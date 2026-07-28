@@ -1,0 +1,13 @@
+node_modules/
+.pnpm-store/
+.expo/
+dist/
+coverage/
+tmp/
+.DS_Store
+.env
+.env.*
+!.env.example
+apps/mobile/ios/
+apps/mobile/android/
+*.log

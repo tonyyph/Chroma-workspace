@@ -1,0 +1,6 @@
+node_modules
+.expo
+coverage
+tmp
+pnpm-lock.yaml
+CHROMAWAVE Product Blueprint.pdf

@@ -1,0 +1,241 @@
+export const color = {
+  canvas: '#090806',
+  canvasElevated: '#0E0C09',
+  surface: '#17130F',
+  surfaceRaised: '#211C16',
+  surfaceSubtle: '#110F0C',
+  text: '#F4EFE5',
+  textMuted: '#B7AD9D',
+  textSubtle: '#80776C',
+  border: '#393126',
+  focus: '#F1D69B',
+  accent: '#DCC28E',
+  accentInk: '#17120A',
+  success: '#76C6A2',
+  warning: '#E2B76F',
+  danger: '#E57C77',
+  brandCoral: '#B85C4B',
+  brandViolet: '#5D5A8F',
+  brandChartreuse: '#B4B96C',
+  champagneSoft: '#E8D9BA',
+  scrim: 'rgba(9, 8, 6, 0.76)',
+} as const;
+
+export type ThemePalette = { readonly [Key in keyof typeof color]: string };
+
+export const themePalettes = {
+  obsidian: color,
+  ivory: {
+    canvas: '#F3EEE5',
+    canvasElevated: '#ECE4D8',
+    surface: '#FBF7F0',
+    surfaceRaised: '#E4D8C7',
+    surfaceSubtle: '#EFE8DD',
+    text: '#211B15',
+    textMuted: '#655A4F',
+    textSubtle: '#8B7E70',
+    border: '#CFC1AD',
+    focus: '#72572F',
+    accent: '#9A7440',
+    accentInk: '#FFF9EF',
+    success: '#397A60',
+    warning: '#A46528',
+    danger: '#A34640',
+    brandCoral: '#B45D4D',
+    brandViolet: '#625C87',
+    brandChartreuse: '#91975F',
+    champagneSoft: '#C7A96E',
+    scrim: 'rgba(25, 20, 15, 0.72)',
+  },
+  oxblood: {
+    canvas: '#110809',
+    canvasElevated: '#180C0E',
+    surface: '#261113',
+    surfaceRaised: '#35171B',
+    surfaceSubtle: '#1C0D0F',
+    text: '#F6EDE7',
+    textMuted: '#C3ABA5',
+    textSubtle: '#886F6D',
+    border: '#4A292C',
+    focus: '#E7C89B',
+    accent: '#D6B483',
+    accentInk: '#1B0B0D',
+    success: '#77C09E',
+    warning: '#D8A764',
+    danger: '#E27976',
+    brandCoral: '#A9433F',
+    brandViolet: '#76506E',
+    brandChartreuse: '#9D9660',
+    champagneSoft: '#E7D0A8',
+    scrim: 'rgba(17, 8, 9, 0.78)',
+  },
+  cobalt: {
+    canvas: '#070A12',
+    canvasElevated: '#0C111D',
+    surface: '#111827',
+    surfaceRaised: '#19243A',
+    surfaceSubtle: '#0D1422',
+    text: '#F1F4FA',
+    textMuted: '#A9B3C7',
+    textSubtle: '#707D96',
+    border: '#293750',
+    focus: '#C9D6F2',
+    accent: '#B8C7E8',
+    accentInk: '#0B1020',
+    success: '#6FC1A5',
+    warning: '#D6AE70',
+    danger: '#DF777F',
+    brandCoral: '#A95E62',
+    brandViolet: '#5D6EA5',
+    brandChartreuse: '#98A577',
+    champagneSoft: '#D3DDF2',
+    scrim: 'rgba(7, 10, 18, 0.78)',
+  },
+  moss: {
+    canvas: '#090C08',
+    canvasElevated: '#0E120D',
+    surface: '#151A12',
+    surfaceRaised: '#20271C',
+    surfaceSubtle: '#10140E',
+    text: '#F0F1E7',
+    textMuted: '#AFB29D',
+    textSubtle: '#747A68',
+    border: '#30392B',
+    focus: '#D8D1A3',
+    accent: '#C9C39A',
+    accentInk: '#10130B',
+    success: '#73BE8D',
+    warning: '#D4AD68',
+    danger: '#D87972',
+    brandCoral: '#9C5C4A',
+    brandViolet: '#67647E',
+    brandChartreuse: '#89945A',
+    champagneSoft: '#DFD9B1',
+    scrim: 'rgba(9, 12, 8, 0.78)',
+  },
+  aubergine: {
+    canvas: '#0E0910',
+    canvasElevated: '#150D17',
+    surface: '#211424',
+    surfaceRaised: '#301D33',
+    surfaceSubtle: '#180F1B',
+    text: '#F5EEF4',
+    textMuted: '#BFAABD',
+    textSubtle: '#806D81',
+    border: '#432A45',
+    focus: '#E5C8DE',
+    accent: '#D3B3CC',
+    accentInk: '#170C19',
+    success: '#74C09A',
+    warning: '#D6A968',
+    danger: '#E07A82',
+    brandCoral: '#A85462',
+    brandViolet: '#73588D',
+    brandChartreuse: '#969765',
+    champagneSoft: '#E5CFE0',
+    scrim: 'rgba(14, 9, 16, 0.78)',
+  },
+} as const satisfies Record<string, ThemePalette>;
+
+export type ThemePaletteId = keyof typeof themePalettes;
+
+export const themeModes: Record<ThemePaletteId, 'light' | 'dark'> = {
+  obsidian: 'dark',
+  ivory: 'light',
+  oxblood: 'dark',
+  cobalt: 'dark',
+  moss: 'dark',
+  aubergine: 'dark',
+};
+
+export const spacing = {
+  xxs: 4,
+  xs: 8,
+  sm: 12,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+  xxxl: 64,
+} as const;
+
+export const radius = {
+  xs: 8,
+  sm: 12,
+  md: 18,
+  lg: 26,
+  xl: 36,
+  pill: 999,
+} as const;
+
+export const typography = {
+  display: {
+    fontFamily: 'PlayfairDisplay_500Medium',
+    fontSize: 52,
+    lineHeight: 57,
+    letterSpacing: -1.6,
+  },
+  title: {
+    fontFamily: 'PlayfairDisplay_500Medium',
+    fontSize: 38,
+    lineHeight: 43,
+    letterSpacing: -0.9,
+  },
+  heading: {
+    fontFamily: 'PlayfairDisplay_500Medium',
+    fontSize: 25,
+    lineHeight: 31,
+    letterSpacing: -0.3,
+  },
+  body: {
+    fontFamily: 'SourceSerif4_400Regular',
+    fontSize: 17,
+    lineHeight: 25,
+    letterSpacing: 0,
+  },
+  label: {
+    fontFamily: 'SourceSerif4_600SemiBold',
+    fontSize: 14,
+    lineHeight: 19,
+    letterSpacing: 0.8,
+  },
+  caption: {
+    fontFamily: 'SourceSerif4_500Medium',
+    fontSize: 12,
+    lineHeight: 17,
+    letterSpacing: 0.45,
+  },
+} as const;
+
+export const motion = {
+  duration: {
+    instant: 80,
+    feedback: 120,
+    direct: 220,
+    screen: 260,
+    immersive: 420,
+  },
+  easing: {
+    standard: [0.2, 0, 0, 1] as const,
+    emphasized: [0.2, 0.8, 0.2, 1] as const,
+  },
+  spring: {
+    responsive: { damping: 18, stiffness: 240, mass: 0.75 },
+    gentle: { damping: 20, stiffness: 145, mass: 0.9 },
+  },
+} as const;
+
+export const iconSize = { sm: 16, md: 20, lg: 24, xl: 32 } as const;
+export const touchTarget = { minimum: 44, comfortable: 52 } as const;
+export const opacity = { disabled: 0.42, secondary: 0.68, pressed: 0.78 } as const;
+export const layer = { base: 0, content: 10, navigation: 20, overlay: 30, toast: 40 } as const;
+
+export const shadow = {
+  floating: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.34,
+    shadowRadius: 30,
+    elevation: 12,
+  },
+} as const;

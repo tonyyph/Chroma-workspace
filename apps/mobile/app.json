@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "CHROMAWAVE",
+    "slug": "chromawave",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/chromawave-icon.png",
+    "scheme": "chromawave",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "icon": "./assets/images/chromawave-icon.png",
+      "supportsTablet": true,
+      "bundleIdentifier": "com.chromawave.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#09090B",
+        "foregroundImage": "./assets/images/chromawave-icon.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.chromawave.app"
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#09090B",
+          "android": {
+            "image": "./assets/images/chromawave-icon.png",
+            "imageWidth": 76
+          }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow CHROMAWAVE to choose a photo only when you start a Memory.",
+          "cameraPermission": "Allow CHROMAWAVE to take a photo for a new private Memory.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#DCC28E",
+          "defaultChannel": "chromatic-reminder",
+          "enableBackgroundRemoteNotifications": false
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

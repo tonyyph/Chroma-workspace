@@ -1,0 +1,23 @@
+{
+  "name": "chromawave",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.18.3",
+  "engines": {
+    "node": ">=20.19.0 <23"
+  },
+  "scripts": {
+    "dev": "corepack pnpm --filter @chromawave/mobile start",
+    "ios": "corepack pnpm --filter @chromawave/mobile ios",
+    "android": "corepack pnpm --filter @chromawave/mobile android",
+    "typecheck": "corepack pnpm -r typecheck",
+    "lint": "corepack pnpm -r lint",
+    "test": "corepack pnpm -r test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "corepack pnpm typecheck && corepack pnpm lint && corepack pnpm test && corepack pnpm format:check"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}
