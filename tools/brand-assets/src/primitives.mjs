@@ -1,6 +1,6 @@
 /**
  * Geometry + SVG primitives, ported 1:1 from the generator embedded in
- * `CHROMAWAVE Identity.dc.html` (class Component extends DCLogic).
+ * `CHROMAWAVE Final Concept.dc.html` (class Component extends DCLogic).
  *
  * The identity document renders its artwork through React.createElement; here the
  * same functions emit SVG source strings so the marks can be rasterised for
@@ -65,7 +65,7 @@ export function sine(mid, amp, cyc, ph, x0, x1) {
   return d;
 }
 
-/** Superellipse of degree `n` — the Liquid Lens body and the iOS mask shape. */
+/** Superellipse of degree `n` — the Chroma Signal glass body and the iOS mask shape. */
 export function squircle(cx, cy, r, n) {
   let d = '';
   const steps = 160;
@@ -78,15 +78,6 @@ export function squircle(cx, cy, r, n) {
     d += `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)} `;
   }
   return `${d}Z`;
-}
-
-export function arc(cx, cy, r, a0, a1) {
-  const x0 = cx + r * Math.cos(a0);
-  const y0 = cy + r * Math.sin(a0);
-  const x1 = cx + r * Math.cos(a1);
-  const y1 = cy + r * Math.sin(a1);
-  const large = Math.abs(a1 - a0) > Math.PI ? 1 : 0;
-  return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
 }
 
 export function svg(viewBox, defs, kids) {

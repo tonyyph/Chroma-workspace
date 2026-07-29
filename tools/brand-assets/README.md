@@ -5,12 +5,37 @@ and **07 Liquid Lens**, straight from the geometry published in
 `CHROMAWAVE Identity.dc.html` (BRAND & ICON SYSTEM · V1 · JUL 2026).
 
 ```sh
-corepack pnpm --filter @chromawave/brand-assets build
-corepack pnpm --filter @chromawave/brand-assets build -- --concept liquid-lens
+corepack pnpm brand:assets                                   # everything, ~11s
+node src/generate.mjs --concept liquid-lens                  # one concept
+node src/generate.mjs --group app-icon                       # one asset group
+node src/generate.mjs --concept liquid-lens --group app-icon # ~4s
 ```
 
-Output lands in `apps/mobile/assets/brand/`. The build is deterministic: it wipes and
+Output lands in `apps/mobile/assets/brand/`. A full run is deterministic: it wipes and
 rewrites each concept directory, so the tree is safe to commit and diff.
+
+Flags:
+
+| Flag            | Default                    | Notes                                                    |
+| --------------- | -------------------------- | -------------------------------------------------------- |
+| `--concept`     | both                       | `bandwave` or `liquid-lens`                              |
+| `--group`       | all                        | Comma-separated: `app-icon,splash,symbol,system,runtime` |
+| `--concurrency` | `min(cores-1, 8)`          | Render workers                                           |
+| `--out`         | `apps/mobile/assets/brand` | Output root                                              |
+
+A partial run (`--concept` or `--group`) skips the directory wipe so it cannot delete the
+groups it is not rebuilding, and leaves `manifest.json` alone rather than replacing it with
+a listing of the subset.
+
+## Why it uses worker threads
+
+`Resvg.render()` is synchronous and CPU-bound — about 190ms for a 1024px icon, which is
+roughly 90% of the per-file cost (PNG encoding is ~20ms). Awaiting each file in turn
+therefore pinned the whole build to one core. Jobs are now collected declaratively and
+handed to a pool of workers, which took a full build from 56s to ~11s on a 10-core machine.
+
+PNG compression stays at level 9 despite being the cheaper knob: dropping to level 6 saves
+about 2s across the tree but adds 10% to every committed asset.
 
 ## Where the numbers come from
 
