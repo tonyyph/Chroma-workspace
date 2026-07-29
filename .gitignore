@@ -11,3 +11,5 @@ tmp/
 apps/mobile/ios/
 apps/mobile/android/
 *.log
+.agents/
+.github/

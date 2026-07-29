@@ -67,7 +67,10 @@ export const channelSizes = [1024, 180, 120];
  */
 const smallCuts = {
   primary: { draw: () => icon({ k: 'S', simple: true }), background: palette.fieldLight },
-  dark: { draw: () => icon({ k: 'SD', simple: true, theme: 'dark' }), background: palette.fieldDark },
+  dark: {
+    draw: () => icon({ k: 'SD', simple: true, theme: 'dark' }),
+    background: palette.fieldDark,
+  },
   mono: { draw: () => icon({ k: 'SM', simple: true, mono: true }), background: palette.fieldLight },
   'high-contrast': {
     draw: () => icon({ k: 'SH', simple: true, contrast: true }),

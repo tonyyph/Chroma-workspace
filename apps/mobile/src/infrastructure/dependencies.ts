@@ -3,7 +3,6 @@ import { DevelopmentAnalytics } from '@chromawave/analytics';
 import { AsyncStorageCollectionRepository } from './AsyncStorageCollectionRepository';
 import { AsyncStorageMemoryRepository } from './AsyncStorageMemoryRepository';
 import { AsyncStoragePreferencesRepository } from './AsyncStoragePreferencesRepository';
-import { ExpoAppIconService } from './ExpoAppIconService';
 import { ExpoHapticsService } from './ExpoHapticsService';
 import { ExpoMemoryAssetStore } from './ExpoMemoryAssetStore';
 import { ExpoNotificationScheduler } from './ExpoNotificationScheduler';
@@ -11,7 +10,6 @@ import { ExpoPaletteExtractor } from './ExpoPaletteExtractor';
 import { MockMusicProvider } from './MockMusicProvider';
 
 export const analytics = new DevelopmentAnalytics(__DEV__);
-export const appIconService = new ExpoAppIconService();
 export const assetStore = new ExpoMemoryAssetStore();
 export const collectionRepository = new AsyncStorageCollectionRepository();
 export const memoryRepository = new AsyncStorageMemoryRepository();

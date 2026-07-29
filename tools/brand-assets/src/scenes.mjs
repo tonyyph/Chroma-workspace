@@ -22,7 +22,16 @@ export function splashFrame(i) {
   const p = `s${i}`;
   const g = (n) => `url(#${p}${n})`;
   const defs = [
-    rg(`${p}bg`, [[0, '#1B1730'], [1, '#07060D']], 195, 400, 470),
+    rg(
+      `${p}bg`,
+      [
+        [0, '#1B1730'],
+        [1, '#07060D'],
+      ],
+      195,
+      400,
+      470,
+    ),
     rg(
       `${p}gl`,
       [
@@ -108,7 +117,15 @@ export function splashFrame(i) {
   }
   if (i === 6) {
     kids.push(
-      element('rect', { x: 24, y: 596, width: 342, height: 150, rx: 22, fill: '#171233', opacity: 0.96 }),
+      element('rect', {
+        x: 24,
+        y: 596,
+        width: 342,
+        height: 150,
+        rx: 22,
+        fill: '#171233',
+        opacity: 0.96,
+      }),
     );
     for (let j = 0; j < 3; j++) {
       kids.push(
@@ -116,7 +133,15 @@ export function splashFrame(i) {
       );
     }
     kids.push(
-      element('rect', { x: 44, y: 700, width: 180, height: 11, rx: 6, fill: '#EDEAE3', opacity: 0.6 }),
+      element('rect', {
+        x: 44,
+        y: 700,
+        width: 180,
+        height: 11,
+        rx: 6,
+        fill: '#EDEAE3',
+        opacity: 0.6,
+      }),
       element('rect', { x: 24, y: 764, width: 342, height: 56, rx: 28, fill: '#171233' }),
     );
   }
@@ -132,7 +157,18 @@ export function splashFrame(i) {
  * handoff shows two dots at slightly different scales.
  */
 export function splashField() {
-  const defs = [rg('sfbg', [[0, '#1B1730'], [1, '#07060D']], 195, 400, 470)];
+  const defs = [
+    rg(
+      'sfbg',
+      [
+        [0, '#1B1730'],
+        [1, '#07060D'],
+      ],
+      195,
+      400,
+      470,
+    ),
+  ];
   return svg(SCREEN, defs, [element('rect', { width: 390, height: 844, fill: 'url(#sfbg)' })]);
 }
 
@@ -147,7 +183,19 @@ export function seedDot() {
 export function onboardingPanel(i) {
   const p = `o${i}`;
   const g = (n) => `url(#${p}${n})`;
-  const defs = [rg(`${p}bg`, [[0, '#161327'], [1, '#08070E']], 195, 300, 480), blur(`${p}bl`, 10)];
+  const defs = [
+    rg(
+      `${p}bg`,
+      [
+        [0, '#161327'],
+        [1, '#08070E'],
+      ],
+      195,
+      300,
+      480,
+    ),
+    blur(`${p}bl`, 10),
+  ];
   const kids = [
     element('rect', { width: 390, height: 844, fill: g('bg') }),
     element('rect', {
@@ -200,15 +248,47 @@ export function onboardingPanel(i) {
       fill: '#EDEAE3',
       opacity: 0.85,
     }),
-    element('rect', { x: 24, y: 626, width: 300, height: 12, rx: 6, fill: '#EDEAE3', opacity: 0.34 }),
-    element('rect', { x: 24, y: 650, width: 230, height: 12, rx: 6, fill: '#EDEAE3', opacity: 0.34 }),
+    element('rect', {
+      x: 24,
+      y: 626,
+      width: 300,
+      height: 12,
+      rx: 6,
+      fill: '#EDEAE3',
+      opacity: 0.34,
+    }),
+    element('rect', {
+      x: 24,
+      y: 650,
+      width: 230,
+      height: 12,
+      rx: 6,
+      fill: '#EDEAE3',
+      opacity: 0.34,
+    }),
   );
 
   if (i === 5) {
     kids.push(
       element('rect', { x: 44, y: 300, width: 302, height: 200, rx: 22, fill: '#EDE8F4' }),
-      element('rect', { x: 70, y: 340, width: 180, height: 14, rx: 7, fill: '#0C0B18', opacity: 0.8 }),
-      element('rect', { x: 70, y: 368, width: 240, height: 10, rx: 5, fill: '#0C0B18', opacity: 0.4 }),
+      element('rect', {
+        x: 70,
+        y: 340,
+        width: 180,
+        height: 14,
+        rx: 7,
+        fill: '#0C0B18',
+        opacity: 0.8,
+      }),
+      element('rect', {
+        x: 70,
+        y: 368,
+        width: 240,
+        height: 10,
+        rx: 5,
+        fill: '#0C0B18',
+        opacity: 0.4,
+      }),
       element('rect', { x: 70, y: 420, width: 250, height: 44, rx: 22, fill: '#7C5CFF' }),
     );
   }
@@ -328,7 +408,16 @@ export function shareCard(ratio = '1.91x1') {
   const g = (n) => `url(#${p}${n})`;
   const landscape = ratio === '1.91x1';
   const defs = [
-    rg(`${p}bg`, [[0, '#1B1730'], [1, '#08070E']], width / 2, height / 2, Math.max(width, height) * 0.6),
+    rg(
+      `${p}bg`,
+      [
+        [0, '#1B1730'],
+        [1, '#08070E'],
+      ],
+      width / 2,
+      height / 2,
+      Math.max(width, height) * 0.6,
+    ),
     blur(`${p}bl`, landscape ? 14 : 18),
   ];
   const kids = [element('rect', { width, height, fill: g('bg') })];
@@ -400,8 +489,24 @@ export function shareCard(ratio = '1.91x1') {
   }
 
   kids.push(
-    element('rect', { x: meta.x, y: meta.y, width: meta.wide, height: 26, rx: 13, fill: '#EDEAE3', opacity: 0.85 }),
-    element('rect', { x: meta.x, y: meta.y + 46, width: meta.narrow, height: 18, rx: 9, fill: '#EDEAE3', opacity: 0.35 }),
+    element('rect', {
+      x: meta.x,
+      y: meta.y,
+      width: meta.wide,
+      height: 26,
+      rx: 13,
+      fill: '#EDEAE3',
+      opacity: 0.85,
+    }),
+    element('rect', {
+      x: meta.x,
+      y: meta.y + 46,
+      width: meta.narrow,
+      height: 18,
+      rx: 9,
+      fill: '#EDEAE3',
+      opacity: 0.35,
+    }),
     element(
       'text',
       {

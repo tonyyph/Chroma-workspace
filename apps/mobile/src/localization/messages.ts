@@ -193,20 +193,6 @@ const en = {
   'settings.theme.moss': 'Forest Patina',
   'settings.theme.aubergine': 'Aubergine Gold',
   'settings.theme.selected': 'Selected',
-  'settings.identity': 'App icon & identity',
-  'settings.identityBody':
-    'Two marks came out of the V1 icon exploration. Your choice changes the home screen icon, the launch sequence, and every brand surface inside the app.',
-  'settings.identity.bandwave': 'Bandwave',
-  'settings.identity.bandwaveBody':
-    'Four chromatic bands travelling one wave, phase-shifted so they never touch. The recommended mark — it keeps its silhouette down to 16px and in greyscale.',
-  'settings.identity.liquid-lens': 'Liquid Lens',
-  'settings.identity.liquid-lensBody':
-    'A squircle of glass bending three bands. The most premium material of the set, at its best on large surfaces; small sizes fall back to a flat cut.',
-  'settings.identity.concept': 'CONCEPT {number}',
-  'settings.identity.iconUnsupported':
-    'This device keeps its current home screen icon. In-app branding still changes.',
-  'settings.appIconError':
-    'The identity was saved, but the home screen icon was not changed. Try again from Settings.',
   'settings.privacy': 'Privacy & storage',
   'settings.privacyBody':
     'Memories, preferences, and reminder schedules stay on this device in the current local-first release.',
@@ -459,20 +445,6 @@ const vi: Record<MessageKey, string> = {
   'settings.theme.moss': 'Patina Rừng Sâu',
   'settings.theme.aubergine': 'Aubergine Ánh Kim',
   'settings.theme.selected': 'Đang chọn',
-  'settings.identity': 'Biểu tượng & bản sắc',
-  'settings.identityBody':
-    'Hai dấu ấn được chọn ra từ đợt khám phá biểu tượng V1. Lựa chọn của bạn thay đổi icon trên màn hình chính, chuỗi khởi động và toàn bộ bề mặt thương hiệu trong ứng dụng.',
-  'settings.identity.bandwave': 'Bandwave',
-  'settings.identity.bandwaveBody':
-    'Bốn dải màu cùng chạy trên một sóng, lệch pha để không bao giờ chạm nhau. Dấu ấn được đề xuất — giữ nguyên hình bóng tới 16px và cả khi chuyển xám.',
-  'settings.identity.liquid-lens': 'Liquid Lens',
-  'settings.identity.liquid-lensBody':
-    'Một khối kính squircle bẻ cong ba dải màu. Chất liệu cao cấp nhất trong bộ, đẹp nhất ở kích thước lớn; cỡ nhỏ sẽ dùng bản phẳng thay thế.',
-  'settings.identity.concept': 'CONCEPT {number}',
-  'settings.identity.iconUnsupported':
-    'Thiết bị này giữ nguyên icon trên màn hình chính. Bản sắc bên trong ứng dụng vẫn thay đổi.',
-  'settings.appIconError':
-    'Bản sắc đã được lưu, nhưng icon màn hình chính chưa đổi. Hãy thử lại trong Cài đặt.',
   'settings.privacy': 'Quyền riêng tư & lưu trữ',
   'settings.privacyBody':
     'Ký ức, tùy chọn và lịch nhắc nằm trên thiết bị trong phiên bản local-first hiện tại.',

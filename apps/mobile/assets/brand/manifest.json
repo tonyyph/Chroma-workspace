@@ -3,14 +3,10 @@
   "mark": {
     "number": "07",
     "name": "Chroma Signal",
-    "bands": [
-      "#7C5CFF",
-      "#22D3EE",
-      "#FF7A5C"
-    ]
+    "bands": ["#7C5CFF", "#22D3EE", "#FF7A5C"]
   },
   "fileCount": 134,
-  "totalBytes": 7591446,
+  "totalBytes": 7500612,
   "files": [
     "apps/mobile/assets/brand/android/ic_launcher_foreground.png",
     "apps/mobile/assets/brand/android/ic_launcher_legacy.png",

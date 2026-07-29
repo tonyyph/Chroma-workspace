@@ -202,6 +202,26 @@ export function symbol({ theme = 'dark', mono = false, k = 'SY' } = {}) {
 }
 
 /**
+ * Android 13+ themed-icon layer.
+ *
+ * Android tints this drawable by its *alpha*, discarding colour entirely, so the
+ * greyscale MONO build cannot be used directly: its alpha is a filled squircle
+ * and the launcher would render a solid blob — the exact failure the submission
+ * note warns about ("Android themed icons force single-colour: ship MONO or the
+ * launcher looks broken"). The structure therefore has to live in the alpha
+ * channel, which is what the FLAT cut already draws: solid strokes, no glass,
+ * no blur. It is emitted in white so any tint the system picks reads cleanly.
+ */
+export function monochromeLayer() {
+  return icon({
+    k: 'MN',
+    flat: true,
+    field: false,
+    bandColors: ['#FFFFFF', '#FFFFFF', '#FFFFFF'],
+  });
+}
+
+/**
  * Android adaptive foreground: "foreground 432 in 108dp, adaptive safe 66dp".
  * The mark's own diameter is 720/1024 of the master; scaling it to the 66/108
  * safe fraction keeps the silhouette clear of every launcher shape mask.
@@ -209,7 +229,7 @@ export function symbol({ theme = 'dark', mono = false, k = 'SY' } = {}) {
 export function adaptiveForeground({ mono = false } = {}) {
   const scale = 66 / 108 / (720 / 1024);
   const offset = 512 * (1 - scale);
-  const inner = symbol({ mono, k: mono ? 'AFM' : 'AF', theme: mono ? 'light' : 'dark' })
+  const inner = (mono ? monochromeLayer() : symbol({ k: 'AF' }))
     .replace(/^<svg[^>]*>/, '')
     .replace(/<\/svg>$/, '');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VIEWBOX}"><g transform="translate(${offset.toFixed(1)} ${offset.toFixed(1)}) scale(${scale.toFixed(4)})">${inner}</g></svg>`;
@@ -222,8 +242,22 @@ export function geometryPlate() {
   const kids = [element('rect', { width: 1024, height: 1024, fill: '#0F0E15' })];
   for (let i = 1; i < 8; i++) {
     kids.push(
-      element('line', { x1: i * 128, y1: 0, x2: i * 128, y2: 1024, stroke: faint, 'stroke-width': 2 }),
-      element('line', { x1: 0, y1: i * 128, x2: 1024, y2: i * 128, stroke: faint, 'stroke-width': 2 }),
+      element('line', {
+        x1: i * 128,
+        y1: 0,
+        x2: i * 128,
+        y2: 1024,
+        stroke: faint,
+        'stroke-width': 2,
+      }),
+      element('line', {
+        x1: 0,
+        y1: i * 128,
+        x2: 1024,
+        y2: i * 128,
+        stroke: faint,
+        'stroke-width': 2,
+      }),
     );
   }
   kids.push(

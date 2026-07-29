@@ -1,5 +1,5 @@
 import type { PaletteMood } from '@chromawave/domain';
-import type { BrandIdentityId, Language, ReminderTime, ThemeId } from '@chromawave/domain';
+import type { Language, ReminderTime, ThemeId } from '@chromawave/domain';
 
 export type AnalyticsEventMap = {
   onboarding_started: Record<string, never>;
@@ -21,7 +21,6 @@ export type AnalyticsEventMap = {
   settings_language_changed: { language: Language };
   settings_theme_changed: { theme: ThemeId };
   /** `iconApplied` is false when the home screen swap was refused or unsupported. */
-  settings_brand_identity_changed: { brandIdentity: BrandIdentityId; iconApplied: boolean };
   settings_notifications_changed: {
     enabled: boolean;
     permission: 'granted' | 'denied' | 'undetermined';

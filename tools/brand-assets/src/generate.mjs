@@ -13,14 +13,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
-import {
-  appIconSizes,
-  buildForSize,
-  builds,
-  channelSizes,
-  channels,
-  tiers,
-} from './builds.mjs';
+import { appIconSizes, buildForSize, builds, channelSizes, channels, tiers } from './builds.mjs';
 import { adaptiveForeground, geometryPlate, palette, symbol } from './mark.mjs';
 import { defaultConcurrency, runRenderJobs } from './pool.mjs';
 import {
@@ -301,7 +294,8 @@ async function main() {
   // one alone rather than replacing it with a listing of the subset.
   if (isFullRun) {
     const manifest = {
-      generatedFrom: 'CHROMAWAVE Final Concept.dc.html · CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026',
+      generatedFrom:
+        'CHROMAWAVE Final Concept.dc.html · CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026',
       mark: { number: '07', name: 'Chroma Signal', bands: palette.bands },
       fileCount: written.length,
       totalBytes,
