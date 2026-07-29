@@ -6,6 +6,14 @@ jest.mock('react-native-reanimated', () => ({
   ...jest.requireActual('react-native-reanimated/mock'),
   useReducedMotion: () => false,
 }));
+// Alternate app icons are a native capability with no JS fallback; the mock reports
+// the simulator-style "unsupported" state so tests exercise the graceful path.
+jest.mock('expo-alternate-app-icons', () => ({
+  supportsAlternateIcons: false,
+  getAppIconName: jest.fn(() => null),
+  setAlternateAppIcon: jest.fn(async () => null),
+  resetAppIcon: jest.fn(async () => {}),
+}));
 jest.mock('expo-notifications', () => ({
   AndroidImportance: { DEFAULT: 3 },
   PermissionStatus: { GRANTED: 'granted', DENIED: 'denied', UNDETERMINED: 'undetermined' },

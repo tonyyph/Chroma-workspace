@@ -1,9 +1,19 @@
-import type { Language, ReminderTime, ThemeId } from '@chromawave/domain';
-import { radius, shadow, spacing, themePalettes, touchTarget } from '@chromawave/design-tokens';
+import type { BrandIdentityId, Language, ReminderTime, ThemeId } from '@chromawave/domain';
+import {
+  brandIdentities,
+  brandIdentityIds,
+  radius,
+  shadow,
+  spacing,
+  themePalettes,
+  touchTarget,
+} from '@chromawave/design-tokens';
+import { Image } from 'expo-image';
 import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
+import { ICON_CORNER_RATIO, identityIcons } from '@/brand/identityAssets';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { EditorialSection } from '@/components/EditorialSection';
@@ -128,10 +138,69 @@ function ThemeCard({
   );
 }
 
+function IdentityCard({
+  id,
+  selected,
+  disabled,
+  onPress,
+}: {
+  id: BrandIdentityId;
+  selected: boolean;
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  const { colors, t } = usePreferences();
+  const identity = brandIdentities[id];
+  return (
+    <Pressable
+      accessibilityLabel={t(`settings.identity.${id}`)}
+      accessibilityRole="radio"
+      accessibilityState={{ disabled, selected }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.identityCard,
+        {
+          borderColor: selected ? colors.accent : colors.border,
+          backgroundColor: selected ? colors.surfaceRaised : colors.surface,
+        },
+        pressed && styles.pressed,
+      ]}
+    >
+      <View style={styles.identityHeader}>
+        <Image
+          contentFit="cover"
+          source={identityIcons[id]}
+          style={styles.identityPreview}
+          transition={160}
+        />
+        <View style={styles.identityCopy}>
+          <AppText tone="subtle" variant="caption">
+            {t('settings.identity.concept', { number: identity.conceptNumber })}
+          </AppText>
+          <AppText variant="label">{t(`settings.identity.${id}`)}</AppText>
+          <AppText tone={selected ? 'accent' : 'subtle'} variant="caption">
+            {selected ? t('settings.theme.selected').toLocaleUpperCase() : identity.designation}
+          </AppText>
+        </View>
+      </View>
+      <AppText tone="muted" variant="caption">
+        {t(`settings.identity.${id}Body`)}
+      </AppText>
+      <View style={styles.identityBands} accessibilityElementsHidden>
+        {identity.bands.map((backgroundColor) => (
+          <View key={backgroundColor} style={[styles.identityBand, { backgroundColor }]} />
+        ))}
+      </View>
+    </Pressable>
+  );
+}
+
 export default function SettingsScreen() {
   const {
     preferences,
     colors,
+    appIconSupported,
     busyAction,
     error,
     notificationPermission,
@@ -139,6 +208,7 @@ export default function SettingsScreen() {
     setHapticsEnabled,
     setLanguage,
     setTheme,
+    setBrandIdentity,
     setNotificationsEnabled,
     setReminderTime,
     refreshNotificationPermission,
@@ -281,7 +351,28 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.section}>
-        <EditorialSection index="04" title={t('settings.privacy')} />
+        <EditorialSection index="04" title={t('settings.identity')} />
+        <AppText tone="muted">{t('settings.identityBody')}</AppText>
+        <View accessibilityRole="radiogroup" style={styles.identityGroup}>
+          {brandIdentityIds.map((id) => (
+            <IdentityCard
+              disabled={disabled}
+              id={id}
+              key={id}
+              onPress={() => void setBrandIdentity(id)}
+              selected={preferences.brandIdentity === id}
+            />
+          ))}
+        </View>
+        {appIconSupported ? null : (
+          <AppText tone="subtle" variant="caption">
+            {t('settings.identity.iconUnsupported')}
+          </AppText>
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <EditorialSection index="05" title={t('settings.privacy')} />
         <View style={[styles.privacyCard, { backgroundColor: colors.surfaceSubtle }]}>
           <AppText tone="muted">{t('settings.privacyBody')}</AppText>
           <AppText tone="accent" variant="caption">
@@ -291,9 +382,18 @@ export default function SettingsScreen() {
       </View>
 
       {error ? (
-        <View style={[styles.notice, { borderColor: colors.danger }]}>
+        <View
+          style={[
+            styles.notice,
+            { borderColor: error === 'appIcon' ? colors.warning : colors.danger },
+          ]}
+        >
           <AppText tone="muted">
-            {error === 'notification' ? t('settings.notificationError') : t('settings.error')}
+            {error === 'notification'
+              ? t('settings.notificationError')
+              : error === 'appIcon'
+                ? t('settings.appIconError')
+                : t('settings.error')}
           </AppText>
         </View>
       ) : null}
@@ -385,6 +485,38 @@ const styles = StyleSheet.create({
     height: 38,
     flexDirection: 'row',
     overflow: 'hidden',
+    borderRadius: radius.pill,
+  },
+  identityGroup: {
+    gap: spacing.md,
+  },
+  identityCard: {
+    padding: spacing.md,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    gap: spacing.sm,
+  },
+  identityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  identityPreview: {
+    width: 64,
+    height: 64,
+    borderRadius: 64 * ICON_CORNER_RATIO,
+  },
+  identityCopy: {
+    flex: 1,
+    gap: spacing.xxs,
+  },
+  identityBands: {
+    height: 10,
+    flexDirection: 'row',
+    gap: spacing.xxs,
+  },
+  identityBand: {
+    flex: 1,
     borderRadius: radius.pill,
   },
   swatch: {

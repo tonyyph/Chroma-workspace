@@ -1,0 +1,17 @@
+{
+  "name": "@chromawave/brand-assets",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Generates the CHROMAWAVE production asset system from the identity document geometry",
+  "scripts": {
+    "build": "node src/generate.mjs",
+    "typecheck": "node --check src/generate.mjs",
+    "lint": "node --check src/generate.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "sharp": "^0.34.4"
+  }
+}

@@ -1,3 +1,5 @@
+export * from './brand';
+
 export const color = {
   canvas: '#090806',
   canvasElevated: '#100E0B',

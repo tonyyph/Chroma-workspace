@@ -1,12 +1,19 @@
 import {
   defaultUserPreferences,
+  type BrandIdentityId,
   type Language,
   type NotificationPermission,
   type ReminderTime,
   type ThemeId,
   type UserPreferences,
 } from '@chromawave/domain';
-import { themeModes, themePalettes, type ThemePalette } from '@chromawave/design-tokens';
+import {
+  brandIdentities,
+  themeModes,
+  themePalettes,
+  type BrandIdentity,
+  type ThemePalette,
+} from '@chromawave/design-tokens';
 import {
   createContext,
   type PropsWithChildren,
@@ -19,18 +26,22 @@ import {
 
 import {
   analytics,
+  appIconService,
   hapticsService,
   notificationScheduler,
   preferencesRepository,
 } from '@/infrastructure/dependencies';
 import { translate, type MessageKey } from '@/localization/messages';
 
-type PreferenceError = 'load' | 'save' | 'notification' | null;
-type PreferenceAction = 'haptics' | 'language' | 'theme' | 'notifications' | 'reminder' | null;
+type PreferenceError = 'load' | 'save' | 'notification' | 'appIcon' | null;
+type PreferenceAction =
+  'haptics' | 'language' | 'theme' | 'notifications' | 'reminder' | 'brandIdentity' | null;
 
 type PreferencesContextValue = {
   preferences: UserPreferences;
   colors: ThemePalette;
+  identity: BrandIdentity;
+  appIconSupported: boolean;
   mode: 'light' | 'dark';
   hydrated: boolean;
   busyAction: PreferenceAction;
@@ -40,6 +51,7 @@ type PreferencesContextValue = {
   setHapticsEnabled: (enabled: boolean) => Promise<void>;
   setLanguage: (language: Language) => Promise<void>;
   setTheme: (theme: ThemeId) => Promise<void>;
+  setBrandIdentity: (identity: BrandIdentityId) => Promise<void>;
   setNotificationsEnabled: (enabled: boolean) => Promise<void>;
   setReminderTime: (time: ReminderTime) => Promise<void>;
   refreshNotificationPermission: () => Promise<void>;
@@ -55,6 +67,8 @@ const noop = async () => {};
 const defaultContextValue: PreferencesContextValue = {
   preferences: defaultUserPreferences,
   colors: themePalettes[defaultUserPreferences.theme],
+  identity: brandIdentities[defaultUserPreferences.brandIdentity],
+  appIconSupported: false,
   mode: themeModes[defaultUserPreferences.theme],
   hydrated: false,
   busyAction: null,
@@ -64,6 +78,7 @@ const defaultContextValue: PreferencesContextValue = {
   setHapticsEnabled: noop,
   setLanguage: noop,
   setTheme: noop,
+  setBrandIdentity: noop,
   setNotificationsEnabled: noop,
   setReminderTime: noop,
   refreshNotificationPermission: noop,
@@ -199,6 +214,29 @@ export function PreferencesProvider({
     [preferences, save],
   );
 
+  const setBrandIdentity = useCallback(
+    async (brandIdentity: BrandIdentityId) => {
+      if (brandIdentity === preferences.brandIdentity) return;
+      const didSave = await save({ ...preferences, brandIdentity }, 'brandIdentity');
+      if (!didSave) return;
+      if (preferences.hapticsEnabled) await hapticsService.success();
+
+      // The stored preference already drives every in-app brand surface. Swapping the
+      // home screen icon is a separate platform call that can fail on its own — an
+      // unsupported device, or the user dismissing the iOS confirmation alert — so a
+      // failure is reported without reverting the identity the app is now wearing.
+      let iconApplied = false;
+      try {
+        await appIconService.apply(brandIdentity);
+        iconApplied = true;
+      } catch {
+        setError('appIcon');
+      }
+      analytics.track('settings_brand_identity_changed', { brandIdentity, iconApplied });
+    },
+    [preferences, save],
+  );
+
   const setNotificationsEnabled = useCallback(
     async (enabled: boolean) => {
       setBusyAction('notifications');
@@ -287,6 +325,8 @@ export function PreferencesProvider({
     () => ({
       preferences,
       colors: themePalettes[preferences.theme],
+      identity: brandIdentities[preferences.brandIdentity],
+      appIconSupported: appIconService.supported,
       mode: themeModes[preferences.theme],
       hydrated,
       busyAction,
@@ -296,6 +336,7 @@ export function PreferencesProvider({
       setHapticsEnabled,
       setLanguage,
       setTheme,
+      setBrandIdentity,
       setNotificationsEnabled,
       setReminderTime,
       refreshNotificationPermission,
@@ -310,6 +351,7 @@ export function PreferencesProvider({
       notificationPermission,
       preferences,
       refreshNotificationPermission,
+      setBrandIdentity,
       setHapticsEnabled,
       setLanguage,
       setNotificationsEnabled,

@@ -4,37 +4,66 @@
     "slug": "chromawave",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/chromawave-icon.png",
+    "icon": "./assets/brand/bandwave/app-icon/primary/chromawave-app-icon-primary-1024.png",
     "scheme": "chromawave",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/images/chromawave-icon.png",
+      "icon": {
+        "light": "./assets/brand/bandwave/app-icon/primary/chromawave-app-icon-primary-1024.png",
+        "dark": "./assets/brand/bandwave/app-icon/dark/chromawave-app-icon-dark-1024.png",
+        "tinted": "./assets/brand/bandwave/app-icon/tinted/chromawave-app-icon-tinted-1024.png"
+      },
       "supportsTablet": true,
       "bundleIdentifier": "com.chromawave.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#09090B",
-        "foregroundImage": "./assets/images/chromawave-icon.png"
+        "backgroundColor": "#0B0918",
+        "foregroundImage": "./assets/brand/bandwave/android/chromawave-android-foreground.png",
+        "monochromeImage": "./assets/brand/bandwave/android/chromawave-android-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.chromawave.app"
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/brand/bandwave/app-icon/chromawave-favicon-48.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#09090B",
+          "backgroundColor": "#0B0918",
+          "image": "./assets/brand/bandwave/splash/static/chromawave-splash-source.png",
+          "imageWidth": 200,
+          "dark": {
+            "backgroundColor": "#0B0918",
+            "image": "./assets/brand/bandwave/splash/static/chromawave-splash-source.png"
+          },
           "android": {
-            "image": "./assets/images/chromawave-icon.png",
-            "imageWidth": 76
+            "backgroundColor": "#0B0918",
+            "image": "./assets/brand/bandwave/splash/static/chromawave-splash-source.png",
+            "imageWidth": 160
           }
         }
+      ],
+      [
+        "expo-alternate-app-icons",
+        [
+          {
+            "name": "LiquidLens",
+            "ios": {
+              "light": "./assets/brand/liquid-lens/app-icon/light/chromawave-app-icon-light-1024.png",
+              "dark": "./assets/brand/liquid-lens/app-icon/dark/chromawave-app-icon-dark-1024.png",
+              "tinted": "./assets/brand/liquid-lens/app-icon/tinted/chromawave-app-icon-tinted-1024.png"
+            },
+            "android": {
+              "foregroundImage": "./assets/brand/liquid-lens/android/chromawave-android-foreground.png",
+              "backgroundColor": "#EDE8F4"
+            }
+          }
+        ]
       ],
       [
         "expo-image-picker",

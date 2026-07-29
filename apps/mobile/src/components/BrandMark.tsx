@@ -1,22 +1,27 @@
-import { radius } from '@chromawave/design-tokens';
+import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 
+import { ICON_CORNER_RATIO, identityIcons } from '@/brand/identityAssets';
 import { usePreferences } from '@/providers/PreferencesProvider';
 
+/**
+ * The mark, drawn from the same masters as the shipped app icon so the in-app
+ * identity and the home screen icon can never drift apart.
+ */
 export function BrandMark({ size = 42 }: { size?: number }) {
-  const { colors } = usePreferences();
+  const { identity } = usePreferences();
   return (
     <View
       accessibilityLabel="CHROMAWAVE"
       accessibilityRole="image"
-      style={[
-        styles.frame,
-        { width: size, height: size, borderRadius: size / 2, backgroundColor: colors.text },
-      ]}
+      style={[styles.frame, { width: size, height: size, borderRadius: size * ICON_CORNER_RATIO }]}
     >
-      <View style={[styles.wave, styles.waveOne, { backgroundColor: colors.brandCoral }]} />
-      <View style={[styles.wave, styles.waveTwo, { backgroundColor: colors.brandViolet }]} />
-      <View style={[styles.wave, styles.waveThree, { backgroundColor: colors.accent }]} />
+      <Image
+        contentFit="cover"
+        source={identityIcons[identity.id]}
+        style={StyleSheet.absoluteFill}
+        transition={160}
+      />
     </View>
   );
 }
@@ -24,25 +29,5 @@ export function BrandMark({ size = 42 }: { size?: number }) {
 const styles = StyleSheet.create({
   frame: {
     overflow: 'hidden',
-    justifyContent: 'center',
-  },
-  wave: {
-    position: 'absolute',
-    height: 7,
-    width: '78%',
-    left: '-8%',
-    borderRadius: radius.pill,
-    transform: [{ rotate: '-14deg' }],
-  },
-  waveOne: {
-    top: '24%',
-  },
-  waveTwo: {
-    top: '44%',
-    left: '12%',
-  },
-  waveThree: {
-    top: '64%',
-    left: '30%',
   },
 });

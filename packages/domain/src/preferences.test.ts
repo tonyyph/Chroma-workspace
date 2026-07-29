@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  brandIdentitySchema,
   defaultUserPreferences,
   reminderTimeSchema,
   themeIdSchema,
@@ -17,12 +18,30 @@ describe('UserPreferences', () => {
       reminderTime: '20:00',
       language: 'en',
       theme: 'obsidian',
+      brandIdentity: 'bandwave',
     });
   });
 
   it('rejects unsupported themes, times, and partial persisted data', () => {
     expect(themeIdSchema.safeParse('neon').success).toBe(false);
     expect(reminderTimeSchema.safeParse('25:00').success).toBe(false);
+    expect(brandIdentitySchema.safeParse('memory-prism').success).toBe(false);
     expect(userPreferencesSchema.safeParse({ language: 'vi' }).success).toBe(false);
+  });
+
+  it('reads preferences persisted before the identity system as Bandwave', () => {
+    const storedBeforeIdentitySystem = {
+      schemaVersion: 1,
+      hapticsEnabled: true,
+      notificationsEnabled: false,
+      notificationIdentifier: null,
+      reminderTime: '20:00',
+      language: 'en',
+      theme: 'obsidian',
+    };
+
+    const parsed = userPreferencesSchema.parse(storedBeforeIdentitySystem);
+
+    expect(parsed.brandIdentity).toBe('bandwave');
   });
 });

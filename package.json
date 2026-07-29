@@ -10,6 +10,7 @@
     "dev": "corepack pnpm --filter @chromawave/mobile start",
     "ios": "corepack pnpm --filter @chromawave/mobile ios",
     "android": "corepack pnpm --filter @chromawave/mobile android",
+    "brand:assets": "corepack pnpm --filter @chromawave/brand-assets build",
     "typecheck": "corepack pnpm -r typecheck",
     "lint": "corepack pnpm -r lint",
     "test": "corepack pnpm -r test",
