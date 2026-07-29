@@ -1,4 +1,5 @@
 export * from './color';
+export * from './collections';
 export * from './entitlements';
 export * from './errors';
 export * from './library';

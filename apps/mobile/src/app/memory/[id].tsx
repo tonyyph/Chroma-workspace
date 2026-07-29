@@ -3,16 +3,18 @@ import { opacity, radius, spacing, touchTarget } from '@chromawave/design-tokens
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, Share, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/AppText';
+import { Button } from '@/components/Button';
 import { EditorialSection } from '@/components/EditorialSection';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { LocalOnlyBanner } from '@/components/LocalOnlyBanner';
 import { PaletteStrip } from '@/components/PaletteStrip';
 import { Screen } from '@/components/Screen';
 import { StateView } from '@/components/StateView';
-import { analytics, memoryRepository } from '@/infrastructure/dependencies';
+import { useCollections } from '@/hooks/useCollections';
+import { analytics, memoryRepository, musicProvider } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
 
 export default function MemoryDetailScreen() {
@@ -20,7 +22,9 @@ export default function MemoryDetailScreen() {
   const [memory, setMemory] = useState<Memory | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error' | 'missing'>('loading');
   const [favoriteBusy, setFavoriteBusy] = useState(false);
-  const { colors, preferences, t } = usePreferences();
+  const [remixStatus, setRemixStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+  const { collections, toggleMemory } = useCollections();
+  const { colors, feedback, preferences, t } = usePreferences();
 
   useEffect(() => {
     let active = true;
@@ -67,6 +71,53 @@ export default function MemoryDetailScreen() {
     } finally {
       setFavoriteBusy(false);
     }
+  };
+
+  const remix = async () => {
+    if (!memory || remixStatus === 'loading') return;
+    setRemixStatus('loading');
+    try {
+      const recommendations = await musicProvider.getRecommendations({
+        mood: memory.palette.mood,
+        brightness: memory.palette.metrics.brightness,
+        saturation: memory.palette.metrics.saturation,
+        temperature: memory.palette.metrics.temperature,
+        contrast: memory.palette.metrics.contrast,
+      });
+      const next =
+        recommendations.find(
+          (recommendation) => recommendation.track.id !== memory.musicPairing?.track.id,
+        ) ?? recommendations[0];
+      if (!next) throw new Error('No pairing recommendation.');
+      const updated: Memory = {
+        ...memory,
+        musicPairing: {
+          track: next.track,
+          explanation: next.explanation,
+          pairedAt: new Date().toISOString(),
+        },
+      };
+      await memoryRepository.save(updated);
+      setMemory(updated);
+      setRemixStatus('idle');
+      await feedback.success();
+      analytics.track('memory_remixed', { memoryId: updated.id, trackId: next.track.id });
+    } catch {
+      setRemixStatus('error');
+    }
+  };
+
+  const shareMemory = async () => {
+    if (!memory) return;
+    await Share.share({
+      message: t('atelier.shareMessage', {
+        mood: memory.palette.mood,
+        colors: memory.palette.colors.map((item) => item.hex).join(' · '),
+        track: memory.musicPairing?.track.title ?? '—',
+      }),
+      title: t('atelier.shareTitle'),
+    });
+    analytics.track('memory_shared', { memoryId: memory.id, format: 'text-board' });
   };
 
   if (status === 'loading') {
@@ -190,7 +241,63 @@ export default function MemoryDetailScreen() {
         </View>
       </View>
 
-      <EditorialSection index="03" title={t('detail.custody')} />
+      <View style={styles.resonanceActions}>
+        <Button
+          label={t('detail.remix')}
+          loading={remixStatus === 'loading'}
+          onPress={() => void remix()}
+          variant="secondary"
+        />
+        <Button label={t('detail.share')} onPress={() => void shareMemory()} variant="ghost" />
+        {remixStatus === 'error' ? (
+          <AppText accessibilityLiveRegion="polite" tone="danger" variant="caption">
+            {t('detail.remixError')}
+          </AppText>
+        ) : null}
+      </View>
+
+      <EditorialSection index="03" title={t('detail.collections')} />
+      {collections.length === 0 ? (
+        <View style={styles.collectionEmpty}>
+          <AppText tone="muted">{t('detail.collectionsEmpty')}</AppText>
+          <Button
+            label={t('detail.openAtelier')}
+            onPress={() => router.push('/(tabs)/atelier')}
+            variant="secondary"
+          />
+        </View>
+      ) : (
+        <View style={styles.collectionChoices}>
+          {collections.map((collection) => {
+            const included = collection.memoryIds.includes(memory.id);
+            return (
+              <Pressable
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: included }}
+                key={collection.id}
+                onPress={() => void toggleMemory(collection, memory.id)}
+                style={({ pressed }) => [
+                  styles.collectionChoice,
+                  {
+                    borderColor: included ? colors.accent : colors.border,
+                    backgroundColor: included ? colors.surfaceRaised : colors.surface,
+                  },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <AppText tone={included ? 'accent' : 'muted'} variant="label">
+                  {collection.name}
+                </AppText>
+                <AppText tone="subtle" variant="caption">
+                  {included ? t('detail.inCollection') : t('detail.addCollection')}
+                </AppText>
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
+
+      <EditorialSection index="04" title={t('detail.custody')} />
       <LocalOnlyBanner />
     </Screen>
   );
@@ -317,5 +424,31 @@ const styles = StyleSheet.create({
   soundCopy: {
     flex: 1,
     gap: spacing.xs,
+  },
+  resonanceActions: {
+    gap: spacing.sm,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.xxl,
+  },
+  collectionEmpty: {
+    gap: spacing.lg,
+    marginVertical: spacing.lg,
+  },
+  collectionChoices: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginVertical: spacing.lg,
+    marginBottom: spacing.xxl,
+  },
+  collectionChoice: {
+    minWidth: 156,
+    minHeight: 72,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    justifyContent: 'center',
+    gap: spacing.xxs,
   },
 });

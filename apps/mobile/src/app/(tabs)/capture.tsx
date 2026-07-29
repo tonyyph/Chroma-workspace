@@ -1,7 +1,7 @@
 import { analytics } from '@/infrastructure/dependencies';
 import { useCaptureStore } from '@/store/captureStore';
 import { toDraftPhoto } from '@/utils/photo';
-import { spacing } from '@chromawave/design-tokens';
+import { radius, shadow, spacing } from '@chromawave/design-tokens';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -21,7 +21,7 @@ type CaptureSource = 'library' | 'camera';
 
 export default function CaptureScreen() {
   const setPhoto = useCaptureStore((state) => state.setPhoto);
-  const { preferences, t } = usePreferences();
+  const { colors, preferences, t } = usePreferences();
   const [status, setStatus] = useState<CaptureStatus>('idle');
   const [canAskAgain, setCanAskAgain] = useState(true);
   const [deniedSource, setDeniedSource] = useState<CaptureSource>('library');
@@ -84,7 +84,9 @@ export default function CaptureScreen() {
       />
       <LocalOnlyBanner />
 
-      <ChromaticArtwork caption={t('capture.caption')} compact />
+      <View style={[styles.artifact, shadow.hero]}>
+        <ChromaticArtwork caption={t('capture.caption')} compact />
+      </View>
 
       {status === 'denied' ? (
         <StateView
@@ -123,7 +125,13 @@ export default function CaptureScreen() {
         />
       ) : null}
       {status === 'idle' || status === 'requesting' ? (
-        <View style={styles.action}>
+        <View
+          style={[
+            styles.action,
+            shadow.raised,
+            { backgroundColor: colors.canvasElevated, borderColor: colors.border },
+          ]}
+        >
           <Button
             accessibilityHint={t('capture.cameraHint')}
             label={t('capture.camera')}
@@ -148,9 +156,16 @@ export default function CaptureScreen() {
 }
 
 const styles = StyleSheet.create({
+  artifact: {
+    borderRadius: radius.xl,
+  },
   action: {
     gap: spacing.sm,
-    marginTop: spacing.xl,
+    marginTop: -spacing.lg,
+    marginHorizontal: spacing.md,
+    padding: spacing.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.xl,
   },
   center: {
     textAlign: 'center',

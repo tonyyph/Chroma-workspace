@@ -1,5 +1,5 @@
 import { deriveMemoryInsights } from '@chromawave/domain';
-import { spacing } from '@chromawave/design-tokens';
+import { radius, shadow, spacing } from '@chromawave/design-tokens';
 import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -42,7 +42,7 @@ export default function TodayScreen() {
   return (
     <Screen>
       <View style={styles.masthead}>
-        <BrandMark size={42} />
+        <BrandMark size={48} />
         <View style={styles.mastheadCopy}>
           <AppText tone="accent" variant="caption">
             {t('today.edition')}
@@ -57,7 +57,7 @@ export default function TodayScreen() {
         <AppText italic tone="muted" variant="heading">
           {t('today.kicker')}
         </AppText>
-        <AppText variant="display">{t('today.title')}</AppText>
+        <AppText variant="title">{t('today.title')}</AppText>
         <AppText tone="muted">{t('today.body')}</AppText>
       </View>
 
@@ -75,8 +75,10 @@ export default function TodayScreen() {
 
       {status === 'ready' && memories.length === 0 ? (
         <>
-          <ChromaticArtwork caption={t('today.firstCaption')} />
-          <View style={styles.emptyCopy}>
+          <View style={[styles.artifact, shadow.hero]}>
+            <ChromaticArtwork caption={t('today.firstCaption')} compact />
+          </View>
+          <View style={[styles.emptyCopy, { backgroundColor: colors.surface }]}>
             <LocalOnlyBanner />
             <Button label={t('today.firstAction')} onPress={() => router.push('/(tabs)/capture')} />
           </View>
@@ -85,16 +87,23 @@ export default function TodayScreen() {
 
       {status === 'ready' && latest ? (
         <>
-          <ChromaticArtwork
-            caption={t('today.leadingCaption', {
-              mood: insights.dominantMood ?? latest.palette.mood,
-            })}
-            colors={insights.recentColors}
-          />
+          <View style={[styles.artifact, shadow.hero]}>
+            <ChromaticArtwork
+              caption={t('today.leadingCaption', {
+                mood: insights.dominantMood ?? latest.palette.mood,
+              })}
+              colors={insights.recentColors}
+              compact
+            />
+          </View>
 
           <View
             accessibilityLabel={`${insights.total} Memories, ${insights.moodDiversity} moods, ${insights.favoriteCount} favorites`}
-            style={[styles.insights, { borderColor: colors.border }]}
+            style={[
+              styles.insights,
+              shadow.raised,
+              { borderColor: colors.border, backgroundColor: colors.canvasElevated },
+            ]}
           >
             <Insight label={t('today.memories')} value={String(insights.total).padStart(2, '0')} />
             <Insight
@@ -104,6 +113,23 @@ export default function TodayScreen() {
             <Insight
               label={t('common.collected')}
               value={String(insights.favoriteCount).padStart(2, '0')}
+            />
+          </View>
+
+          <View style={[styles.atelierInvitation, { borderColor: colors.border }]}>
+            <View style={styles.atelierCopy}>
+              <AppText tone="accent" variant="caption">
+                {t('today.atelierEyebrow')}
+              </AppText>
+              <AppText italic variant="heading">
+                {t('today.atelierTitle')}
+              </AppText>
+              <AppText tone="muted">{t('today.atelierBody')}</AppText>
+            </View>
+            <Button
+              label={t('today.atelierAction')}
+              onPress={() => router.push('/(tabs)/atelier')}
+              variant="secondary"
             />
           </View>
 
@@ -154,17 +180,27 @@ const styles = StyleSheet.create({
   },
   heroCopy: {
     gap: spacing.sm,
-    marginBottom: spacing.xl,
+    maxWidth: 620,
+    marginBottom: spacing.xxl,
+  },
+  artifact: {
+    borderRadius: radius.xl,
   },
   emptyCopy: {
     gap: spacing.md,
-    marginTop: spacing.xl,
+    marginTop: -spacing.lg,
+    marginHorizontal: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radius.lg,
   },
   insights: {
     flexDirection: 'row',
-    marginVertical: spacing.xxl,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginTop: -spacing.lg,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.xxl,
+    paddingHorizontal: spacing.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.lg,
   },
   insight: {
     flex: 1,
@@ -174,5 +210,15 @@ const styles = StyleSheet.create({
   continue: {
     gap: spacing.lg,
     marginBottom: spacing.lg,
+  },
+  atelierInvitation: {
+    marginBottom: spacing.xxl,
+    paddingVertical: spacing.xl,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: spacing.lg,
+  },
+  atelierCopy: {
+    gap: spacing.sm,
   },
 });

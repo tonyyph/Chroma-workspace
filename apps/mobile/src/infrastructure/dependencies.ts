@@ -10,9 +10,11 @@ import { MockMusicProvider } from './MockMusicProvider';
 
 export const analytics = new DevelopmentAnalytics(__DEV__);
 export const assetStore = new ExpoMemoryAssetStore();
+export const collectionRepository = new AsyncStorageCollectionRepository();
 export const memoryRepository = new AsyncStorageMemoryRepository();
 export const musicProvider = new MockMusicProvider();
 export const paletteExtractor = new ExpoPaletteExtractor();
 export const preferencesRepository = new AsyncStoragePreferencesRepository();
 export const hapticsService = new ExpoHapticsService();
 export const notificationScheduler = new ExpoNotificationScheduler();
+import { AsyncStorageCollectionRepository } from './AsyncStorageCollectionRepository';

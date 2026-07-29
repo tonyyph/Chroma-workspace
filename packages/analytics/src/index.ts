@@ -25,6 +25,13 @@ export type AnalyticsEventMap = {
     permission: 'granted' | 'denied' | 'undetermined';
   };
   settings_reminder_time_changed: { reminderTime: ReminderTime };
+  atelier_opened: { memoryCount: number };
+  collection_created: { collectionId: string };
+  collection_memory_changed: { collectionId: string; included: boolean };
+  recap_viewed: { monthKey: string };
+  palette_lab_viewed: { memoryCount: number };
+  memory_shared: { memoryId: string; format: 'text-board' };
+  memory_remixed: { memoryId: string; trackId: string };
 };
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;

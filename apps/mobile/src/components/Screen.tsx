@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingTop: spacing.md,
-    paddingBottom: 120,
+    paddingBottom: 156,
   },
   centered: {
     width: '100%',

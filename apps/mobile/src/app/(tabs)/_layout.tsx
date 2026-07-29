@@ -1,32 +1,16 @@
-import { spacing } from '@chromawave/design-tokens';
 import { Tabs } from 'expo-router';
 
+import { FloatingDock } from '@/components/FloatingDock';
 import { usePreferences } from '@/providers/PreferencesProvider';
 
 export default function TabsLayout() {
   const { colors, t } = usePreferences();
   return (
     <Tabs
+      tabBar={(props) => <FloatingDock {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.textSubtle,
-        tabBarIconStyle: { display: 'none' },
-        tabBarLabelStyle: {
-          fontFamily: 'SourceSerif4_600SemiBold',
-          fontSize: 12,
-          letterSpacing: 0.8,
-          textTransform: 'uppercase',
-        },
-        tabBarStyle: {
-          position: 'absolute',
-          height: 72,
-          paddingTop: spacing.xs,
-          paddingBottom: spacing.sm,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-          backgroundColor: colors.canvas,
-        },
+        sceneStyle: { backgroundColor: colors.canvas },
       }}
     >
       <Tabs.Screen
@@ -48,6 +32,13 @@ export default function TabsLayout() {
         options={{
           title: t('tabs.capture'),
           tabBarAccessibilityLabel: t('tabs.capture'),
+        }}
+      />
+      <Tabs.Screen
+        name="atelier"
+        options={{
+          title: t('tabs.atelier'),
+          tabBarAccessibilityLabel: t('tabs.atelier'),
         }}
       />
       <Tabs.Screen

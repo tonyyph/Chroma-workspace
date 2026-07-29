@@ -1,8 +1,8 @@
 import type { Language, ReminderTime, ThemeId } from '@chromawave/domain';
-import { radius, spacing, themePalettes, touchTarget } from '@chromawave/design-tokens';
+import { radius, shadow, spacing, themePalettes, touchTarget } from '@chromawave/design-tokens';
 import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
-import { Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
@@ -32,7 +32,9 @@ function PreferenceSwitch({
     <View style={[styles.preferenceRow, { borderBottomColor: colors.border }]}>
       <View style={styles.preferenceCopy}>
         <AppText variant="label">{title}</AppText>
-        <AppText tone="muted">{body}</AppText>
+        <AppText tone="muted" variant="caption">
+          {body}
+        </AppText>
       </View>
       <Switch
         accessibilityLabel={title}
@@ -159,6 +161,39 @@ export default function SettingsScreen() {
         title={t('settings.title')}
       />
 
+      <View
+        style={[
+          styles.atmosphere,
+          shadow.hero,
+          { backgroundColor: colors.surfaceRaised, borderColor: colors.border },
+        ]}
+      >
+        <View style={styles.atmosphereCopy}>
+          <AppText tone="accent" variant="caption">
+            {t('settings.currentAtmosphere')}
+          </AppText>
+          <AppText italic variant="title">
+            {t(`settings.theme.${preferences.theme}`)}
+          </AppText>
+          <AppText tone="muted" variant="caption">
+            {t('settings.currentAtmosphereBody')}
+          </AppText>
+        </View>
+        <View style={styles.atmosphereSpectrum}>
+          {[colors.brandCoral, colors.brandViolet, colors.brandChartreuse, colors.accent].map(
+            (backgroundColor, index) => (
+              <View
+                key={backgroundColor}
+                style={[
+                  styles.atmosphereBand,
+                  { backgroundColor, height: index % 2 === 0 ? 94 : 72 },
+                ]}
+              />
+            ),
+          )}
+        </View>
+      </View>
+
       <View style={styles.section}>
         <EditorialSection index="01" title={t('settings.experience')} />
         <PreferenceSwitch
@@ -226,17 +261,23 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <EditorialSection index="03" title={t('settings.appearance')} />
         <AppText tone="muted">{t('settings.appearanceBody')}</AppText>
-        <View accessibilityRole="radiogroup" style={styles.themeGrid}>
-          {themes.map((theme) => (
-            <ThemeCard
-              disabled={disabled}
-              key={theme}
-              onPress={() => void setTheme(theme)}
-              selected={preferences.theme === theme}
-              theme={theme}
-            />
-          ))}
-        </View>
+        <ScrollView
+          contentContainerStyle={styles.themeGrid}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          <View accessibilityRole="radiogroup" style={styles.themeRow}>
+            {themes.map((theme) => (
+              <ThemeCard
+                disabled={disabled}
+                key={theme}
+                onPress={() => void setTheme(theme)}
+                selected={preferences.theme === theme}
+                theme={theme}
+              />
+            ))}
+          </View>
+        </ScrollView>
       </View>
 
       <View style={styles.section}>
@@ -266,12 +307,36 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
+  atmosphere: {
+    minHeight: 270,
+    padding: spacing.lg,
+    marginBottom: spacing.xxxl,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.xl,
+    overflow: 'hidden',
+    justifyContent: 'space-between',
+    gap: spacing.lg,
+  },
+  atmosphereCopy: {
+    maxWidth: 420,
+    gap: spacing.sm,
+  },
+  atmosphereSpectrum: {
+    height: 100,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: spacing.xs,
+  },
+  atmosphereBand: {
+    flex: 1,
+    borderRadius: radius.pill,
+  },
   section: {
     gap: spacing.md,
     marginBottom: spacing.xxl,
   },
   preferenceRow: {
-    minHeight: 92,
+    minHeight: 78,
     paddingVertical: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
@@ -301,13 +366,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   themeGrid: {
+    paddingRight: spacing.lg,
+  },
+  themeRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   themeCard: {
-    width: '48%',
-    minHeight: 142,
+    width: 210,
+    minHeight: 132,
     padding: spacing.md,
     borderWidth: 1,
     borderRadius: radius.lg,

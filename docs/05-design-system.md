@@ -29,3 +29,32 @@ every surface.
 The shared component set includes `Screen`, `AppText`, `Button`, `PaletteStrip`,
 `MemoryCard`, `ChromaticArtwork`, `EditorialSection`, `FavoriteButton`,
 `FilterChip`, `SearchField`, and reusable state views.
+
+## Exhibition direction
+
+The second visual cycle moves from a sequence of similarly weighted cards to an
+exhibition composition:
+
+- one dominant editorial statement per viewport;
+- artwork fields that can carry asymmetry and overlap;
+- raised information trays with a restrained border and long, soft shadow;
+- numbered sections and quiet rules instead of repeated containers;
+- a fixed floating dock whose center Capture action breaks the frame.
+
+Elevation has three named levels: `raised` for controls and trays, `hero` for
+artwork and atmosphere panels, and `dock` for the navigation shell. Elevation is
+reserved for hierarchy, never applied to every section.
+
+The dock always presents five stable destinations: Today, Archive, Capture,
+Atelier, and Settings. Capture is the central circular interruption; the other
+destinations use geometric glyphs and text so the navigation remains recognizable
+without depending on color.
+
+## Curated atmospheres
+
+The six complete semantic atmospheres are Obsidian Atelier, Porcelain Ink,
+Rosewood Salon, Midnight Lapis, Forest Patina, and Aubergine Gold. Each atmosphere
+redefines canvas, raised surfaces, text hierarchy, border, focus, status, and
+navigation colors as one system. Dynamic colors extracted from a Memory remain
+inside artwork, palette rails, and small accents, so a photograph cannot reduce
+body-copy contrast.
