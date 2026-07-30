@@ -1,21 +1,24 @@
 import 'react-native-gesture-handler';
 
+import { ui } from '@chromawave/design-tokens';
 import {
-  PlayfairDisplay_400Regular_Italic,
-  PlayfairDisplay_500Medium,
-} from '@expo-google-fonts/playfair-display';
+  IBMPlexMono_400Regular,
+  IBMPlexMono_500Medium,
+  IBMPlexMono_600SemiBold,
+} from '@expo-google-fonts/ibm-plex-mono';
 import {
-  SourceSerif4_400Regular,
-  SourceSerif4_500Medium,
-  SourceSerif4_600SemiBold,
-} from '@expo-google-fonts/source-serif-4';
+  SpaceGrotesk_400Regular,
+  SpaceGrotesk_500Medium,
+  SpaceGrotesk_600SemiBold,
+  SpaceGrotesk_700Bold,
+} from '@expo-google-fonts/space-grotesk';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback } from 'react';
 
-import { PreferencesProvider, usePreferences } from '@/providers/PreferencesProvider';
+import { PreferencesProvider } from '@/providers/PreferencesProvider';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -25,11 +28,13 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    PlayfairDisplay_400Regular_Italic,
-    PlayfairDisplay_500Medium,
-    SourceSerif4_400Regular,
-    SourceSerif4_500Medium,
-    SourceSerif4_600SemiBold,
+    SpaceGrotesk_400Regular,
+    SpaceGrotesk_500Medium,
+    SpaceGrotesk_600SemiBold,
+    SpaceGrotesk_700Bold,
+    IBMPlexMono_400Regular,
+    IBMPlexMono_500Medium,
+    IBMPlexMono_600SemiBold,
   });
   const handlePreferencesReady = useCallback(() => {
     void SplashScreen.hideAsync();
@@ -45,26 +50,26 @@ export default function RootLayout() {
 }
 
 function AppNavigator() {
-  const { colors, mode } = usePreferences();
-
   return (
     <>
-      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style="light" />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: colors.canvas },
+          contentStyle: { backgroundColor: ui.bg.base },
           animation: 'fade',
         }}
       >
         <Stack.Screen name="index" />
-        <Stack.Screen name="onboarding" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="capture/review" />
-        <Stack.Screen name="capture/palette" />
-        <Stack.Screen name="capture/pairing" />
-        <Stack.Screen name="capture/compose" />
-        <Stack.Screen name="memory/[id]" />
+        <Stack.Screen name="onboarding" />
+        <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
+        <Stack.Screen
+          name="capture"
+          options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
+        />
+        <Stack.Screen name="capture/result" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="palette/[id]" />
       </Stack>
     </>
   );

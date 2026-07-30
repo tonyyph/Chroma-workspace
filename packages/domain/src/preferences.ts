@@ -50,7 +50,36 @@ export interface NotificationScheduler {
   cancel(identifier: string): Promise<void>;
 }
 
+/**
+ * BUILD KIT · 05 · HAPTIC MAP. Every haptic in the product is one of these eight
+ * moments, named after the moment rather than the effect, so a screen cannot
+ * invent a new buzz. The kit's rule — "Never haptic on scroll, tab switch, or
+ * plain navigation" — is enforced by there being no key for those.
+ */
+export type HapticMoment =
+  | 'shutterPress'
+  | 'colourPinned'
+  | 'extractionComplete'
+  | 'paletteSaved'
+  | 'sliderDetent'
+  | 'refreshThreshold'
+  | 'contrastFail'
+  | 'deleteConfirmed';
+
 export interface HapticsService {
+  /** Fires the haptic mapped to a moment, or nothing if the user reduced them. */
+  fire(moment: HapticMoment): Promise<void>;
   selection(): Promise<void>;
   success(): Promise<void>;
+}
+
+/**
+ * BUILD KIT · 05 · SOUND · "opt-in, off by default". The three-note rise maps to
+ * the three bands: violet → cyan → coral, a major triad.
+ */
+export type SoundCue = 'shutter' | 'extractDone' | 'save' | 'error';
+
+export interface SoundService {
+  readonly enabled: boolean;
+  play(cue: SoundCue): Promise<void>;
 }

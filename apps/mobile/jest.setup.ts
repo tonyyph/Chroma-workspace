@@ -24,3 +24,19 @@ const { setUpTests } =
   jest.requireMock<typeof import('react-native-reanimated')>('react-native-reanimated');
 
 setUpTests();
+
+// MMKV is a Nitro module with no JS fallback under Jest; the repositories are
+// tested against an in-memory KeyValueStorage, so the mock only has to exist.
+jest.mock('react-native-mmkv', () => ({
+  createMMKV: () => {
+    const store = new Map<string, string>();
+    return {
+      getString: (key: string) => store.get(key),
+      set: (key: string, value: string) => store.set(key, value),
+      remove: (key: string) => store.delete(key),
+      contains: (key: string) => store.has(key),
+      clearAll: () => store.clear(),
+      getAllKeys: () => [...store.keys()],
+    };
+  },
+}));

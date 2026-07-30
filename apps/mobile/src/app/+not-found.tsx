@@ -1,19 +1,32 @@
-import { router } from 'expo-router';
+import { space } from '@chromawave/design-tokens';
+import { useRouter } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 
-import { Screen } from '@/components/Screen';
-import { StateView } from '@/components/StateView';
 import { usePreferences } from '@/providers/PreferencesProvider';
+import { Button, EmptyGlyph, Screen, Text } from '@/ui';
 
-export default function NotFoundScreen() {
+export default function NotFound() {
+  const router = useRouter();
   const { t } = usePreferences();
   return (
-    <Screen scroll={false}>
-      <StateView
-        actionLabel={t('common.notFoundAction')}
-        body={t('common.notFoundBody')}
-        onAction={() => router.replace('/(tabs)')}
-        title={t('common.notFoundTitle')}
-      />
+    <Screen>
+      <View style={styles.body}>
+        <EmptyGlyph kind="no-results" />
+        <Text variant="section">{t('state.nothing.title')}</Text>
+        <Text style={styles.copy} tone="secondary" variant="body">
+          {t('state.nothing.body')}
+        </Text>
+        <Button
+          label={t('state.nothing.action')}
+          onPress={() => router.replace('/(tabs)')}
+          size="xs"
+        />
+      </View>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  body: { alignItems: 'center', gap: space.md, paddingTop: space.xl, paddingHorizontal: space.lg },
+  copy: { textAlign: 'center' },
+});

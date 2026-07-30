@@ -4,17 +4,20 @@
     "slug": "chromawave",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/brand/ios/AppIcon.appiconset/chromawave-primary-1024.png",
+    "icon": "./assets/brand/ios/AppIcon.appiconset/icon-primary-1024.png",
     "scheme": "chromawave",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": {
-        "light": "./assets/brand/ios/AppIcon.appiconset/chromawave-primary-1024.png",
-        "dark": "./assets/brand/ios/AppIcon.appiconset/chromawave-dark-1024.png",
-        "tinted": "./assets/brand/ios/AppIcon.appiconset/chromawave-tinted-1024.png"
+        "light": "./assets/brand/ios/AppIcon.appiconset/icon-primary-1024.png",
+        "dark": "./assets/brand/ios/AppIcon.appiconset/icon-dark-1024.png",
+        "tinted": "./assets/brand/ios/AppIcon.appiconset/icon-tinted-1024.png"
       },
       "supportsTablet": true,
-      "bundleIdentifier": "com.chromawave.app"
+      "bundleIdentifier": "com.chromawave.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "CHROMAWAVE uses the camera to read colour from what you point at. Frames are analysed on device and discarded unless you save a capture."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +26,8 @@
         "monochromeImage": "./assets/brand/android/ic_launcher_monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.chromawave.app"
+      "package": "com.chromawave.app",
+      "permissions": ["android.permission.CAMERA"]
     },
     "web": {
       "output": "static",
@@ -52,8 +56,8 @@
         "expo-image-picker",
         {
           "photosPermission": "Allow CHROMAWAVE to choose a photo only when you start a Memory.",
-          "cameraPermission": "Allow CHROMAWAVE to take a photo for a new private Memory.",
-          "microphonePermission": false
+          "microphonePermission": false,
+          "cameraPermission": "CHROMAWAVE uses the camera to read colour from what you point at. Frames are analysed on device and discarded unless you save a capture."
         }
       ],
       [

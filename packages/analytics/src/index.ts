@@ -1,22 +1,34 @@
-import type { PaletteMood } from '@chromawave/domain';
-import type { Language, ReminderTime, ThemeId } from '@chromawave/domain';
+import type {
+  ColorRole,
+  Language,
+  LibraryFilter,
+  PaletteSource,
+  ReminderTime,
+  ThemeId,
+} from '@chromawave/domain';
 
+/**
+ * BUILD KIT · 07 · ANALYTICS EVENTS. The eight events the kit names are the
+ * first block below, with their exact property shapes; the rest are this app's
+ * own additions and are marked as such.
+ */
 export type AnalyticsEventMap = {
+  capture_started: { source: PaletteSource };
+  extraction_completed: { ms: number; confidence: number; colorCount: number };
+  palette_saved: { tuned: boolean; source: PaletteSource };
+  palette_tuned: { band: ColorRole; property: 'hue' | 'saturation' | 'luminance'; delta: number };
+  export_performed: { format: ExportFormat; isPro: boolean };
+  paywall_shown: { trigger: PaywallTrigger };
+  paywall_converted: { plan: 'monthly' | 'yearly' };
+  contrast_check_failed: { ratio: number };
+  scan_pins_added: { count: number };
+
+  /* --- beyond the kit's list, kept because existing surfaces emit them --- */
   onboarding_started: Record<string, never>;
   onboarding_completed: { stepCount: number };
-  capture_started: { source: 'library' | 'camera' };
-  capture_completed: { source: 'library' | 'camera'; durationMs: number };
-  palette_extracted: { colorCount: number; durationMs: number; mood: PaletteMood };
-  pairing_requested: { mood: PaletteMood; provider: 'mock' | 'spotify' };
-  pairing_accepted: { provider: 'mock' | 'spotify'; trackId: string };
-  memory_saved: { memoryId: string; mood: PaletteMood; hasNote: boolean };
-  memory_detail_opened: { memoryId: string };
-  memory_favorite_changed: { memoryId: string; isFavorite: boolean };
-  library_filter_changed: {
-    favoritesOnly: boolean;
-    mood: PaletteMood | null;
-    hasQuery: boolean;
-  };
+  palette_detail_opened: { paletteId: string };
+  palette_pinned_changed: { paletteId: string; isPinned: boolean };
+  library_filter_changed: { filter: LibraryFilter };
   settings_haptics_changed: { enabled: boolean };
   settings_language_changed: { language: Language };
   settings_theme_changed: { theme: ThemeId };
@@ -26,14 +38,22 @@ export type AnalyticsEventMap = {
     permission: 'granted' | 'denied' | 'undetermined';
   };
   settings_reminder_time_changed: { reminderTime: ReminderTime };
-  atelier_opened: { memoryCount: number };
+  explore_opened: Record<string, never>;
   collection_created: { collectionId: string };
-  collection_memory_changed: { collectionId: string; included: boolean };
+  collection_palette_changed: { collectionId: string; included: boolean };
   recap_viewed: { monthKey: string };
-  palette_lab_viewed: { memoryCount: number };
-  memory_shared: { memoryId: string; format: 'text-board' };
-  memory_remixed: { memoryId: string; trackId: string };
+  gradient_studio_opened: { paletteId: string };
+  palette_shared: { paletteId: string; format: ShareRatio };
 };
+
+/** G7's four code targets, plus the palette formats from B4's export row. */
+export type ExportFormat = 'css' | 'tailwind' | 'swift' | 'json' | 'svg' | 'ase' | 'png' | 'theme';
+
+/** Where the paywall was entered from, so conversion can be attributed. */
+export type PaywallTrigger =
+  'merge-set' | 'watermark' | 'json-export' | 'semantic-names' | 'palette-limit' | 'unknown';
+
+export type ShareRatio = '1x1' | '4x5' | '9x16' | '1.91x1';
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;
 

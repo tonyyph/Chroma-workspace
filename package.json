@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "corepack pnpm --filter @chromawave/mobile start",
+    "prebuild:ios": "corepack pnpm --filter @chromawave/mobile prebuild:ios",
     "ios": "corepack pnpm --filter @chromawave/mobile ios",
     "android": "corepack pnpm --filter @chromawave/mobile android",
     "brand:assets": "corepack pnpm --filter @chromawave/brand-assets build",
@@ -20,5 +21,10 @@
   },
   "devDependencies": {
     "prettier": "^3.6.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@shopify/react-native-skia"
+    ]
   }
 }

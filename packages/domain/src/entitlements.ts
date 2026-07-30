@@ -9,7 +9,7 @@ export type Entitlement =
   | 'premium_animated_export'
   | 'printable_palette'
   | 'spotify_playlist_export'
-  | 'unlimited_memories'
+  | 'unlimited_palettes'
   | 'unlimited_pairings';
 
 const tierEntitlements: Record<SubscriptionTier, ReadonlySet<Entitlement>> = {
@@ -19,7 +19,7 @@ const tierEntitlements: Record<SubscriptionTier, ReadonlySet<Entitlement>> = {
     'ai_pairing',
     'custom_mood_tags',
     'high_quality_export',
-    'unlimited_memories',
+    'unlimited_palettes',
     'unlimited_pairings',
   ]),
   premium: new Set([
@@ -30,7 +30,7 @@ const tierEntitlements: Record<SubscriptionTier, ReadonlySet<Entitlement>> = {
     'premium_animated_export',
     'printable_palette',
     'spotify_playlist_export',
-    'unlimited_memories',
+    'unlimited_palettes',
     'unlimited_pairings',
   ]),
 };
@@ -38,10 +38,10 @@ const tierEntitlements: Record<SubscriptionTier, ReadonlySet<Entitlement>> = {
 export const hasEntitlement = (tier: SubscriptionTier, entitlement: Entitlement): boolean =>
   tierEntitlements[tier].has(entitlement);
 
-export const canSaveMemory = (tier: SubscriptionTier, currentCount: number): boolean =>
-  hasEntitlement(tier, 'unlimited_memories') || currentCount < 10;
+export const canSavePalette = (tier: SubscriptionTier, currentCount: number): boolean =>
+  hasEntitlement(tier, 'unlimited_palettes') || currentCount < 10;
 
-export const canSavePairing = (tier: SubscriptionTier, currentCount: number): boolean =>
+export const canSaveCollection = (tier: SubscriptionTier, currentCount: number): boolean =>
   hasEntitlement(tier, 'unlimited_pairings') || currentCount < 5;
 
 export interface EntitlementProvider {

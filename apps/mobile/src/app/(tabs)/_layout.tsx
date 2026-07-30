@@ -1,53 +1,49 @@
-import { Tabs } from 'expo-router';
+import { ui } from '@chromawave/design-tokens';
+import { Tabs, useRouter } from 'expo-router';
 
-import { FloatingDock } from '@/components/FloatingDock';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { TabBar, type TabKey } from '@/ui';
 
-export default function TabsLayout() {
-  const { colors, t } = usePreferences();
+const routeForTab: Record<TabKey, string> = {
+  library: 'index',
+  explore: 'explore',
+  sets: 'sets',
+  you: 'you',
+};
+
+const tabForRoute: Record<string, TabKey> = {
+  index: 'library',
+  explore: 'explore',
+  sets: 'sets',
+  you: 'you',
+};
+
+/**
+ * FLOW C · the floating bar with the mark centred as the capture button.
+ * `expo-router`'s Tabs owns the routes; the bar is ours because the design puts
+ * a raised 56pt action in the middle of the row, which the stock tab bar has no
+ * slot for.
+ */
+export default function TabLayout() {
+  const router = useRouter();
+
   return (
     <Tabs
-      tabBar={(props) => <FloatingDock {...props} />}
       screenOptions={{
         headerShown: false,
-        sceneStyle: { backgroundColor: colors.canvas },
+        sceneStyle: { backgroundColor: ui.bg.base },
       }}
+      tabBar={({ state, navigation }) => (
+        <TabBar
+          active={tabForRoute[state.routes[state.index]?.name ?? 'index'] ?? 'library'}
+          onCapture={() => router.push('/capture')}
+          onSelect={(key) => navigation.navigate(routeForTab[key] as never)}
+        />
+      )}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: t('tabs.today'),
-          tabBarAccessibilityLabel: t('tabs.today'),
-        }}
-      />
-      <Tabs.Screen
-        name="archive"
-        options={{
-          title: t('tabs.archive'),
-          tabBarAccessibilityLabel: t('tabs.archive'),
-        }}
-      />
-      <Tabs.Screen
-        name="capture"
-        options={{
-          title: t('tabs.capture'),
-          tabBarAccessibilityLabel: t('tabs.capture'),
-        }}
-      />
-      <Tabs.Screen
-        name="atelier"
-        options={{
-          title: t('tabs.atelier'),
-          tabBarAccessibilityLabel: t('tabs.atelier'),
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: t('tabs.settings'),
-          tabBarAccessibilityLabel: t('tabs.settings'),
-        }}
-      />
+      <Tabs.Screen name="index" options={{ title: 'Library' }} />
+      <Tabs.Screen name="explore" options={{ title: 'Explore' }} />
+      <Tabs.Screen name="sets" options={{ title: 'Sets' }} />
+      <Tabs.Screen name="you" options={{ title: 'You' }} />
     </Tabs>
   );
 }

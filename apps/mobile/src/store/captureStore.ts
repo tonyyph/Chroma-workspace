@@ -1,42 +1,96 @@
-import type { Palette, TrackRecommendation } from '@chromawave/domain';
+import {
+  makeColor,
+  paletteSchema,
+  type Color,
+  type Palette,
+  type PaletteSource,
+} from '@chromawave/domain';
+import * as Crypto from 'expo-crypto';
 import { create } from 'zustand';
 
-export type DraftPhoto = Readonly<{
-  uri: string;
-  width: number;
-  height: number;
-  mediaType: 'image/heic' | 'image/heif' | 'image/jpeg' | 'image/png' | 'image/webp';
-  extension: 'heic' | 'heif' | 'jpg' | 'png' | 'webp';
-}>;
-
-type CaptureState = {
-  photo: DraftPhoto | null;
-  palette: Palette | null;
-  recommendations: readonly TrackRecommendation[];
-  selectedRecommendation: TrackRecommendation | null;
-  note: string;
-  setPhoto: (photo: DraftPhoto) => void;
-  setPalette: (palette: Palette) => void;
-  setRecommendations: (recommendations: readonly TrackRecommendation[]) => void;
-  selectRecommendation: (recommendation: TrackRecommendation) => void;
-  setNote: (note: string) => void;
-  reset: () => void;
+/**
+ * The capture in flight between B1 and B2/B3.
+ *
+ * Route params carry strings, and a pending capture is an array of colours plus a
+ * frame path — so it lives here rather than being serialised through the URL.
+ * Cleared on save or discard, so a stale capture can never be committed twice.
+ */
+type PendingCapture = {
+  colors: readonly Color[];
+  photoUri: string | null;
+  deltaE: number;
+  confidence: number;
+  source: PaletteSource;
 };
 
-const initialState = {
-  photo: null,
-  palette: null,
-  recommendations: [],
-  selectedRecommendation: null,
-  note: '',
-} as const;
+type CaptureState = {
+  pending: PendingCapture | null;
+  begin: (capture: PendingCapture) => void;
+  /** Replaces the colours after a tune, keeping the frame and the read metrics. */
+  retune: (colors: readonly Color[]) => void;
+  discard: () => void;
+  /** Builds a valid `Palette` from the pending capture, or null if there is none. */
+  toPalette: (name: string) => Palette | null;
+};
 
-export const useCaptureStore = create<CaptureState>((set) => ({
-  ...initialState,
-  setPhoto: (photo) => set({ ...initialState, photo }),
-  setPalette: (palette) => set({ palette }),
-  setRecommendations: (recommendations) => set({ recommendations }),
-  selectRecommendation: (selectedRecommendation) => set({ selectedRecommendation }),
-  setNote: (note) => set({ note }),
-  reset: () => set(initialState),
+export const useCaptureStore = create<CaptureState>((set, get) => ({
+  pending: null,
+
+  begin: (capture) => set({ pending: capture }),
+
+  retune: (colors) =>
+    set((state) => (state.pending ? { pending: { ...state.pending, colors } } : state)),
+
+  discard: () => set({ pending: null }),
+
+  toPalette: (name) => {
+    const pending = get().pending;
+    if (!pending || pending.colors.length < 2) return null;
+
+    const now = new Date().toISOString();
+    // Weights come from the extractor already summing to one, but a retune can
+    // round them; normalise here so the schema's invariant always holds.
+    const colors = normalise(pending.colors);
+
+    const candidate = {
+      schemaVersion: 1 as const,
+      id: Crypto.randomUUID(),
+      name: name.trim() || 'Untitled capture',
+      createdAt: now,
+      capturedAt: now,
+      source: pending.source,
+      colors,
+      tags: [],
+      location: null,
+      photoUri: pending.photoUri,
+      deltaE: Math.min(100, Math.max(0, pending.deltaE)),
+      confidence: Math.min(1, Math.max(0, pending.confidence)),
+      space: 'srgb' as const,
+      tuned: false,
+      setIds: [],
+      isPinned: false,
+    };
+
+    const parsed = paletteSchema.safeParse(candidate);
+    return parsed.success ? parsed.data : null;
+  },
 }));
+
+/** Rescales weights to sum to one, pushing any remainder onto the dominant. */
+function normalise(colors: readonly Color[]): Color[] {
+  const total = colors.reduce((sum, color) => sum + color.weight, 0) || 1;
+  const scaled = colors.map((color) =>
+    makeColor(
+      color.hex,
+      Math.round((color.weight / total) * 1000) / 1000,
+      color.role,
+      color.locked,
+    ),
+  );
+  const drift = 1 - scaled.reduce((sum, color) => sum + color.weight, 0);
+  const first = scaled[0];
+  if (first) {
+    scaled[0] = { ...first, weight: Math.round((first.weight + drift) * 1000) / 1000 };
+  }
+  return scaled;
+}

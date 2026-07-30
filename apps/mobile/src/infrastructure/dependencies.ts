@@ -1,20 +1,26 @@
 import { DevelopmentAnalytics } from '@chromawave/analytics';
 
-import { AsyncStorageCollectionRepository } from './AsyncStorageCollectionRepository';
-import { AsyncStorageMemoryRepository } from './AsyncStorageMemoryRepository';
-import { AsyncStoragePreferencesRepository } from './AsyncStoragePreferencesRepository';
+import { StoredPaletteRepository } from './StoredPaletteRepository';
+import { StoredPreferencesRepository } from './StoredPreferencesRepository';
+import { LEGACY_KEYS, MmkvStorage } from './MmkvStorage';
 import { ExpoHapticsService } from './ExpoHapticsService';
-import { ExpoMemoryAssetStore } from './ExpoMemoryAssetStore';
 import { ExpoNotificationScheduler } from './ExpoNotificationScheduler';
-import { ExpoPaletteExtractor } from './ExpoPaletteExtractor';
-import { MockMusicProvider } from './MockMusicProvider';
+import { ExpoSoundService } from './ExpoSoundService';
 
 export const analytics = new DevelopmentAnalytics(__DEV__);
-export const assetStore = new ExpoMemoryAssetStore();
-export const collectionRepository = new AsyncStorageCollectionRepository();
-export const memoryRepository = new AsyncStorageMemoryRepository();
-export const musicProvider = new MockMusicProvider();
-export const paletteExtractor = new ExpoPaletteExtractor();
-export const preferencesRepository = new AsyncStoragePreferencesRepository();
+
+/**
+ * One MMKV instance behind every repository — BUILD KIT · 08 names it as the
+ * local-first store. The repositories are unchanged: they were already written
+ * against `KeyValueStorage`, which is what made this a one-line swap.
+ */
+export const storage = new MmkvStorage();
+
+/** Copies any data the previous AsyncStorage build wrote. Safe to call repeatedly. */
+export const migrateStorage = () => storage.migrateFromAsyncStorage(LEGACY_KEYS);
+
+export const paletteRepository = new StoredPaletteRepository(storage);
+export const preferencesRepository = new StoredPreferencesRepository(storage);
 export const hapticsService = new ExpoHapticsService();
 export const notificationScheduler = new ExpoNotificationScheduler();
+export const soundService = new ExpoSoundService();

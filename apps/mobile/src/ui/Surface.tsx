@@ -1,0 +1,122 @@
+import { round, size, space, ui, uiMotion } from '@chromawave/design-tokens';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  type ViewProps,
+  type ViewStyle,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+/**
+ * A card: `fill/card` over the ground with a hairline border. The recurring
+ * container behind list rows, stat tiles and panels.
+ */
+export function Card({
+  style,
+  onPress,
+  padded = true,
+  children,
+  ...props
+}: ViewProps & { onPress?: () => void; padded?: boolean }) {
+  const box = [styles.card, padded && styles.cardPadded, style];
+  if (!onPress) {
+    return (
+      <View {...props} style={box}>
+        {children}
+      </View>
+    );
+  }
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [...box, pressed && { opacity: uiMotion.listPress.opacity }]}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+/**
+ * A grouped list: rows separated by hairlines with no gap, clipped to the card
+ * radius. Used by the profile settings groups and the hex list in B4.
+ */
+export function CardGroup({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
+  const rows = Array.isArray(children) ? children.filter(Boolean) : [children];
+  return (
+    <View style={[styles.card, styles.group, style]}>
+      {rows.map((row, index) => (
+        <View key={index} style={[styles.groupRow, index < rows.length - 1 && styles.groupDivider]}>
+          {row}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** The base screen ground, with the status bar and home indicator respected. */
+export function Screen({
+  children,
+  scroll = true,
+  /** Extra bottom padding so content clears the floating tab bar. */
+  tabBarInset = false,
+  style,
+}: {
+  children: React.ReactNode;
+  scroll?: boolean;
+  tabBarInset?: boolean;
+  style?: ViewStyle;
+}) {
+  const insets = useSafeAreaInsets();
+  const paddingBottom = tabBarInset ? size.tabBar + space.sectionGap * 2 : space.xl;
+
+  if (!scroll) {
+    return <View style={[styles.screen, { paddingTop: insets.top }, style]}>{children}</View>;
+  }
+  return (
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
+      <ScrollView
+        contentContainerStyle={[{ paddingBottom: paddingBottom + insets.bottom }, style]}
+        showsVerticalScrollIndicator={false}
+      >
+        {children}
+      </ScrollView>
+    </View>
+  );
+}
+
+/** Standard 20pt horizontal gutter. */
+export function Gutter({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
+  return <View style={[styles.gutter, style]}>{children}</View>;
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: ui.bg.base,
+  },
+  gutter: {
+    paddingHorizontal: space.gutter,
+  },
+  card: {
+    backgroundColor: ui.fill.card,
+    borderWidth: 1,
+    borderColor: ui.border.hairline,
+    borderRadius: round.card,
+  },
+  cardPadded: {
+    padding: space.md,
+  },
+  group: {
+    overflow: 'hidden',
+  },
+  groupRow: {
+    paddingHorizontal: space.cardGap,
+    paddingVertical: space.cardGap,
+  },
+  groupDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(237,234,227,.07)',
+  },
+});

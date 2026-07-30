@@ -13,5 +13,10 @@
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "sharp": "^0.34.4"
+  },
+  "devDependencies": {
+    "@expo-google-fonts/space-grotesk": "^0.4.1",
+    "@types/opentype.js": "^1.3.10",
+    "opentype.js": "^2.0.0"
   }
 }

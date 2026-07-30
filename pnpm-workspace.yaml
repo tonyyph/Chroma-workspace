@@ -4,4 +4,5 @@ packages:
   - tools/*
 
 onlyBuiltDependencies:
+  - '@shopify/react-native-skia'
   - esbuild

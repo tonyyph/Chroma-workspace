@@ -8,7 +8,8 @@
  * The tree mirrors the section 09 EXPORT CHECKLIST. One mark, no alternates.
  */
 
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -16,6 +17,9 @@ import sharp from 'sharp';
 import { appIconSizes, buildForSize, builds, channelSizes, channels, tiers } from './builds.mjs';
 import { adaptiveForeground, geometryPlate, palette, symbol } from './mark.mjs';
 import { defaultConcurrency, runRenderJobs } from './pool.mjs';
+import { lottieFiles } from './lottie.mjs';
+import { soundNames, sounds } from './sound.mjs';
+import { wordmark, wordmarkVariants } from './wordmark.mjs';
 import {
   emptyGlyph,
   emptyGlyphNames,
@@ -83,7 +87,7 @@ function emitIcons(out) {
     for (const size of appIconSizes) {
       const build = buildForSize(variant, size);
       flatPng(
-        join(out, 'ios', 'AppIcon.appiconset', `chromawave-${variant}-${size}.png`),
+        join(out, 'ios', 'AppIcon.appiconset', `icon-${variant}-${size}.png`),
         build.draw(),
         size,
         build.background,
@@ -95,7 +99,7 @@ function emitIcons(out) {
   // system applies its own ramp rather than tinting an already-grey field.
   for (const size of [1024, 180, 120]) {
     alphaPng(
-      join(out, 'ios', 'AppIcon.appiconset', `chromawave-tinted-${size}.png`),
+      join(out, 'ios', 'AppIcon.appiconset', `icon-tinted-${size}.png`),
       symbol({ mono: true, k: 'TI' }),
       size,
     );
@@ -104,7 +108,7 @@ function emitIcons(out) {
   for (const [name, build] of Object.entries(channels)) {
     for (const size of channelSizes) {
       flatPng(
-        join(out, 'ios', 'channels', `chromawave-${name}-${size}.png`),
+        join(out, 'ios', 'channels', `icon-${name}-${size}.png`),
         build.draw(),
         size,
         build.background,
@@ -131,7 +135,7 @@ function emitIcons(out) {
   putSvg(join(out, 'web', 'favicon.svg'), builds.small.draw());
   flatPng(join(out, 'web', 'favicon-48.png'), builds.small.draw(), 48, builds.small.background);
   flatPng(
-    join(out, 'web', 'apple-touch-icon-180.png'),
+    join(out, 'web', 'apple-touch-180.png'),
     builds.primary.draw(),
     180,
     builds.primary.background,
@@ -194,6 +198,92 @@ function emitStates(out) {
   }
 }
 
+/* ------------------------------------------------------------------ lottie */
+
+/**
+ * BUILD KIT · 04. Every JSON ships with a static PNG poster frame of the same
+ * name, which is what the reduce-motion path renders instead of playing.
+ */
+function emitLottie(out) {
+  for (const [name, build] of Object.entries(lottieFiles)) {
+    const document = build();
+    putSvg(join(out, 'lottie', `${name}.json`), `${JSON.stringify(document)}\n`);
+
+    // Poster frames: the empty states already have a drawn glyph, the loops use
+    // the static three-band bar the reduce-motion rule prescribes.
+    const poster = name.startsWith('empty-')
+      ? emptyGlyph(posterGlyph(name))
+      : staticBandBar(document.w, document.h);
+    alphaPng(join(out, 'lottie', `${name}-poster.png`), poster, document.w * 2);
+  }
+}
+
+const posterGlyph = (name) =>
+  ({ 'empty-library': 1, 'empty-results': 2, 'empty-offline': 3, 'empty-loading': 4 })[name] ?? 1;
+
+/** The reduce-motion substitute: a static three-band bar, drawn flat. */
+function staticBandBar(width, height) {
+  const barHeight = Math.max(10, Math.round(height * 0.06));
+  const gap = Math.round(barHeight * 0.6);
+  const totalWidth = Math.round(width * 0.62);
+  const x = Math.round((width - totalWidth) / 2);
+  const bars = palette.bands
+    .map((colour, index) => {
+      const y = Math.round(height / 2 - (barHeight * 3 + gap * 2) / 2 + index * (barHeight + gap));
+      return `<rect x="${x}" y="${y}" width="${totalWidth}" height="${barHeight}" rx="${barHeight / 2}" fill="${colour}"/>`;
+    })
+    .join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">${bars}</svg>`;
+}
+
+/* ------------------------------------------------------------------- sound */
+
+/**
+ * BUILD KIT · 05. Synthesised, so the cues carry no licence.
+ *
+ * WAV is the source of truth; CAF is transcoded from it with macOS's own
+ * `afconvert` when available, because the kit asks for `.caf`. The WAV is kept
+ * alongside so a build on a machine without `afconvert` still has playable audio.
+ */
+async function emitSound(out) {
+  for (const name of soundNames) {
+    const wavPath = join(out, 'sound', `${name}.wav`);
+    await put(wavPath, sounds[name]());
+
+    const cafPath = join(out, 'sound', `${name}.caf`);
+    try {
+      // ima4 at 44.1kHz mono — the format iOS decodes cheapest for short cues.
+      execFileSync('afconvert', ['-f', 'caff', '-d', 'ima4@44100', '-c', '1', wavPath, cafPath], {
+        stdio: 'ignore',
+      });
+      const { size } = await stat(cafPath);
+      written.push({ path: relative(ROOT, cafPath), bytes: size });
+    } catch {
+      // afconvert is macOS-only. The WAV above is the fallback.
+      cafSkipped.push(name);
+    }
+  }
+}
+
+const cafSkipped = [];
+
+/* ---------------------------------------------------------------- wordmark */
+
+/**
+ * Section 6: `wordmark/horizontal · stacked · ink-1c (SVG + PNG@3x)`.
+ *
+ * Real outlines, extracted from the same Space Grotesk file the app renders with,
+ * so the "never live text" requirement from the font-licence note is satisfied
+ * rather than deferred.
+ */
+function emitWordmark(out) {
+  for (const variant of wordmarkVariants) {
+    const source = wordmark(variant);
+    putSvg(join(out, 'wordmark', `wordmark-${variant}.svg`), source);
+    alphaPng(join(out, 'wordmark', `wordmark-${variant}@3x.png`), source, 1200);
+  }
+}
+
 /* -------------------------------------------------------------- share cards */
 
 function emitSocial(out) {
@@ -251,6 +341,9 @@ async function emitGrain(out) {
 const GROUPS = {
   icon: emitIcons,
   splash: emitSplash,
+  lottie: emitLottie,
+  sound: emitSound,
+  wordmark: emitWordmark,
   onboarding: emitOnboarding,
   states: emitStates,
   social: emitSocial,
@@ -281,7 +374,7 @@ async function main() {
   const isFullRun = groups.length === Object.keys(GROUPS).length;
   if (isFullRun) await rm(out, { recursive: true, force: true });
 
-  for (const group of groups) GROUPS[group](out);
+  for (const group of groups) await GROUPS[group](out);
   await Promise.all(pendingWrites);
 
   const rendered = await runRenderJobs(renderJobs, { font: FONT, concurrency });
@@ -302,6 +395,10 @@ async function main() {
       files: written.map((f) => f.path).sort(),
     };
     await put(join(out, 'manifest.json'), Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`));
+  }
+
+  if (cafSkipped.length) {
+    console.warn(`afconvert unavailable — CAF not generated for: ${cafSkipped.join(', ')}`);
   }
 
   const seconds = ((Date.now() - started) / 1000).toFixed(1);

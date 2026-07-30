@@ -1,5 +1,22 @@
 import { DomainError } from './errors';
-import type { Palette, PaletteColor, PaletteMetrics, PaletteMood } from './schemas';
+import { makeColor, type Color, type ColorRole } from './palette';
+
+/** An extracted cluster before it is narrowed to the shipped swatch shape. */
+type ExtractedColor = Readonly<{
+  hex: string;
+  weight: number;
+  lightness: number;
+  chroma: number;
+  hue: number;
+}>;
+
+export type ExtractionResult = Readonly<{
+  colors: readonly Color[];
+  /** Mean perceptual spread of the clusters. B2 reports this as "ΔE 2.4". */
+  deltaE: number;
+  /** 0-1. B2 reports this as "CONF 94%". */
+  confidence: number;
+}>;
 
 type Rgb = Readonly<{ red: number; green: number; blue: number }>;
 type Oklab = Readonly<{ lightness: number; a: number; b: number }>;
@@ -63,15 +80,6 @@ const temperatureForHue = (hue: number): number => {
   return total === 0 ? 0 : clamp((coolDistance - warmDistance) / total, -1, 1);
 };
 
-export const classifyPaletteMood = (metrics: PaletteMetrics): PaletteMood => {
-  if (metrics.contrast >= 48 && metrics.saturation >= 0.2) return 'energetic';
-  if (metrics.brightness >= 76 && metrics.saturation <= 0.16) return 'airy';
-  if (metrics.brightness <= 36) return 'moody';
-  if (metrics.temperature >= 0.24) return 'warm';
-  if (metrics.saturation <= 0.12) return 'calm';
-  return 'grounded';
-};
-
 const makeInitialCentroids = (pixels: readonly Pixel[], count: number): Oklab[] => {
   const ordered = [...pixels].sort((left, right) => {
     const lightnessDelta = left.lab.lightness - right.lab.lightness;
@@ -127,7 +135,7 @@ export const extractPaletteFromRgba = (
   width: number,
   height: number,
   requestedColorCount = 5,
-): Palette => {
+): ExtractionResult => {
   const pixels = normalizePixels(rgba, width, height);
   const clusterCount = Math.min(Math.max(1, requestedColorCount), 6, pixels.length);
   let centroids = makeInitialCentroids(pixels, clusterCount);
@@ -187,21 +195,24 @@ export const extractPaletteFromRgba = (
     blue: 0,
     count: 0,
   }));
+  // BUILD KIT · section 8: "Extract in linear light, not sRGB-encoded values —
+  // averaging gamma-encoded pixels shifts every result muddy." Channels are
+  // linearised before accumulation and re-encoded once, after the mean.
   pixels.forEach((pixel, index) => {
     const cluster = clusters[assignments[index] ?? 0]!;
-    cluster.red += pixel.rgb.red;
-    cluster.green += pixel.rgb.green;
-    cluster.blue += pixel.rgb.blue;
+    cluster.red += srgbToLinear(pixel.rgb.red);
+    cluster.green += srgbToLinear(pixel.rgb.green);
+    cluster.blue += srgbToLinear(pixel.rgb.blue);
     cluster.count += 1;
   });
 
-  const colors: PaletteColor[] = clusters
+  const colors: ExtractedColor[] = clusters
     .map((cluster) => {
       if (cluster.count === 0) return null;
       const rgb = {
-        red: cluster.red / cluster.count,
-        green: cluster.green / cluster.count,
-        blue: cluster.blue / cluster.count,
+        red: linearToSrgb(cluster.red / cluster.count),
+        green: linearToSrgb(cluster.green / cluster.count),
+        blue: linearToSrgb(cluster.blue / cluster.count),
       };
       const lab = rgbToOklab(rgb);
       return {
@@ -212,23 +223,48 @@ export const extractPaletteFromRgba = (
         hue: hueForLab(lab),
       };
     })
-    .filter((color): color is PaletteColor => color !== null)
+    .filter((color): color is ExtractedColor => color !== null)
     .sort((left, right) => right.weight - left.weight);
 
-  const brightness = colors.reduce((sum, color) => sum + color.lightness * color.weight, 0) * 100;
-  const saturation = clamp(
-    colors.reduce((sum, color) => sum + color.chroma * color.weight, 0) / 0.32,
+  // FLOW A3 names the three roles in share order, and the document's own
+  // reference palette ("Harbour dusk": 38 / 24 / 18%) assigns them that way, so
+  // role follows weight rather than a separate salience score.
+  const roles: readonly ColorRole[] = ['dominant', 'support', 'signal'];
+  const swatches: Color[] = colors.map((color, index) =>
+    makeColor(color.hex, color.weight, roles[index] ?? 'extra'),
   );
-  const temperature = clamp(
-    colors.reduce((sum, color) => sum + temperatureForHue(color.hue) * color.weight, 0),
-    -1,
-    1,
-  );
-  const lightnesses = colors.map((color) => color.lightness);
-  const contrast = (Math.max(...lightnesses) - Math.min(...lightnesses)) * 100;
-  const metrics = { brightness, saturation, temperature, contrast };
 
-  return { colors, metrics, mood: classifyPaletteMood(metrics) };
+  // Weights are rounded for storage; the remainder rides on the dominant swatch
+  // so the schema's "must sum to one" invariant still holds.
+  const rounded = swatches.map((s) => ({ ...s, weight: Math.round(s.weight * 1000) / 1000 }));
+  const drift = 1 - rounded.reduce((sum, s) => sum + s.weight, 0);
+  const dominant = rounded[0];
+  if (dominant) dominant.weight = Math.round((dominant.weight + drift) * 1000) / 1000;
+
+  // BUILD KIT · section 8: "Report ΔE00, never ΔE76." The read's stability is the
+  // mean perceptual distance from each sampled pixel to the colour it was folded
+  // into — B2 renders this as "ΔE 2.4 · STABLE". Cluster labs are computed once;
+  // the per-pixel conversion is the only real cost and `normalizePixels` has
+  // already capped the sample.
+  const clusterLabs = colors.map((color) => rgbToLab(hexToRgb(color.hex)));
+  const clusterIndexByOriginal = new Map<number, number>();
+  clusters.forEach((cluster, index) => {
+    if (cluster.count > 0) clusterIndexByOriginal.set(index, clusterIndexByOriginal.size);
+  });
+
+  let distanceTotal = 0;
+  pixels.forEach((pixel, index) => {
+    const lab = clusterLabs[clusterIndexByOriginal.get(assignments[index] ?? 0) ?? 0];
+    if (!lab) return;
+    distanceTotal += deltaE00(rgbToLab(pixel.rgb), lab);
+  });
+  const deltaE = Math.round((distanceTotal / Math.max(1, pixels.length)) * 10) / 10;
+
+  // Confidence falls away as the read drifts. ΔE00 of 10 is an unmistakable
+  // difference, so a read that far from its own clusters carries no confidence.
+  const confidence = clamp(1 - deltaE / 10);
+
+  return { colors: rounded, deltaE, confidence };
 };
 
 export const relativeLuminance = (hex: string): number => {
@@ -253,3 +289,143 @@ export const safeForegroundFor = (background: string): '#09090B' | '#FFFFFF' =>
   contrastRatio('#09090B', background) >= contrastRatio('#FFFFFF', background)
     ? '#09090B'
     : '#FFFFFF';
+
+/* --------------------------------------------------- BUILD KIT · section 8 */
+
+/** Inverse of `srgbToLinear`, for returning an averaged linear colour to 8-bit sRGB. */
+const linearToSrgb = (value: number): number => {
+  const v = clamp(value);
+  const encoded = v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055;
+  return encoded * 255;
+};
+
+export type Oklch = Readonly<{ lightness: number; chroma: number; hue: number }>;
+export type Lab = Readonly<{ lightness: number; a: number; b: number }>;
+
+/** Cylindrical form of OKLab. The kit's `Color` carries `oklch`. */
+export const oklabToOklch = ({ lightness, a, b }: Oklab): Oklch => ({
+  lightness,
+  chroma: Math.hypot(a, b),
+  hue: ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360,
+});
+
+export const rgbToOklch = (rgb: Rgb): Oklch => oklabToOklch(rgbToOklab(rgb));
+
+/**
+ * CIELAB (D65). Distinct from OKLab: clustering happens in OKLab because it is
+ * perceptually uniform for interpolation, but ΔE00 is *defined* on CIELAB, so
+ * reporting a distance requires this conversion rather than reusing the other.
+ */
+export const rgbToLab = ({ red, green, blue }: Rgb): Lab => {
+  const r = srgbToLinear(red);
+  const g = srgbToLinear(green);
+  const b = srgbToLinear(blue);
+
+  const x = (0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047;
+  const y = 0.2126729 * r + 0.7151522 * g + 0.072175 * b;
+  const z = (0.0193339 * r + 0.119192 * g + 0.9503041 * b) / 1.08883;
+
+  const epsilon = (6 / 29) ** 3;
+  const f = (t: number) => (t > epsilon ? Math.cbrt(t) : t / (3 * (6 / 29) ** 2) + 4 / 29);
+
+  const fx = f(x);
+  const fy = f(y);
+  const fz = f(z);
+
+  return { lightness: 116 * fy - 16, a: 500 * (fx - fy), b: 200 * (fy - fz) };
+};
+
+/**
+ * CIEDE2000. The kit is explicit — "Report ΔE00, never ΔE76" — because the
+ * plain Euclidean distance overstates differences in saturated blues and
+ * understates them in near-neutrals, which is where palettes actually live.
+ *
+ * Implements CIE 142-2001 with the standard kL = kC = kH = 1.
+ */
+export const deltaE00 = (first: Lab, second: Lab): number => {
+  const rad = Math.PI / 180;
+  const deg = 180 / Math.PI;
+
+  const c1 = Math.hypot(first.a, first.b);
+  const c2 = Math.hypot(second.a, second.b);
+  const cBar = (c1 + c2) / 2;
+
+  // G expands the a* axis for low-chroma pairs, the correction ΔE76 lacks.
+  const g = 0.5 * (1 - Math.sqrt(cBar ** 7 / (cBar ** 7 + 25 ** 7)));
+  const a1 = (1 + g) * first.a;
+  const a2 = (1 + g) * second.a;
+
+  const c1p = Math.hypot(a1, first.b);
+  const c2p = Math.hypot(a2, second.b);
+
+  const hp = (a: number, b: number) =>
+    a === 0 && b === 0 ? 0 : (Math.atan2(b, a) * deg + 360) % 360;
+  const h1p = hp(a1, first.b);
+  const h2p = hp(a2, second.b);
+
+  const dL = second.lightness - first.lightness;
+  const dC = c2p - c1p;
+
+  let dhp = 0;
+  if (c1p * c2p !== 0) {
+    dhp = h2p - h1p;
+    if (dhp > 180) dhp -= 360;
+    else if (dhp < -180) dhp += 360;
+  }
+  const dH = 2 * Math.sqrt(c1p * c2p) * Math.sin((dhp * rad) / 2);
+
+  const lBar = (first.lightness + second.lightness) / 2;
+  const cBarP = (c1p + c2p) / 2;
+
+  let hBarP: number;
+  if (c1p * c2p === 0) hBarP = h1p + h2p;
+  else if (Math.abs(h1p - h2p) <= 180) hBarP = (h1p + h2p) / 2;
+  else if (h1p + h2p < 360) hBarP = (h1p + h2p + 360) / 2;
+  else hBarP = (h1p + h2p - 360) / 2;
+
+  const t =
+    1 -
+    0.17 * Math.cos((hBarP - 30) * rad) +
+    0.24 * Math.cos(2 * hBarP * rad) +
+    0.32 * Math.cos((3 * hBarP + 6) * rad) -
+    0.2 * Math.cos((4 * hBarP - 63) * rad);
+
+  const dTheta = 30 * Math.exp(-(((hBarP - 275) / 25) ** 2));
+  const rc = 2 * Math.sqrt(cBarP ** 7 / (cBarP ** 7 + 25 ** 7));
+  const sl = 1 + (0.015 * (lBar - 50) ** 2) / Math.sqrt(20 + (lBar - 50) ** 2);
+  const sc = 1 + 0.045 * cBarP;
+  const sh = 1 + 0.015 * cBarP * t;
+  const rt = -Math.sin(2 * dTheta * rad) * rc;
+
+  return Math.sqrt((dL / sl) ** 2 + (dC / sc) ** 2 + (dH / sh) ** 2 + rt * (dC / sc) * (dH / sh));
+};
+
+/** ΔE00 between two hex colours. */
+export const hexDeltaE00 = (first: string, second: string): number =>
+  deltaE00(rgbToLab(hexToRgb(first)), rgbToLab(hexToRgb(second)));
+
+export const hexToRgb = (hex: string): Rgb => {
+  const value = Number.parseInt(hex.replace('#', ''), 16);
+  return { red: (value >> 16) & 255, green: (value >> 8) & 255, blue: value & 255 };
+};
+
+/**
+ * The same colour expressed in Display P3. The kit requires storing both and
+ * tagging exports; P3 has a wider gamut, so an sRGB colour is always
+ * representable and the components come back in range.
+ */
+export const rgbToDisplayP3 = ({ red, green, blue }: Rgb): Rgb => {
+  const r = srgbToLinear(red);
+  const g = srgbToLinear(green);
+  const b = srgbToLinear(blue);
+
+  const x = 0.4124564 * r + 0.3575761 * g + 0.1804375 * b;
+  const y = 0.2126729 * r + 0.7151522 * g + 0.072175 * b;
+  const z = 0.0193339 * r + 0.119192 * g + 0.9503041 * b;
+
+  return {
+    red: linearToSrgb(2.4934969119 * x - 0.9313836179 * y - 0.4027107845 * z),
+    green: linearToSrgb(-0.8294889696 * x + 1.7626640603 * y + 0.0236246858 * z),
+    blue: linearToSrgb(0.0358458302 * x - 0.0761723893 * y + 0.956884524 * z),
+  };
+};

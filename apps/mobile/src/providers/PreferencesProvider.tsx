@@ -1,3 +1,4 @@
+import { themeModes, themePalettes, type ThemePalette } from '@chromawave/design-tokens';
 import {
   defaultUserPreferences,
   type Language,
@@ -6,7 +7,6 @@ import {
   type ThemeId,
   type UserPreferences,
 } from '@chromawave/domain';
-import { themeModes, themePalettes, type ThemePalette } from '@chromawave/design-tokens';
 import {
   createContext,
   type PropsWithChildren,
@@ -20,6 +20,7 @@ import {
 import {
   analytics,
   hapticsService,
+  migrateStorage,
   notificationScheduler,
   preferencesRepository,
 } from '@/infrastructure/dependencies';
@@ -91,7 +92,11 @@ export function PreferencesProvider({
 
   useEffect(() => {
     let active = true;
-    Promise.all([preferencesRepository.get(), notificationScheduler.getPermission()])
+    // The MMKV migration has to finish before the first read, or an upgrading
+    // user sees defaults for one launch and then their real data on the next.
+    migrateStorage()
+      .catch(() => undefined)
+      .then(() => Promise.all([preferencesRepository.get(), notificationScheduler.getPermission()]))
       .then(([stored, permission]) => {
         if (!active) return;
         setPreferences(stored);
