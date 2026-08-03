@@ -61,7 +61,7 @@ export const vi: Record<MessageKey, string> = {
   'capture.notNow': 'Để sau',
 
   'result.capture': 'ẢNH CHỤP',
-  'result.close': '✕ ĐÓNG',
+  'result.close': 'ĐÓNG',
   'result.retake': 'CHỤP LẠI',
   'result.confidence': 'TIN CẬY {percent}%',
   'result.read': 'ĐỘ ĐỌC {stability}',
@@ -90,9 +90,9 @@ export const vi: Record<MessageKey, string> = {
   'tune.contrast.pass': 'ĐẠT',
   'tune.contrast.fail': 'KHÔNG ĐẠT',
 
-  'palette.back': '‹ QUAY LẠI',
+  'palette.back': 'QUAY LẠI',
   'palette.more': 'Thêm tuỳ chọn',
-  'palette.addTag': '+ THẺ',
+  'palette.addTag': 'THẺ',
   'palette.addTag.confirm': 'Thêm thẻ',
   'palette.addTag.placeholder': 'Một từ, viết thường',
   'palette.rename.placeholder': 'Tên bảng màu',
@@ -154,7 +154,7 @@ export const vi: Record<MessageKey, string> = {
   'sets.createFailed': 'Không tạo được bộ',
   'sets.createFailedDetail': 'Chưa có gì được lưu',
   'sets.newName': 'Bộ chưa đặt tên',
-  'collection.back': '‹ THƯ VIỆN',
+  'collection.back': 'THƯ VIỆN',
   'collection.edit': 'SỬA',
   'collection.meta.shared': '{count} bảng màu · chia sẻ với {people} người',
   'collection.meta.private': '{count} bảng màu · riêng tư',
@@ -222,7 +222,7 @@ export const vi: Record<MessageKey, string> = {
   'you.version': 'V{version} · BẢO MẬT · HỖ TRỢ',
 
   /* --------------------------------------------------------------- G · deeper */
-  'scan.exit': '✕ THOÁT',
+  'scan.exit': 'THOÁT',
   'scan.pinned': 'ĐÃ GHIM {count}',
   'scan.pinnedWhileWalking': 'GHIM TRONG KHI DI CHUYỂN',
   'scan.now': 'HIỆN TẠI {hex}',
@@ -255,7 +255,7 @@ export const vi: Record<MessageKey, string> = {
   'compare.meta': '2 bảng màu · ma trận ΔE',
   'compare.matrixLabel': 'KHOẢNG CÁCH THỊ GIÁC ΔE00',
   'compare.closest': 'Cặp gần nhất',
-  'compare.swap': 'ĐỔI →',
+  'compare.swap': 'ĐỔI',
   'compare.temperature': 'Nhiệt màu',
   'compare.tempCool': 'lạnh 4200K',
   'compare.tempWarm': 'ấm 2700K',
@@ -292,7 +292,7 @@ export const vi: Record<MessageKey, string> = {
   'gradient.exportFailedDetail': 'Không dựng được tệp từ dải màu này',
 
   'theme.title': 'Xem khi áp dụng',
-  'theme.meta': '{name} → xem trước UI',
+  'theme.meta': '{name} dạng UI',
   'theme.dashboard': 'Bảng điều khiển',
   'theme.uptime': 'HOẠT ĐỘNG',
   'theme.sessions': 'PHIÊN',
@@ -320,7 +320,7 @@ export const vi: Record<MessageKey, string> = {
   'export.openFailed': 'Không mở được đích đến',
   'export.openFailedDetail': 'Mã đã nằm trong clipboard',
 
-  'widgets.close': '‹ XONG',
+  'widgets.close': 'XONG',
 
   'activity.title': 'Hoạt động',
   'activity.allRead': 'ĐÃ ĐỌC HẾT',

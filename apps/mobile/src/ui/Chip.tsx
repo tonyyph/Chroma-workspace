@@ -1,6 +1,7 @@
 import { round, tint, ui, uiMotion } from '@chromawave/design-tokens';
 import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 
+import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
 
 export type ChipTone = 'default' | 'selected' | 'pro' | 'add' | 'info' | 'danger';
@@ -58,6 +59,8 @@ export function Chip({
   label,
   tone = 'default',
   onPress,
+  /** Drawn before the label at the chip's mono size. */
+  icon,
   /** Stretch to share a row equally — the "MERGE ALL / EXPORT SET / INVITE" pattern. */
   fill = false,
   style,
@@ -65,11 +68,19 @@ export function Chip({
   label: string;
   tone?: ChipTone;
   onPress?: () => void;
+  icon?: IconName;
   fill?: boolean;
   style?: ViewStyle;
 }) {
   const look = tones[tone];
-  const content = (
+  const content = icon ? (
+    <View style={styles.withIcon}>
+      <Icon color={look.color} name={icon} scale="inline" />
+      <Text style={{ color: look.color }} variant="chip">
+        {label}
+      </Text>
+    </View>
+  ) : (
     <Text style={{ color: look.color }} variant="chip">
       {label}
     </Text>
@@ -109,5 +120,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 0,
     paddingVertical: 12,
+  },
+  withIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
 });

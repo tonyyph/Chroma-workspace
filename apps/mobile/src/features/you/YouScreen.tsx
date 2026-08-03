@@ -8,7 +8,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { usePalettes } from '@/hooks/usePalettes';
 import { unreadActivityCount } from '@/features/tools/activity';
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Card, CardGroup, Gutter, Meta, Screen, Text, Toggle } from '@/ui';
+import { Card, CardGroup, Gutter, Icon, Meta, Screen, Text, Toggle } from '@/ui';
 
 const EXPORT_TARGETS = exportTargetSchema.options;
 
@@ -166,9 +166,14 @@ function Row({
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
       {trailing ?? (
-        <Text tone="secondary" variant="mono">
-          {`${value} ›`}
-        </Text>
+        <View style={styles.rowValue}>
+          <Text tone="secondary" variant="mono">
+            {value}
+          </Text>
+          {/* The chevron belongs to rows that go somewhere, so it is drawn from
+              the handler rather than concatenated into every value string. */}
+          {onPress ? <Icon color={ui.text.tertiary} name="forward" scale="inline" /> : null}
+        </View>
       )}
     </View>
   );
@@ -225,6 +230,11 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     fontSize: 14,
+  },
+  rowValue: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   footer: {
     paddingTop: space.md,

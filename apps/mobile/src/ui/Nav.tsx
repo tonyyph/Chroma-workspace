@@ -1,6 +1,7 @@
 import { space, ui, uiMotion } from '@chromawave/design-tokens';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Icon, type IconName } from './Icon';
 import { Meta, Text } from './Text';
 
 /**
@@ -11,12 +12,15 @@ import { Meta, Text } from './Text';
 export function NavBar({
   title,
   leading,
+  /** Drawn before the leading label — `back` for a pop, `close` for a dismiss. */
+  leadingIcon,
   trailing,
   onLeading,
   onTrailing,
 }: {
   title?: string | undefined;
   leading?: string | undefined;
+  leadingIcon?: IconName | undefined;
   trailing?: string | undefined;
   onLeading?: (() => void) | undefined;
   onTrailing?: (() => void) | undefined;
@@ -30,8 +34,14 @@ export function NavBar({
             accessibilityRole="button"
             hitSlop={12}
             onPress={onLeading}
-            style={({ pressed }) => pressed && { opacity: uiMotion.listPress.opacity }}
+            style={({ pressed }) => [
+              styles.navLeadingRow,
+              pressed && { opacity: uiMotion.listPress.opacity },
+            ]}
           >
+            {leadingIcon ? (
+              <Icon color={ui.text.secondary} name={leadingIcon} scale="inline" />
+            ) : null}
             <Text style={styles.navLeading} tone="secondary">
               {leading}
             </Text>
@@ -99,6 +109,11 @@ const styles = StyleSheet.create({
   },
   navSideEnd: {
     alignItems: 'flex-end',
+  },
+  navLeadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
   navLeading: {
     fontSize: 14,

@@ -18,6 +18,7 @@ import {
   Chip,
   ColorRow,
   Gutter,
+  Icon,
   InlineError,
   Meta,
   PromptSheet,
@@ -174,8 +175,11 @@ export function PaletteDetailScreen() {
         <Pressable
           accessibilityLabel={t('palette.back')}
           accessibilityRole="button"
+          hitSlop={12}
           onPress={router.back}
+          style={styles.navButton}
         >
+          <Icon color={ui.text.secondary} name="back" scale="inline" />
           <Text tone="secondary" variant="mono">
             {t('palette.back')}
           </Text>
@@ -186,9 +190,7 @@ export function PaletteDetailScreen() {
           hitSlop={12}
           onPress={() => setMenuOpen(true)}
         >
-          <Text tone="secondary" variant="mono">
-            •••
-          </Text>
+          <Icon color={ui.text.secondary} name="more" />
         </Pressable>
       </Gutter>
 
@@ -223,7 +225,12 @@ export function PaletteDetailScreen() {
             tone="pro"
           />
         ))}
-        <Chip label={t('palette.addTag')} onPress={() => setPrompt('tag')} tone="add" />
+        <Chip
+          icon="add"
+          label={t('palette.addTag')}
+          onPress={() => setPrompt('tag')}
+          tone="add"
+        />
       </Gutter>
 
       <Gutter style={styles.list}>
@@ -359,6 +366,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: space.sm,
     paddingBottom: space.cardGap,
+  },
+  navButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   error: {
     paddingBottom: space.cardGap,

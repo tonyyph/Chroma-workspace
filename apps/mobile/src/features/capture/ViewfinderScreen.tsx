@@ -18,7 +18,17 @@ import { usePhotoRead } from '@/hooks/usePhotoRead';
 import { hapticsService, soundService } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { useCaptureStore } from '@/store/captureStore';
-import { Button, Card, Chip, LiveReadPulse, Meta, ScanSweep, Text, useCaptureSequence } from '@/ui';
+import {
+  Button,
+  Card,
+  Chip,
+  Icon,
+  LiveReadPulse,
+  Meta,
+  ScanSweep,
+  Text,
+  useCaptureSequence,
+} from '@/ui';
 
 /** The three viewfinder modes, each with its own message key. */
 const MODES = [
@@ -181,7 +191,7 @@ export function ViewfinderScreen() {
             onPress={router.back}
             style={styles.close}
           >
-            <Text variant="chip">✕</Text>
+            <Icon name="close" scale="action" />
           </Pressable>
           <View style={styles.topChips}>
             <Chip

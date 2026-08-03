@@ -9,7 +9,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Button, Card, Chip, Gutter, Meta, Screen, ScreenHeader, Text } from '@/ui';
+import { Button, Card, Chip, Gutter, Icon, Meta, Screen, ScreenHeader, Text } from '@/ui';
 
 type Verdict = 'AAA' | 'AA' | 'FAIL';
 
@@ -135,9 +135,7 @@ export function ContrastScreen({
             </Text>
             <View style={styles.fixRow}>
               <View style={[styles.fixSwatch, { backgroundColor: shown(failing.foreground) }]} />
-              <Text tone="tertiary" variant="rowTitle">
-                →
-              </Text>
+              <Icon color={ui.text.tertiary} name="arrowRight" />
               <View style={[styles.fixSwatch, { backgroundColor: shown(fix.hex) }]} />
               <View style={styles.fixCopy}>
                 <Text tone="secondary" variant="mono">

@@ -80,7 +80,7 @@ export const ui = {
     panel: 'rgba(8,7,14,.62)',
     strong: 'rgba(8,7,14,.72)',
   },
-  tabBar: 'rgba(23,18,51,.92)',
+  tabBar: 'rgba(36, 32, 61, 0.92)',
 } as const;
 
 /** Tinted container recipes that recur across every flow. */
@@ -248,6 +248,14 @@ export const size = {
   tabMark: 56,
   grabberWidth: 44,
   grabberHeight: 5,
+  /**
+   * Icon sizes, set against the type scale rather than the icon grid: `inline`
+   * matches the 10px mono chip's cap height, `control` the 14px row label, and
+   * `action` the 40pt circular buttons in a nav row.
+   */
+  iconInline: 13,
+  iconControl: 17,
+  iconAction: 20,
   /** "band strips keep 10px minimum height" at Dynamic Type XXL. */
   bandStripMin: 10,
 } as const;

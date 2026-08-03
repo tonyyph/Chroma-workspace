@@ -16,7 +16,7 @@ export function BrandMark({ size = 42 }: { size?: number }) {
       accessibilityRole="image"
       style={[
         styles.frame,
-        { width: size, height: size, borderRadius: size * brandGeometry.cornerRatio },
+        { width: size, height: size, borderRadius: size * brandGeometry.cycles },
       ]}
     >
       <Image

@@ -43,7 +43,7 @@ export function TabBar({
   const [left, right] = [tabs.slice(0, 2), tabs.slice(2)];
 
   return (
-    <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: 26 + insets.bottom }]}>
+    <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: insets.bottom }]}>
       <LinearGradient
         colors={['rgba(8,7,14,0)', 'rgba(8,7,14,.94)']}
         locations={[0, 0.4]}
@@ -131,8 +131,8 @@ const styles = StyleSheet.create({
     paddingTop: space.sectionGap,
   },
   bar: {
-    height: size.tabBar,
-    borderRadius: size.tabBar / 2,
+    height: size.tabBar * 1.15,
+    borderRadius: size.tabBar,
     backgroundColor: ui.tabBar,
     borderWidth: 1,
     borderColor: ui.border.hairlineStrong,

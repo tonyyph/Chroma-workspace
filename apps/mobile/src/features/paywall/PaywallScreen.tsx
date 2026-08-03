@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '@/components/BrandMark';
 import { analytics } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Button, Card, Text } from '@/ui';
+import { Button, Card, Icon, Text } from '@/ui';
 
 type Plan = 'monthly' | 'yearly';
 
@@ -67,9 +67,7 @@ export function PaywallScreen({ trigger = 'unknown' }: { trigger?: PaywallTrigge
           hitSlop={12}
           onPress={router.back}
         >
-          <Text tone="tertiary" variant="mono">
-            ✕
-          </Text>
+          <Icon color={ui.text.tertiary} name="close" scale="action" />
         </Pressable>
       </View>
 

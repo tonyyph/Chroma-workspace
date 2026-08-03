@@ -13,7 +13,7 @@ import {
 import { usePhotoRead } from '@/hooks/usePhotoRead';
 import { analytics, hapticsService } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Button, Card, Chip, LiveReadPulse, Text } from '@/ui';
+import { Button, Card, Chip, Icon, LiveReadPulse, Text } from '@/ui';
 
 const MAX_PINS = 7;
 
@@ -86,7 +86,8 @@ export function ScanScreen({
       )}
 
       <View style={styles.topRow}>
-        <Card onPress={onExit} style={styles.exitChip}>
+        <Card accessibilityLabel={t('scan.exit')} onPress={onExit} style={styles.exitChip}>
+          <Icon name="close" scale="inline" />
           <Text variant="chip">{t('scan.exit')}</Text>
         </Card>
         <Chip label={t('scan.pinned', { count: pins.length })} tone="pro" />
@@ -165,6 +166,9 @@ const styles = StyleSheet.create({
     paddingTop: space.cardGap,
   },
   exitChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     backgroundColor: ui.scrim.control,
     borderColor: ui.border.control,
     paddingHorizontal: space.sm,

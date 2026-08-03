@@ -2,7 +2,7 @@ import { round, size, space, typeExtra, ui } from '@chromawave/design-tokens';
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
-import { Text } from './Text';
+import { Icon } from './Icon';
 
 /**
  * SYSTEM F search field: 46pt tall, fully rounded, `fill/chip` ground. The
@@ -31,9 +31,7 @@ export function Field({
         { borderColor: focused ? ui.action.primary : ui.border.hairlineStrong },
       ]}
     >
-      <Text tone="tertiary" variant="body">
-        ⌕
-      </Text>
+      <Icon color={ui.text.tertiary} name="search" />
       <TextInput
         accessibilityLabel={label}
         autoCapitalize="none"

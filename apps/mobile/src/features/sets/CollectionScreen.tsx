@@ -7,7 +7,18 @@ import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Card, Chip, Gutter, Meta, NavBar, PromptSheet, Screen, SwatchStrip, Text } from '@/ui';
+import {
+  Card,
+  Chip,
+  Gutter,
+  Icon,
+  Meta,
+  NavBar,
+  PromptSheet,
+  Screen,
+  SwatchStrip,
+  Text,
+} from '@/ui';
 
 /**
  * C3 · COLLECTION · "shared set, merge is the Pro hook".
@@ -79,6 +90,7 @@ export function CollectionScreen({
     <Screen>
       <NavBar
         leading={t('collection.back')}
+        leadingIcon="back"
         onLeading={onBack}
         onTrailing={() => setEditing((current) => !current)}
         trailing={t(editing ? 'common.done' : 'collection.edit')}
@@ -122,9 +134,7 @@ export function CollectionScreen({
                 onPress={() => onRemovePalette(palette.id)}
                 style={styles.remove}
               >
-                <Text tone="danger" variant="chip">
-                  ✕
-                </Text>
+                <Icon color={ui.status.dangerText} name="remove" scale="inline" />
               </Pressable>
             ) : (
               <SwatchStrip

@@ -58,7 +58,7 @@ export const en = {
   'capture.notNow': 'Not now',
 
   'result.capture': 'CAPTURE',
-  'result.close': '✕ CLOSE',
+  'result.close': 'CLOSE',
   'result.retake': 'RETAKE',
   'result.confidence': 'CONF {percent}%',
   'result.read': 'READ {stability}',
@@ -87,9 +87,9 @@ export const en = {
   'tune.contrast.pass': 'PASS',
   'tune.contrast.fail': 'FAIL',
 
-  'palette.back': '‹ BACK',
+  'palette.back': 'BACK',
   'palette.more': 'More actions',
-  'palette.addTag': '+ TAG',
+  'palette.addTag': 'TAG',
   'palette.addTag.confirm': 'Add tag',
   'palette.addTag.placeholder': 'One word, lower case',
   'palette.rename.placeholder': 'Palette name',
@@ -152,7 +152,7 @@ export const en = {
   'sets.createFailed': 'Could not create the set',
   'sets.createFailedDetail': 'Nothing was saved',
   'sets.newName': 'Untitled set',
-  'collection.back': '‹ LIBRARY',
+  'collection.back': 'LIBRARY',
   'collection.edit': 'EDIT',
   'collection.meta.shared': '{count} palettes · shared with {people} people',
   'collection.meta.private': '{count} palettes · private',
@@ -221,7 +221,7 @@ export const en = {
   'you.version': 'V{version} · PRIVACY · SUPPORT',
 
   /* --------------------------------------------------------------- G · deeper */
-  'scan.exit': '✕ EXIT SCAN',
+  'scan.exit': 'EXIT SCAN',
   'scan.pinned': '{count} PINNED',
   'scan.pinnedWhileWalking': 'PINNED WHILE YOU WALK',
   'scan.now': 'NOW {hex}',
@@ -254,7 +254,7 @@ export const en = {
   'compare.meta': '2 palettes · ΔE matrix',
   'compare.matrixLabel': 'PERCEPTUAL DISTANCE ΔE00',
   'compare.closest': 'Closest pair',
-  'compare.swap': 'SWAP →',
+  'compare.swap': 'SWAP',
   'compare.temperature': 'Temperature',
   'compare.tempCool': 'cool 4200K',
   'compare.tempWarm': 'warm 2700K',
@@ -292,7 +292,7 @@ export const en = {
   'gradient.exportFailedDetail': 'The gradient could not be rendered to a file',
 
   'theme.title': 'See it applied',
-  'theme.meta': '{name} → UI preview',
+  'theme.meta': '{name} as UI',
   'theme.dashboard': 'Dashboard',
   'theme.uptime': 'UPTIME',
   'theme.sessions': 'SESSIONS',
@@ -320,7 +320,7 @@ export const en = {
   'export.openFailed': 'Could not open the destination',
   'export.openFailedDetail': 'The code is on your clipboard',
 
-  'widgets.close': '‹ DONE',
+  'widgets.close': 'DONE',
 
   'activity.title': 'Activity',
   'activity.markRead': 'MARK ALL READ',

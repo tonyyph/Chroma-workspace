@@ -15,6 +15,7 @@ import {
   Chip,
   EmptyGlyph,
   Gutter,
+  Icon,
   Screen,
   ScreenHeader,
   Shimmer,
@@ -31,8 +32,6 @@ export function LibraryScreen() {
   const [filter, setFilter] = useState<LibraryFilter>('all');
 
   const visible = useMemo(() => filterPalettes(palettes, filter), [palettes, filter]);
-  // The header's collection count was hard-coded to zero, so creating a set left
-  // the library still claiming none existed.
   const { sets } = useSets();
   const insets = useSafeAreaInsets();
 
@@ -49,9 +48,7 @@ export function LibraryScreen() {
               onPress={() => router.push('/explore')}
               style={styles.searchButton}
             >
-              <Text tone="primary" variant="mono">
-                ⌕
-              </Text>
+              <Icon name="search" scale="action" />
             </Pressable>
           }
         />
@@ -87,9 +84,6 @@ export function LibraryScreen() {
   );
 
   return (
-    // `scroll={false}`: the list owns the scrolling. A FlatList inside the
-    // Screen's ScrollView would nest two virtualisers, which React Native warns
-    // about and which defeats windowing entirely.
     <Screen scroll={false}>
       <FlatList
         columnWrapperStyle={styles.row}
@@ -121,11 +115,6 @@ export function LibraryScreen() {
           )
         }
         ListHeaderComponent={header}
-        // Windowing is the whole point: the previous grid mounted every card,
-        // so a 200-palette library held 200 images and 200 Pressables live at
-        // once. `getItemLayout` is deliberately absent — combining it with
-        // `numColumns` and a header miscomputes offsets, and the measured
-        // fallback is fast enough for cards this size.
         initialNumToRender={8}
         maxToRenderPerBatch={8}
         numColumns={2}
@@ -155,9 +144,7 @@ function EmptyLibrary({ onCapture, filtered }: { onCapture: () => void; filtered
 }
 
 const styles = StyleSheet.create({
-  header: {
-    paddingTop: space.cardGap,
-  },
+  header: {},
   searchButton: {
     width: 40,
     height: 40,
@@ -170,16 +157,12 @@ const styles = StyleSheet.create({
   },
   filters: {
     paddingHorizontal: space.gutter,
-    paddingTop: space.md,
+    paddingVertical: space.md,
     gap: space.xs,
   },
-  // The 14pt card gap from SYSTEM F: the list carries the gutter, and each
-  // column takes half the gap on either side so the two still reach the edges.
   list: {
     paddingTop: space.md,
   },
-  // Only the item rows are indented; the header and the empty state keep the
-  // plain 20pt gutter they already carry.
   row: {
     alignItems: 'flex-start',
     paddingHorizontal: space.gutter - space.cardGap / 2,

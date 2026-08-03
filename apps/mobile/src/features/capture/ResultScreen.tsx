@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Button, ButtonRow, Card, ColorRow, Meta, Sheet, Text } from '@/ui';
+import { Button, ButtonRow, Card, ColorRow, Icon, Meta, Sheet, Text } from '@/ui';
 
 /**
  * B2 · RESULT SHEET · "drag to expand full hex list".
@@ -37,10 +37,15 @@ export function ResultScreen({
           {t('result.capture')}
         </Text>
         <View style={styles.captureChrome}>
-          <Card onPress={() => router.back()} style={styles.captureChip}>
+          <Card
+            accessibilityLabel={t('result.close')}
+            onPress={() => router.back()}
+            style={styles.captureChip}
+          >
+            <Icon name="close" scale="inline" />
             <Text variant="chip">{t('result.close')}</Text>
           </Card>
-          <Card onPress={onRetake} style={styles.captureChip}>
+          <Card accessibilityLabel={t('result.retake')} onPress={onRetake} style={styles.captureChip}>
             <Text variant="chip">{t('result.retake')}</Text>
           </Card>
         </View>
@@ -134,6 +139,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   captureChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     backgroundColor: ui.scrim.control,
     borderColor: ui.border.control,
     paddingHorizontal: space.sm,

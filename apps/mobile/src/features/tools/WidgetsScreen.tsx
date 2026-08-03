@@ -34,7 +34,7 @@ export function WidgetsScreen({ palette, onClose }: { palette: Palette; onClose?
       {/* A full-bleed preview with no chrome had no way out but the OS gesture. */}
       {onClose ? (
         <View style={styles.nav}>
-          <NavBar leading={t('widgets.close')} onLeading={onClose} />
+          <NavBar leading={t('widgets.close')} leadingIcon="back" onLeading={onClose} />
         </View>
       ) : null}
 

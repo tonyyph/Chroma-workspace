@@ -10,6 +10,7 @@ import {
   ButtonRow,
   Card,
   Gutter,
+  Icon,
   Meta,
   Screen,
   ScreenHeader,
@@ -145,17 +146,22 @@ export function CompareScreen({
               <Text style={{ color: tint.infoSubtle.color }} variant="cardTitle">
                 {t('compare.closest')}
               </Text>
-              <Meta>{`${closestRow.hex} ↔ ${closestColumn.hex} · ΔE ${Math.round(closest.distance)}`}</Meta>
+              {/* The card's own title already says these two are a pair, so the
+                  separator is the same middot every other meta line uses rather
+                  than a ↔ that Feather has no equivalent for. */}
+              <Meta>{`${closestRow.hex} · ${closestColumn.hex} · ΔE ${Math.round(closest.distance)}`}</Meta>
             </View>
             <Pressable
               accessibilityLabel={t('compare.swapSides')}
               accessibilityRole="button"
               hitSlop={10}
               onPress={onSwap}
+              style={styles.swap}
             >
               <Text tone="secondary" variant="chip">
                 {t('compare.swap')}
               </Text>
+              <Icon color={ui.text.secondary} name="swap" scale="inline" />
             </Pressable>
           </Card>
           <Card style={styles.finding}>
@@ -255,6 +261,7 @@ const styles = StyleSheet.create({
     paddingVertical: space.cardGap,
   },
   findingCopy: { gap: 3 },
+  swap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   actions: { paddingTop: space.gutter },
   flex: { flex: 1 },
   wide: { flex: 1.3 },

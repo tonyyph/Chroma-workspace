@@ -16,6 +16,19 @@ import { vi } from './vi';
  * a full-width pill.
  */
 
+/**
+ * Characters that were once typed into strings to stand in for icons.
+ *
+ * They render in whatever the text font happens to carry, so they shifted weight
+ * and baseline between platforms, could not be sized against their control, and
+ * VoiceOver read them aloud by their Unicode names. `@expo/vector-icons` draws
+ * them now, which means a translator must never be handed one to carry.
+ *
+ * `×` is deliberately absent: it is a real typographic operator, and
+ * `compare.mergedName` uses it to join two palette names.
+ */
+const ICON_GLYPHS = ['⌕', '✕', '✖', '•••', '‹', '›', '→', '←', '↔', '⌄', '⌃'];
+
 /** Controls whose width is fixed by the design and cannot grow. */
 const BUDGETS: Record<string, number> = {
   // Mono chips: 10px, ~5.5pt per glyph, sharing a row of up to four.
@@ -61,6 +74,13 @@ const BUTTON_KEYS = messageKeys.filter(
 );
 
 describe('catalogue integrity', () => {
+  it('carries no icon glyphs in either language', () => {
+    const offenders = messageKeys.flatMap((key) =>
+      ICON_GLYPHS.some((glyph) => en[key].includes(glyph) || vi[key].includes(glyph)) ? [key] : [],
+    );
+    expect(offenders).toEqual([]);
+  });
+
   it('translates every English key into Vietnamese', () => {
     const missing = messageKeys.filter((key) => !(key in vi) || vi[key].trim() === '');
     expect(missing).toEqual([]);
