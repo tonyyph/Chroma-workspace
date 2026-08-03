@@ -246,6 +246,11 @@ export const size = {
   sliderThumb: 24,
   /** The mark, centred in the tab bar. */
   tabMark: 56,
+  /** Navigation icon and its selected pill inside the floating tab bar. */
+  tabIcon: 20,
+  tabIconSurfaceWidth: 38,
+  tabIconSurfaceHeight: 32,
+  tabItem: 54,
   grabberWidth: 44,
   grabberHeight: 5,
   /**
@@ -422,6 +427,21 @@ export const uiShadow = {
     shadowOpacity: 0.5,
     shadowRadius: 30,
     elevation: 12,
+  },
+  /** Separates the floating navigation shell from scrolling artwork beneath it. */
+  tabBar: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.55,
+    shadowRadius: 24,
+    elevation: 16,
+  },
+  /** A bounded glow that makes the selected destination legible at a glance. */
+  tabActive: {
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.38,
+    shadowRadius: 10,
+    elevation: 5,
   },
   sheet: {
     shadowColor: '#000000',

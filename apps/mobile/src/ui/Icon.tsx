@@ -26,17 +26,22 @@ const GLYPHS = {
   add: 'plus',
   remove: 'x',
   arrowRight: 'arrow-right',
+  library: 'grid',
+  explore: 'compass',
+  sets: 'layers',
+  profile: 'user',
 } as const satisfies Record<string, React.ComponentProps<typeof Feather>['name']>;
 
 export type IconName = keyof typeof GLYPHS;
 
 /** Which control the icon sits in, which is what decides its size. */
-export type IconScale = 'inline' | 'control' | 'action';
+export type IconScale = 'inline' | 'control' | 'action' | 'navigation';
 
 const SCALES: Record<IconScale, number> = {
   inline: size.iconInline,
   control: size.iconControl,
   action: size.iconAction,
+  navigation: size.tabIcon,
 };
 
 export function Icon({

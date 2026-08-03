@@ -1,4 +1,4 @@
-import { brandBands, round, size, space, ui, uiShadow } from '@chromawave/design-tokens';
+import { brandBands, round, size, space, ui, uiMotion, uiShadow } from '@chromawave/design-tokens';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandMark } from '@/components/BrandMark';
 
+import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
 
 export type TabKey = 'library' | 'explore' | 'sets' | 'you';
@@ -18,11 +19,41 @@ export type TabKey = 'library' | 'explore' | 'sets' | 'you';
  * into coral; YOU falls back to action/primary because it is the account
  * surface rather than a content one.
  */
-const tabs: readonly { key: TabKey; label: string; accent: string; circular?: boolean }[] = [
-  { key: 'library', label: 'LIB', accent: brandBands[0] },
-  { key: 'explore', label: 'EXPLORE', accent: brandBands[1] },
-  { key: 'sets', label: 'SETS', accent: brandBands[2] },
-  { key: 'you', label: 'YOU', accent: ui.action.primary, circular: true },
+const tabs: readonly {
+  key: TabKey;
+  label: string;
+  accessibilityLabel: string;
+  accent: string;
+  icon: IconName;
+}[] = [
+  {
+    key: 'library',
+    label: 'LIB',
+    accessibilityLabel: 'Library',
+    accent: brandBands[3],
+    icon: 'library',
+  },
+  {
+    key: 'explore',
+    label: 'EXPLORE',
+    accessibilityLabel: 'Explore',
+    accent: brandBands[1],
+    icon: 'explore',
+  },
+  {
+    key: 'sets',
+    label: 'SETS',
+    accessibilityLabel: 'Sets',
+    accent: brandBands[2],
+    icon: 'sets',
+  },
+  {
+    key: 'you',
+    label: 'YOU',
+    accessibilityLabel: 'You',
+    accent: ui.action.primary,
+    icon: 'profile',
+  },
 ];
 
 /**
@@ -50,37 +81,40 @@ export function TabBar({
         pointerEvents="none"
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.bar}>
-        <BlurView intensity={20} style={StyleSheet.absoluteFill} tint="dark" />
-        <View style={styles.barInner}>
-          {left.map((tab) => (
-            <TabItem
-              active={active === tab.key}
-              key={tab.key}
-              onPress={() => onSelect(tab.key)}
-              tab={tab}
-            />
-          ))}
-          <Pressable
-            accessibilityLabel="Capture a colour"
-            accessibilityRole="button"
-            onPress={onCapture}
-            style={({ pressed }) => [
-              styles.capture,
-              uiShadow.mark,
-              pressed && styles.capturePressed,
-            ]}
-          >
-            <BrandMark size={size.tabMark} />
-          </Pressable>
-          {right.map((tab) => (
-            <TabItem
-              active={active === tab.key}
-              key={tab.key}
-              onPress={() => onSelect(tab.key)}
-              tab={tab}
-            />
-          ))}
+      <View style={[styles.barShell, uiShadow.tabBar]}>
+        <View style={styles.bar}>
+          <BlurView intensity={26} style={StyleSheet.absoluteFill} tint="dark" />
+          <View style={styles.barInner}>
+            {left.map((tab) => (
+              <TabItem
+                active={active === tab.key}
+                key={tab.key}
+                onPress={() => onSelect(tab.key)}
+                tab={tab}
+              />
+            ))}
+            <Pressable
+              accessibilityLabel="Capture a colour"
+              accessibilityRole="button"
+              hitSlop={6}
+              onPress={onCapture}
+              style={({ pressed }) => [
+                styles.capture,
+                uiShadow.mark,
+                pressed && styles.capturePressed,
+              ]}
+            >
+              <BrandMark size={size.tabMark} />
+            </Pressable>
+            {right.map((tab) => (
+              <TabItem
+                active={active === tab.key}
+                key={tab.key}
+                onPress={() => onSelect(tab.key)}
+                tab={tab}
+              />
+            ))}
+          </View>
         </View>
       </View>
     </View>
@@ -98,23 +132,27 @@ function TabItem({
 }) {
   return (
     <Pressable
-      accessibilityLabel={tab.label}
+      accessibilityLabel={tab.accessibilityLabel}
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
-      hitSlop={10}
       onPress={onPress}
-      style={styles.item}
+      style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
     >
       <View
         style={[
-          styles.glyph,
-          tab.circular && styles.glyphCircular,
-          active
-            ? { backgroundColor: tab.accent }
-            : { borderWidth: 1.5, borderColor: 'rgba(237,234,227,.4)' },
+          styles.iconSurface,
+          active && styles.iconSurfaceActive,
+          active && uiShadow.tabActive,
+          active && { backgroundColor: tab.accent, shadowColor: tab.accent },
         ]}
-      />
-      <Text style={{ color: active ? ui.text.primary : 'rgba(237,234,227,.5)' }} variant="chip">
+      >
+        <Icon
+          color={active ? ui.text.primary : ui.text.secondary}
+          name={tab.icon}
+          scale="navigation"
+        />
+      </View>
+      <Text style={{ color: active ? ui.text.primary : ui.text.tertiary }} variant="chip">
         {tab.label}
       </Text>
     </Pressable>
@@ -130,12 +168,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.gutter,
     paddingTop: space.sectionGap,
   },
-  bar: {
+  barShell: {
     height: size.tabBar * 1.15,
     borderRadius: size.tabBar,
     backgroundColor: ui.tabBar,
+  },
+  bar: {
+    flex: 1,
+    borderRadius: size.tabBar,
+    backgroundColor: ui.tabBar,
     borderWidth: 1,
-    borderColor: ui.border.hairlineStrong,
+    borderColor: ui.border.control,
     overflow: 'hidden',
   },
   barInner: {
@@ -143,18 +186,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
+    paddingHorizontal: space.xs,
   },
   item: {
+    flex: 1,
+    minHeight: size.tabItem,
     alignItems: 'center',
-    gap: 7,
+    justifyContent: 'center',
+    gap: space.xxs,
   },
-  glyph: {
-    width: 22,
-    height: 22,
-    borderRadius: 7,
+  itemPressed: {
+    opacity: uiMotion.listPress.opacity,
   },
-  glyphCircular: {
-    borderRadius: 11,
+  iconSurface: {
+    width: size.tabIconSurfaceWidth,
+    height: size.tabIconSurfaceHeight,
+    borderRadius: round.control,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconSurfaceActive: {
+    transform: [{ translateY: -2 }],
   },
   capture: {
     width: size.tabMark,

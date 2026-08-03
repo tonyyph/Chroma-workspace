@@ -10,8 +10,27 @@
 /** Section 04 · Colour. Band order is violet → cyan → coral and is not reorderable. */
 export const brandColors = {
   violet: '#7C5CFF',
-  cyan: '#22D3EE',
+  cyan: '#1498AD',
   coral: '#FF7A5C',
+
+  indigo: '#4F46E5',
+  blue: '#3B82F6',
+  sky: '#38BDF8',
+  teal: '#14B8A6',
+  mint: '#5ED6B3',
+  green: '#22C55E',
+
+  yellow: '#F5C451',
+  amber: '#F59E0B',
+  orange: '#FF9F43',
+  rose: '#F45B8C',
+  pink: '#EC4899',
+  magenta: '#C84BDF',
+
+  navy: '#18233D',
+  slate: '#64748B',
+  lavender: '#B8A7FF',
+  cream: '#FFF4E8',
   glass: '#EDE8F4',
   glassDeep: '#DCD4EC',
   surface: '#161327',
@@ -19,7 +38,12 @@ export const brandColors = {
 } as const;
 
 /** The three chroma bands, in band order. */
-export const brandBands = [brandColors.violet, brandColors.cyan, brandColors.coral] as const;
+export const brandBands = [
+  brandColors.lavender,
+  brandColors.cyan,
+  brandColors.coral,
+  brandColors.rose,
+] as const;
 
 /**
  * Section 01 · The mark. A 1024 master; every derived size is a scale of this.
