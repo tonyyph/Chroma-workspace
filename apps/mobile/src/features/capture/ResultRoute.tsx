@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { usePalettes } from '@/hooks/usePalettes';
 import { analytics, hapticsService, soundService } from '@/infrastructure/dependencies';
+import { persistPhoto } from '@/lib/photos';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { useCaptureStore } from '@/store/captureStore';
 import { Button, EmptyGlyph, Gutter, Screen, ScreenHeader, Text } from '@/ui';
@@ -37,8 +38,12 @@ export default function ResultRoute() {
 
   const commit = useCallback(
     async (name: string) => {
-      const palette = toPalette(name);
-      if (!palette) return;
+      const draft = toPalette(name);
+      if (!draft) return;
+      // The frame is still in a purgeable cache at this point. Saving the record
+      // without moving the file first is how a library ends up full of palettes
+      // whose photos have quietly vanished.
+      const palette = { ...draft, photoUri: persistPhoto(draft.photoUri, draft.id) };
       await save(palette);
       void hapticsService.fire('paletteSaved');
       void soundService.play('save');

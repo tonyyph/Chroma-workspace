@@ -27,7 +27,8 @@ export function ImportPickScreen({
   onExtract,
 }: {
   onCancel: () => void;
-  onExtract: (colors: readonly Color[]) => void;
+  /** The photo travels with the colours — the result sheet and card both show it. */
+  onExtract: (colors: readonly Color[], photoUri: string | null) => void;
 }) {
   const { t } = usePreferences();
   const [uri, setUri] = useState<string | null>(null);
@@ -149,7 +150,7 @@ export function ImportPickScreen({
     const drift = 1 - colors.reduce((sum, color) => sum + color.weight, 0);
     const first = colors[0];
     if (first) colors[0] = { ...first, weight: Math.round((first.weight + drift) * 1000) / 1000 };
-    onExtract(colors);
+    onExtract(colors, uri);
   };
 
   return (

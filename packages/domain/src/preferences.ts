@@ -31,6 +31,8 @@ export const userPreferencesSchema = z.object({
   // record written before they existed still parses instead of being rejected
   // as invalid and throwing the user back to factory preferences.
   colorSpace: colorSpaceSchema.default('srgb'),
+  /** BUILD KIT · 05 · SOUND — "opt-in, off by default". */
+  soundEnabled: z.boolean().default(false),
   defaultExport: exportTargetSchema.default('css'),
   /**
    * When the activity feed was last cleared, as an ISO timestamp. Anything
@@ -49,6 +51,7 @@ export const defaultUserPreferences = userPreferencesSchema.parse({
   language: 'en',
   theme: 'obsidian',
   colorSpace: 'srgb',
+  soundEnabled: false,
   defaultExport: 'css',
   activityReadAt: null,
 });

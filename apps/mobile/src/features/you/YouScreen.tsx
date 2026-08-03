@@ -22,6 +22,7 @@ export function YouScreen() {
     setNotificationsEnabled,
     setColorSpace,
     setDefaultExport,
+    setSoundEnabled,
     busyAction,
     t,
   } = usePreferences();
@@ -86,6 +87,17 @@ export function YouScreen() {
                 label={t('you.haptics')}
                 onValueChange={(value) => void setHapticsEnabled(value)}
                 value={preferences.hapticsEnabled}
+              />
+            }
+          />
+          <Row
+            label={t('you.sound')}
+            trailing={
+              <Toggle
+                disabled={busyAction !== null}
+                label={t('you.sound')}
+                onValueChange={(value) => void setSoundEnabled(value)}
+                value={preferences.soundEnabled}
               />
             }
           />

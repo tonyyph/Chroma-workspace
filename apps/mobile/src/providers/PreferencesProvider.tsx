@@ -25,6 +25,7 @@ import {
   migrateStorage,
   notificationScheduler,
   preferencesRepository,
+  soundService,
 } from '@/infrastructure/dependencies';
 import { translate, type MessageKey } from '@/localization/messages';
 
@@ -36,6 +37,7 @@ type PreferenceAction =
   | 'notifications'
   | 'reminder'
   | 'colorSpace'
+  | 'sound'
   | 'defaultExport'
   | 'activity'
   | null;
@@ -55,6 +57,7 @@ type PreferencesContextValue = {
   setNotificationsEnabled: (enabled: boolean) => Promise<void>;
   setReminderTime: (time: ReminderTime) => Promise<void>;
   setColorSpace: (space: ColorSpacePreference) => Promise<void>;
+  setSoundEnabled: (enabled: boolean) => Promise<void>;
   setDefaultExport: (target: ExportTarget) => Promise<void>;
   /** Clears the activity feed's unread count by stamping "read" at now. */
   markActivityRead: () => Promise<void>;
@@ -83,6 +86,7 @@ const defaultContextValue: PreferencesContextValue = {
   setNotificationsEnabled: noop,
   setReminderTime: noop,
   setColorSpace: noop,
+  setSoundEnabled: noop,
   setDefaultExport: noop,
   markActivityRead: noop,
   refreshNotificationPermission: noop,
@@ -119,6 +123,9 @@ export function PreferencesProvider({
         if (!active) return;
         setPreferences(stored);
         setNotificationPermission(permission);
+        // The service is a singleton outside React, so it has to be told what
+        // was stored — otherwise cues stay silent until the toggle is touched.
+        soundService.setEnabled(stored.soundEnabled);
       })
       .catch(() => {
         if (active) setError('load');
@@ -290,6 +297,18 @@ export function PreferencesProvider({
     [preferences, save, scheduleFor],
   );
 
+  const setSoundEnabled = useCallback(
+    async (enabled: boolean) => {
+      const didSave = await save({ ...preferences, soundEnabled: enabled }, 'sound');
+      if (!didSave) return;
+      // The service holds the flag too, because it is called from places that
+      // have no access to this context — the capture sequence's worklet callback.
+      soundService.setEnabled(enabled);
+      if (enabled) await soundService.play('save');
+    },
+    [preferences, save],
+  );
+
   const setColorSpace = useCallback(
     async (colorSpace: ColorSpacePreference) => {
       const didSave = await save({ ...preferences, colorSpace }, 'colorSpace');
@@ -349,6 +368,7 @@ export function PreferencesProvider({
       setNotificationsEnabled,
       setReminderTime,
       setColorSpace,
+      setSoundEnabled,
       setDefaultExport,
       markActivityRead,
       refreshNotificationPermission,
@@ -365,11 +385,13 @@ export function PreferencesProvider({
       preferences,
       refreshNotificationPermission,
       setColorSpace,
+      setSoundEnabled,
       setDefaultExport,
       setHapticsEnabled,
       setLanguage,
       setNotificationsEnabled,
       setReminderTime,
+      setSoundEnabled,
       setTheme,
     ],
   );

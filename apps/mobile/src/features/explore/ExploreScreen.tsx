@@ -2,7 +2,7 @@ import { round, space, ui } from '@chromawave/design-tokens';
 import * as Crypto from 'expo-crypto';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { trendingPalettes } from '@/data/seed';
 import { usePalettes } from '@/hooks/usePalettes';
@@ -21,7 +21,6 @@ import {
 } from '@/ui';
 
 const BANNER_HEIGHT = 186;
-const CARD_WIDTH = 342;
 /** How many trending rows show before "SEE ALL" is worth tapping. */
 const TRENDING_PREVIEW = 3;
 
@@ -43,6 +42,7 @@ export function ExploreScreen() {
   const [saved, setSaved] = useState<Readonly<Record<string, string>>>({});
   const [saveError, setSaveError] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const { width } = useWindowDimensions();
 
   // Arriving from a tag chip on B4 lands here with the tag already typed.
   useEffect(() => {
@@ -153,11 +153,14 @@ export function ExploreScreen() {
           style={styles.banner}
         >
           <View style={StyleSheet.absoluteFill}>
+            {/* Measured, not assumed: the fixed 342 this used to draw at was
+                clipped on a 375pt phone and left a strip of bare ground on a
+                430pt one. */}
             <BandCanvas
               background={ui.bg.media}
               blur={13}
               height={BANNER_HEIGHT}
-              width={CARD_WIDTH}
+              width={width - space.gutter * 2}
             />
           </View>
           <View style={styles.bannerScrim} />

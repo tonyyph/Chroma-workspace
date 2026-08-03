@@ -13,10 +13,15 @@
         "dark": "./assets/brand/ios/AppIcon.appiconset/icon-dark-1024.png",
         "tinted": "./assets/brand/ios/AppIcon.appiconset/icon-tinted-1024.png"
       },
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.chromawave.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "Chroma Wave uses the camera to read colour from what you point at. Frames are analysed on device and discarded unless you save a capture."
+        "NSCameraUsageDescription": "Chroma Wave uses the camera to read colour from what you point at. Frames are analysed on device and discarded unless you save a capture.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleLocalizations": [
+          "en",
+          "vi"
+        ]
       }
     },
     "android": {
@@ -57,7 +62,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Chroma Wave to choose a photo only when you start a Memory.",
+          "photosPermission": "Chroma Wave reads colour from a photo you choose. The photo is analysed on device and only the palette is kept.",
           "microphonePermission": false,
           "cameraPermission": "Chroma Wave uses the camera to read colour from what you point at. Frames are analysed on device and discarded unless you save a capture."
         }
@@ -65,7 +70,7 @@
       [
         "expo-notifications",
         {
-          "color": "#DCC28E",
+          "color": "#7C5CFF",
           "defaultChannel": "chromatic-reminder",
           "enableBackgroundRemoteNotifications": false
         }

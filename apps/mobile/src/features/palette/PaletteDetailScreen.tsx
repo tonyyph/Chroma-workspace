@@ -9,6 +9,7 @@ import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { ShareSheet, type ShareOptions } from '@/features/capture/ShareSheet';
 import { paletteRepository } from '@/infrastructure/dependencies';
 import { renderShareCard, shareFile } from '@/lib/export';
+import { persistPhoto } from '@/lib/photos';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import {
   ActionSheet,
@@ -110,11 +111,15 @@ export function PaletteDetailScreen() {
   const duplicate = useCallback(
     async (source: Palette) => {
       const now = new Date().toISOString();
+      const id = Crypto.randomUUID();
       const copy: Palette = {
         ...source,
-        id: Crypto.randomUUID(),
+        id,
         name: t('palette.copyName', { name: source.name }),
         createdAt: now,
+        // The copy gets its own file. Sharing the original's would mean deleting
+        // either palette took the other's photo with it.
+        photoUri: persistPhoto(source.photoUri, id),
         // The copy is a new record but the light it was read from is not, so the
         // capture time is carried over rather than reset to now.
         isPinned: false,

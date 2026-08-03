@@ -18,6 +18,7 @@ describe('UserPreferences', () => {
       language: 'en',
       theme: 'obsidian',
       colorSpace: 'srgb',
+      soundEnabled: false,
       defaultExport: 'css',
       activityReadAt: null,
     });
@@ -41,6 +42,7 @@ describe('UserPreferences', () => {
     const parsed = userPreferencesSchema.parse(storedBeforeTheSettingsRows);
 
     expect(parsed.colorSpace).toBe('srgb');
+    expect(parsed.soundEnabled).toBe(false);
     expect(parsed.defaultExport).toBe('css');
     expect(parsed.activityReadAt).toBeNull();
     // The choices that were on disk survive rather than reverting to defaults.

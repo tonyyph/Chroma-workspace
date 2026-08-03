@@ -1,8 +1,9 @@
-import { space, ui } from '@chromawave/design-tokens';
+import { size, space, ui } from '@chromawave/design-tokens';
 import { filterPalettes, libraryFilters, type LibraryFilter } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { usePalettes } from '@/hooks/usePalettes';
 import { useSets } from '@/hooks/useSets';
@@ -33,9 +34,10 @@ export function LibraryScreen() {
   // The header's collection count was hard-coded to zero, so creating a set left
   // the library still claiming none existed.
   const { sets } = useSets();
+  const insets = useSafeAreaInsets();
 
-  return (
-    <Screen tabBarInset>
+  const header = (
+    <>
       <Gutter style={styles.header}>
         <ScreenHeader
           meta={t('library.meta', { palettes: palettes.length, collections: sets.length })}
@@ -72,34 +74,65 @@ export function LibraryScreen() {
           />
         ))}
       </ScrollView>
+    </>
+  );
 
-      <Gutter>
-        {loading ? (
-          <Shimmer>
-            <View style={styles.grid}>
-              <View style={styles.column}>
-                <CardSkeleton />
-              </View>
-              <View style={styles.column}>
-                <CardSkeleton />
-              </View>
-            </View>
-          </Shimmer>
-        ) : visible.length === 0 ? (
-          <EmptyLibrary onCapture={() => router.push('/capture')} filtered={filter !== 'all'} />
-        ) : (
-          <View style={styles.grid}>
-            {visible.map((palette) => (
-              <View key={palette.id} style={styles.column}>
-                <PaletteCard
-                  onPress={() => router.push(`/palette/${palette.id}`)}
-                  palette={palette}
-                />
-              </View>
-            ))}
-          </View>
-        )}
-      </Gutter>
+  const renderCard = useCallback(
+    ({ item }: { item: (typeof visible)[number] }) => (
+      <View style={styles.column}>
+        <PaletteCard onPress={() => router.push(`/palette/${item.id}`)} palette={item} />
+      </View>
+    ),
+    [router],
+  );
+
+  return (
+    // `scroll={false}`: the list owns the scrolling. A FlatList inside the
+    // Screen's ScrollView would nest two virtualisers, which React Native warns
+    // about and which defeats windowing entirely.
+    <Screen scroll={false}>
+      <FlatList
+        columnWrapperStyle={styles.row}
+        contentContainerStyle={[
+          styles.list,
+          { paddingBottom: size.tabBar + space.sectionGap * 2 + insets.bottom },
+        ]}
+        data={loading ? [] : visible}
+        keyExtractor={(item) => item.id}
+        renderItem={renderCard}
+        ListEmptyComponent={
+          loading ? (
+            <Gutter>
+              <Shimmer>
+                <View style={styles.grid}>
+                  <View style={styles.column}>
+                    <CardSkeleton />
+                  </View>
+                  <View style={styles.column}>
+                    <CardSkeleton />
+                  </View>
+                </View>
+              </Shimmer>
+            </Gutter>
+          ) : (
+            <Gutter>
+              <EmptyLibrary onCapture={() => router.push('/capture')} filtered={filter !== 'all'} />
+            </Gutter>
+          )
+        }
+        ListHeaderComponent={header}
+        // Windowing is the whole point: the previous grid mounted every card,
+        // so a 200-palette library held 200 images and 200 Pressables live at
+        // once. `getItemLayout` is deliberately absent — combining it with
+        // `numColumns` and a header miscomputes offsets, and the measured
+        // fallback is fast enough for cards this size.
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        numColumns={2}
+        removeClippedSubviews
+        showsVerticalScrollIndicator={false}
+        windowSize={7}
+      />
     </Screen>
   );
 }
@@ -140,16 +173,25 @@ const styles = StyleSheet.create({
     paddingTop: space.md,
     gap: space.xs,
   },
+  // The 14pt card gap from SYSTEM F: the list carries the gutter, and each
+  // column takes half the gap on either side so the two still reach the edges.
+  list: {
+    paddingTop: space.md,
+  },
+  // Only the item rows are indented; the header and the empty state keep the
+  // plain 20pt gutter they already carry.
+  row: {
+    alignItems: 'flex-start',
+    paddingHorizontal: space.gutter - space.cardGap / 2,
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingTop: space.md,
-    // The 14pt card gap from SYSTEM F, applied as a negative-margin gutter so
-    // the two columns still reach the screen edges.
     marginHorizontal: -space.cardGap / 2,
   },
   column: {
-    width: '50%',
+    flex: 1,
     paddingHorizontal: space.cardGap / 2,
     paddingBottom: space.cardGap,
   },

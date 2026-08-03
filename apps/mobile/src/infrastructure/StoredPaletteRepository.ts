@@ -7,6 +7,7 @@ import {
 } from '@chromawave/domain';
 
 import { seedPalettes } from '@/data/seed';
+import { deletePhoto } from '@/lib/photos';
 
 import type { KeyValueStorage } from './KeyValueStorage';
 
@@ -46,6 +47,10 @@ export class StoredPaletteRepository implements PaletteRepository {
 
   async remove(id: string): Promise<void> {
     const all = await this.list();
+    // Removal is the one choke point every delete goes through, so the frame is
+    // cleaned up here rather than at each call site. Dropping only the record
+    // would leave orphaned photos that no screen can reach or remove.
+    deletePhoto(all.find((palette) => palette.id === id)?.photoUri ?? null);
     await this.storage.setItem(
       STORAGE_KEY,
       JSON.stringify(all.filter((palette) => palette.id !== id)),
