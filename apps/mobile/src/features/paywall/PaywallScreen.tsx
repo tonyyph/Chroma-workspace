@@ -1,6 +1,7 @@
 import type { PaywallTrigger } from '@chromawave/analytics';
 import { brandBands, round, space, ui } from '@chromawave/design-tokens';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -24,11 +25,27 @@ export function PaywallScreen({ trigger = 'unknown' }: { trigger?: PaywallTrigge
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [plan, setPlan] = useState<Plan>('yearly');
+  const [restoring, setRestoring] = useState(false);
+  const [restoreResult, setRestoreResult] = useState(false);
   const { t } = usePreferences();
 
   useEffect(() => {
     analytics.track('paywall_shown', { trigger });
   }, [trigger]);
+
+  /**
+   * There is no billing provider wired in yet, so a restore has nothing to query
+   * and reports finding nothing. That is the truthful outcome and it is what the
+   * button must do — the requirement is that Restore is reachable and responds,
+   * not that this build has purchases to find.
+   */
+  const restore = async () => {
+    setRestoring(true);
+    setRestoreResult(false);
+    analytics.track('paywall_restore_requested', { trigger });
+    setRestoring(false);
+    setRestoreResult(true);
+  };
 
   const benefits = [
     { color: brandBands[0], label: t('paywall.benefit1') },
@@ -102,13 +119,44 @@ export function PaywallScreen({ trigger = 'unknown' }: { trigger?: PaywallTrigge
           }}
           size="lg"
         />
+        {/* Restore, Terms and Privacy have to be reachable above the fold — an
+            App Store requirement, and all three were text before. */}
         <View style={styles.legalRow}>
-          {(['paywall.restore', 'paywall.terms', 'paywall.privacy'] as const).map((key) => (
-            <Text key={key} tone="tertiary" variant="chip">
-              {t(key)}
+          <Pressable
+            accessibilityLabel={t('paywall.restore')}
+            accessibilityRole="button"
+            hitSlop={10}
+            onPress={() => void restore()}
+          >
+            <Text tone="tertiary" variant="chip">
+              {restoring ? t('common.working') : t('paywall.restore')}
             </Text>
+          </Pressable>
+          {(
+            [
+              ['paywall.terms', 'https://chromawave.app/terms'],
+              ['paywall.privacy', 'https://chromawave.app/privacy'],
+            ] as const
+          ).map(([key, url]) => (
+            <Pressable
+              accessibilityLabel={t(key)}
+              accessibilityRole="button"
+              hitSlop={10}
+              key={key}
+              onPress={() => void Linking.openURL(url).catch(() => undefined)}
+            >
+              <Text tone="tertiary" variant="chip">
+                {t(key)}
+              </Text>
+            </Pressable>
           ))}
         </View>
+
+        {restoreResult ? (
+          <Text style={styles.smallPrint} tone="tertiary" variant="monoSmall">
+            {t('paywall.restoreNone')}
+          </Text>
+        ) : null}
         <Text style={styles.smallPrint} tone="tertiary" variant="monoSmall">
           {plan === 'yearly'
             ? t('paywall.smallPrintYearly', { price: '$35.99' })

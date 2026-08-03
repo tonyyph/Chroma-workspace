@@ -4,7 +4,7 @@ import Svg, { Defs, FeGaussianBlur, Filter, Path, Rect } from 'react-native-svg'
 /**
  * The decorative band field used for hero areas and previews.
  *
- * Ported from `CHROMAWAVE App.dc.html`'s `bands(w, hgt, k, opts)` — same
+ * Ported from `Chroma Wave App.dc.html`'s `bands(w, hgt, k, opts)` — same
  * midlines (`hgt * (0.34 + i * 0.16)`), same amplitude (`hgt * 0.1`), same
  * 0.85 cycles, same 1.1rad phase step, same 0.85 opacity. Strokes overhang the
  * viewport by 20px at each end so the blur never reveals a cap.

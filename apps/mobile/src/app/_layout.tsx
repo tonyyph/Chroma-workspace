@@ -1,5 +1,3 @@
-import 'react-native-gesture-handler';
-
 import { ui } from '@chromawave/design-tokens';
 import {
   IBMPlexMono_400Regular,
@@ -17,7 +15,9 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PreferencesProvider } from '@/providers/PreferencesProvider';
 
 void SplashScreen.preventAutoHideAsync();
@@ -43,9 +43,15 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <PreferencesProvider onReady={handlePreferencesReady}>
-      <AppNavigator />
-    </PreferencesProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* A last-resort boundary: without one, any render error unmounts the tree and
+          leaves a blank screen with no way back. */}
+      <ErrorBoundary>
+        <PreferencesProvider onReady={handlePreferencesReady}>
+          <AppNavigator />
+        </PreferencesProvider>
+      </ErrorBoundary>
+    </GestureHandlerRootView>
   );
 }
 

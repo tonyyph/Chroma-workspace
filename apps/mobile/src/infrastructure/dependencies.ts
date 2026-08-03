@@ -1,11 +1,12 @@
 import { DevelopmentAnalytics } from '@chromawave/analytics';
 
-import { StoredPaletteRepository } from './StoredPaletteRepository';
-import { StoredPreferencesRepository } from './StoredPreferencesRepository';
-import { LEGACY_KEYS, MmkvStorage } from './MmkvStorage';
 import { ExpoHapticsService } from './ExpoHapticsService';
 import { ExpoNotificationScheduler } from './ExpoNotificationScheduler';
 import { ExpoSoundService } from './ExpoSoundService';
+import { LEGACY_KEYS, MmkvStorage } from './MmkvStorage';
+import { StoredPaletteRepository } from './StoredPaletteRepository';
+import { StoredPreferencesRepository } from './StoredPreferencesRepository';
+import { StoredSetRepository } from './StoredSetRepository';
 
 export const analytics = new DevelopmentAnalytics(__DEV__);
 
@@ -21,6 +22,7 @@ export const migrateStorage = () => storage.migrateFromAsyncStorage(LEGACY_KEYS)
 
 export const paletteRepository = new StoredPaletteRepository(storage);
 export const preferencesRepository = new StoredPreferencesRepository(storage);
+export const setRepository = new StoredSetRepository(storage);
 export const hapticsService = new ExpoHapticsService();
 export const notificationScheduler = new ExpoNotificationScheduler();
 export const soundService = new ExpoSoundService();

@@ -3,9 +3,14 @@ import { makeColor, type Color } from '@chromawave/domain';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
+import {
+  Camera,
+  useCameraDevice,
+  useCameraPermission,
+  usePhotoOutput,
+} from 'react-native-vision-camera';
 
-import { useLiveRead } from '@/hooks/useLiveRead';
+import { usePhotoRead } from '@/hooks/usePhotoRead';
 import { analytics, hapticsService } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { Button, Card, Chip, LiveReadPulse, Text } from '@/ui';
@@ -31,15 +36,29 @@ export function ScanScreen({
   const [pins, setPins] = useState<readonly string[]>([]);
   const { hasPermission } = useCameraPermission();
   const device = useCameraDevice('back');
-  const { frameOutput, colors } = useLiveRead({ enabled: hasPermission, intervalMs: 150 });
+  const photoOutput = usePhotoOutput({ targetResolution: { width: 640, height: 480 } });
+  const { read, colors, reading } = usePhotoRead();
 
   const dominant = colors.find((color) => color.role === 'dominant') ?? colors[0];
 
-  const addPin = () => {
-    if (pins.length >= MAX_PINS || !dominant) return;
-    setPins((current) => [...current, dominant.hex]);
-    // BUILD KIT · haptic map: "colour pinned (scan) → impact · light".
-    void hapticsService.fire('colourPinned');
+  /**
+   * Each tap grabs a low-resolution frame and pins its dominant colour. A live
+   * frame processor would be smoother, but its native dependency does not build
+   * against this React Native version — see `usePhotoRead`.
+   */
+  const addPin = async () => {
+    if (pins.length >= MAX_PINS || reading) return;
+    try {
+      const file = await photoOutput.capturePhotoToFile({}, {});
+      const result = await read(`file://${file.filePath}`, 3);
+      const hex = result?.colors.find((color) => color.role === 'dominant')?.hex;
+      if (!hex) return;
+      setPins((current) => [...current, hex]);
+      // BUILD KIT · haptic map: "colour pinned (scan) → impact · light".
+      void hapticsService.fire('colourPinned');
+    } catch {
+      // A missed grab is not worth interrupting a walk for.
+    }
   };
 
   const build = () => {
@@ -57,7 +76,7 @@ export function ScanScreen({
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       {device && hasPermission ? (
-        <Camera device={device} isActive outputs={[frameOutput]} style={StyleSheet.absoluteFill} />
+        <Camera device={device} isActive outputs={[photoOutput]} style={StyleSheet.absoluteFill} />
       ) : (
         <View style={styles.sceneLabel}>
           <Text tone="quaternary" variant="chip">
@@ -78,7 +97,7 @@ export function ScanScreen({
         accessibilityHint={t('scan.pinHint')}
         accessibilityLabel={t('scan.pinLabel')}
         accessibilityRole="button"
-        onPress={addPin}
+        onPress={() => void addPin()}
         style={styles.scene}
       >
         {pins.slice(-4).map((hex, index) => (

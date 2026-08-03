@@ -1,6 +1,6 @@
 # Design system
 
-CHROMAWAVE uses an editorial "quiet luxury" system: an obsidian canvas, warm bone
+Chroma Wave uses an editorial "quiet luxury" system: an obsidian canvas, warm bone
 text, restrained champagne accents, generous negative space, and user photography
 treated as artwork rather than card decoration.
 

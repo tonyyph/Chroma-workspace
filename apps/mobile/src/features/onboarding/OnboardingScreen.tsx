@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCameraPermission } from 'react-native-vision-camera';
 
 import { BrandMark } from '@/components/BrandMark';
 import { analytics } from '@/infrastructure/dependencies';
@@ -22,9 +23,27 @@ export function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { t } = usePreferences();
 
+  const { hasPermission, requestPermission } = useCameraPermission();
+
   const finish = () => {
     analytics.track('onboarding_completed', { stepCount: 3 });
     router.replace('/(tabs)');
+  };
+
+  /**
+   * A4's whole point is asking in context, so the button asks. The intro is over
+   * either way — a refusal is an answer, and the capture screen has its own gate
+   * for that case.
+   */
+  const allowCamera = async () => {
+    if (!hasPermission) await requestPermission().catch(() => undefined);
+    finish();
+  };
+
+  /** "Import a photo instead" has to actually reach the importer. */
+  const importInstead = () => {
+    analytics.track('onboarding_completed', { stepCount: 3 });
+    router.replace('/tools/import');
   };
 
   return (
@@ -37,10 +56,14 @@ export function OnboardingScreen() {
         <Dots active={step} />
         {step === 3 ? (
           <>
-            <Button label={t('onboarding.allowCamera')} onPress={finish} size="lg" />
+            <Button
+              label={t('onboarding.allowCamera')}
+              onPress={() => void allowCamera()}
+              size="lg"
+            />
             <Button
               label={t('onboarding.importInstead')}
-              onPress={finish}
+              onPress={importInstead}
               size="md"
               variant="secondary"
             />
@@ -54,7 +77,15 @@ export function OnboardingScreen() {
             />
             {step === 1 ? (
               <Button label={t('onboarding.skip')} onPress={finish} variant="ghost" />
-            ) : null}
+            ) : (
+              // Step 2 has no skip, so without this there is no way back to
+              // step 1 once "Continue" has been tapped.
+              <Button
+                label={t('onboarding.back')}
+                onPress={() => setStep((current) => Math.max(1, current - 1) as Step)}
+                variant="ghost"
+              />
+            )}
           </>
         )}
       </View>

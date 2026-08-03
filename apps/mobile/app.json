@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "CHROMAWAVE",
+    "name": "Chroma Wave",
     "slug": "chromawave",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.chromawave.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "CHROMAWAVE uses the camera to read colour from what you point at. Frames are analysed on device and discarded unless you save a capture."
+        "NSCameraUsageDescription": "Chroma Wave uses the camera to read colour from what you point at. Frames are analysed on device and discarded unless you save a capture."
       }
     },
     "android": {
@@ -27,7 +27,9 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.chromawave.app",
-      "permissions": ["android.permission.CAMERA"]
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "output": "static",
@@ -55,9 +57,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow CHROMAWAVE to choose a photo only when you start a Memory.",
+          "photosPermission": "Allow Chroma Wave to choose a photo only when you start a Memory.",
           "microphonePermission": false,
-          "cameraPermission": "CHROMAWAVE uses the camera to read colour from what you point at. Frames are analysed on device and discarded unless you save a capture."
+          "cameraPermission": "Chroma Wave uses the camera to read colour from what you point at. Frames are analysed on device and discarded unless you save a capture."
         }
       ],
       [
@@ -72,6 +74,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d6cc3c4e-e6c7-456b-8a3f-482a23401abc"
+      }
+    },
+    "owner": "cuongphan2"
   }
 }

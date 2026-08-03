@@ -20,6 +20,7 @@ export type AnalyticsEventMap = {
   export_performed: { format: ExportFormat; isPro: boolean };
   paywall_shown: { trigger: PaywallTrigger };
   paywall_converted: { plan: 'monthly' | 'yearly' };
+  paywall_restore_requested: { trigger: PaywallTrigger };
   contrast_check_failed: { ratio: number };
   scan_pins_added: { count: number };
 
@@ -51,7 +52,13 @@ export type ExportFormat = 'css' | 'tailwind' | 'swift' | 'json' | 'svg' | 'ase'
 
 /** Where the paywall was entered from, so conversion can be attributed. */
 export type PaywallTrigger =
-  'merge-set' | 'watermark' | 'json-export' | 'semantic-names' | 'palette-limit' | 'unknown';
+  | 'merge-set'
+  | 'watermark'
+  | 'json-export'
+  | 'semantic-names'
+  | 'palette-limit'
+  | 'auto-wb'
+  | 'unknown';
 
 export type ShareRatio = '1x1' | '4x5' | '9x16' | '1.91x1';
 

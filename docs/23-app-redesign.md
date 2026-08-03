@@ -1,6 +1,6 @@
 # App redesign — Chroma Signal product UI
 
-Source of truth: `CHROMAWAVE App.dc.html` — APP UI · 390×844 · iOS FIRST · V1 · JUL 2026.
+Source of truth: `Chroma Wave App.dc.html` — APP UI · 390×844 · iOS FIRST · V1 · JUL 2026.
 
 The design is a colour-palette tool. The previous build was a "Memory" app —
 photo + palette + **music pairing**, tabs Today/Archive/Capture/Atelier/Settings.

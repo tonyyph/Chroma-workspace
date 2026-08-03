@@ -1,10 +1,10 @@
-# CHROMAWAVE
+# Chroma Wave
 
-CHROMAWAVE is a mobile-first synesthetic memory platform. A photograph becomes a
+Chroma Wave is a mobile-first synesthetic memory platform. A photograph becomes a
 perceptual color palette, a mood, and a musical pairing stored as a private Memory.
 
 This repository currently implements the first local-first vertical slice from the
-[Product Blueprint](./CHROMAWAVE%20Product%20Blueprint.pdf).
+[Product Blueprint](./Chroma Wave%20Product%20Blueprint.pdf).
 
 ## Requirements
 

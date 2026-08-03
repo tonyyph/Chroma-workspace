@@ -1,13 +1,17 @@
 import { round, space, ui } from '@chromawave/design-tokens';
 import type { Palette } from '@chromawave/domain';
-import { useState } from 'react';
+import * as Clipboard from 'expo-clipboard';
+import { useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 
+import { gradientSvg, renderGradientPng, shareFile } from '@/lib/export';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import {
   Card,
   Chip,
   GradientCanvas,
+  InlineError,
   NavBar,
   Screen,
   Slider,
@@ -36,14 +40,59 @@ export function GradientScreen({
   onSave: () => void;
 }) {
   const { width } = useWindowDimensions();
+  const router = useRouter();
   const { t } = usePreferences();
   const [kind, setKind] = useState<(typeof KINDS)[number]>('LINEAR');
   const [interpolation, setInterpolation] = useState<(typeof INTERPOLATIONS)[number]>('OKLAB');
   const [angle, setAngle] = useState(152);
   const [grain, setGrain] = useState(true);
 
+  const [busy, setBusy] = useState<'png' | 'svg' | null>(null);
+  const [exportFailed, setExportFailed] = useState(false);
+
+  const copyCss = useCallback(() => {
+    const stops = palette.colors.map((color) => color.hex.toLowerCase()).join(', ');
+    const css =
+      kind === 'LINEAR'
+        ? `background: linear-gradient(${Math.round(angle)}deg, ${stops});`
+        : kind === 'RADIAL'
+          ? `background: radial-gradient(circle at 50% 50%, ${stops});`
+          : `background: conic-gradient(from ${Math.round(angle)}deg, ${stops});`;
+    void Clipboard.setStringAsync(css);
+  }, [palette.colors, kind, angle]);
+
   const stops = palette.colors.map((color) => color.hex);
   const canvasWidth = width - space.gutter * 2;
+  const slug = palette.name.toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+  const shape = {
+    colors: stops,
+    kind: kind.toLowerCase() as GradientKind,
+    angle,
+    interpolation: interpolation.toLowerCase() as Interpolation,
+  };
+
+  /**
+   * Renders at 4K rather than snapshotting the on-screen canvas — the preview is
+   * a few hundred points wide and upscaling it would not be a 4K wallpaper.
+   */
+  const exportPng = async () => {
+    setBusy('png');
+    setExportFailed(false);
+    const bytes = renderGradientPng({ ...shape, width: 3840, height: 2160 });
+    const outcome = bytes ? await shareFile(bytes, `${slug}-gradient.png`) : 'failed';
+    if (outcome === 'failed') setExportFailed(true);
+    setBusy(null);
+  };
+
+  const exportSvg = async () => {
+    setBusy('svg');
+    setExportFailed(false);
+    const markup = gradientSvg({ ...shape, width: 1920, height: 1080 });
+    const outcome = await shareFile(markup, `${slug}-gradient.svg`);
+    if (outcome === 'failed') setExportFailed(true);
+    setBusy(null);
+  };
 
   return (
     <Screen>
@@ -133,11 +182,33 @@ export function GradientScreen({
         </View>
       </Card>
 
+      {exportFailed ? (
+        <View style={styles.error}>
+          <InlineError
+            detail={t('gradient.exportFailedDetail')}
+            title={t('gradient.exportFailed')}
+          />
+        </View>
+      ) : null}
+
       <View style={styles.exports}>
-        <Chip fill label="CSS" onPress={() => {}} />
-        <Chip fill label="PNG 4K" onPress={() => {}} />
-        <Chip fill label="SVG" onPress={() => {}} />
-        <Chip fill label={t('gradient.wallpaper')} tone="pro" />
+        <Chip fill label={t('common.css')} onPress={copyCss} />
+        <Chip
+          fill
+          label={busy === 'png' ? t('common.working') : 'PNG 4K'}
+          onPress={() => void exportPng()}
+        />
+        <Chip
+          fill
+          label={busy === 'svg' ? t('common.working') : t('common.svg')}
+          onPress={() => void exportSvg()}
+        />
+        <Chip
+          fill
+          label={t('gradient.wallpaper')}
+          onPress={() => router.push('/paywall?trigger=json-export')}
+          tone="pro"
+        />
       </View>
     </Screen>
   );
@@ -171,6 +242,7 @@ const styles = StyleSheet.create({
   interpolations: { flexDirection: 'row', gap: space.xs, paddingTop: space.xs },
   grainRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   grainLabel: { fontSize: 14, color: ui.text.primary },
+  error: { paddingHorizontal: space.gutter, paddingTop: space.md },
   exports: {
     flexDirection: 'row',
     gap: space.xs,

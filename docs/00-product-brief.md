@@ -1,6 +1,6 @@
 # Product brief
 
-CHROMAWAVE turns a photograph into a private, color-and-music Memory. The first
+Chroma Wave turns a photograph into a private, color-and-music Memory. The first
 commercially meaningful loop is: select a photo, extract a perceptual palette,
 confirm its mood, pair a track, save locally, and revisit it in a timeline.
 
@@ -17,5 +17,5 @@ Memories default to private and stay on the device.
 
 - A new user can save a first Memory without instruction outside the app.
 - Palette results are deterministic for the same normalized image.
-- Every palette remains readable in the neutral CHROMAWAVE shell.
+- Every palette remains readable in the neutral Chroma Wave shell.
 - The flow recovers from denied permission, extraction failure, and an empty library.

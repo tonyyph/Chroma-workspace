@@ -1,7 +1,7 @@
 /**
  * Concept 07 · Chroma Signal — the only mark in the system.
  *
- * Ported 1:1 from the generator embedded in `CHROMAWAVE Final Concept.dc.html`
+ * Ported 1:1 from the generator embedded in `Chroma Wave Final Concept.dc.html`
  * (`class Component extends DCLogic`, method `icon(o)`). Option names, colour
  * literals, midlines, amplitudes, stroke widths and blur deviations are kept
  * identical so a future revision of the document can be diffed against this file
@@ -76,15 +76,15 @@ export function icon(o = {}) {
 
   const glassStops = dark
     ? [
-        [0, '#FFFFFF', 0.3],
-        [0.62, '#FFFFFF', 0.15],
-        [1, '#8E86B8', 0.1],
-      ]
+      [0, '#FFFFFF', 0.3],
+      [0.62, '#FFFFFF', 0.15],
+      [1, '#8E86B8', 0.1],
+    ]
     : [
-        [0, '#FFFFFF', 0.96],
-        [0.62, '#FFFFFF', 0.74],
-        [1, '#D9D2EA', 0.5],
-      ];
+      [0, '#FFFFFF', 0.96],
+      [0.62, '#FFFFFF', 0.74],
+      [1, '#D9D2EA', 0.5],
+    ];
 
   const sd = mono ? 18 : simple ? 20 : 44;
   const defs = [
@@ -128,10 +128,10 @@ export function icon(o = {}) {
     flat || bare
       ? null
       : element(
-          'g',
-          { filter: g('sh'), opacity: dark ? 0.4 : 0.28 },
-          element('path', { d: squircle(512, 552, 356, 4), fill: dark ? '#000000' : '#2A2440' }),
-        ),
+        'g',
+        { filter: g('sh'), opacity: dark ? 0.4 : 0.28 },
+        element('path', { d: squircle(512, 552, 356, 4), fill: dark ? '#000000' : '#2A2440' }),
+      ),
     element('clipPath', { id: `${p}cl` }, element('path', { d: sq })),
     element('g', { 'clip-path': `url(#${p}cl)` }, [
       flat ? null : element('path', { d: sq, fill: g('gl') }),
@@ -147,13 +147,13 @@ export function icon(o = {}) {
     simple || flat
       ? null
       : element('path', {
-          d: 'M300 300 Q396 236 512 236',
-          stroke: '#FFFFFF',
-          'stroke-width': 22,
-          'stroke-linecap': 'round',
-          fill: 'none',
-          opacity: 0.9,
-        }),
+        d: 'M300 300 Q396 236 512 236',
+        stroke: '#FFFFFF',
+        'stroke-width': 22,
+        'stroke-linecap': 'round',
+        fill: 'none',
+        opacity: 0.9,
+      }),
   ];
 
   if (o.badge) {

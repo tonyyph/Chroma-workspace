@@ -14,13 +14,34 @@ import {
 } from 'react-native-vision-camera';
 
 import { BrandMark } from '@/components/BrandMark';
-import { useLiveRead } from '@/hooks/useLiveRead';
+import { usePhotoRead } from '@/hooks/usePhotoRead';
 import { hapticsService, soundService } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { useCaptureStore } from '@/store/captureStore';
 import { Button, Card, Chip, LiveReadPulse, Meta, ScanSweep, Text, useCaptureSequence } from '@/ui';
 
-type Mode = 'LIVE' | 'PHOTO' | 'SCAN';
+/** The three viewfinder modes, each with its own message key. */
+const MODES = [
+  { key: 'live', labelKey: 'capture.mode.live' },
+  { key: 'photo', labelKey: 'capture.mode.photo' },
+  { key: 'scan', labelKey: 'capture.mode.scan' },
+] as const;
+
+type Mode = (typeof MODES)[number]['key'];
+
+/** Flash cycles through these; AUTO leaves the decision to the capture. */
+const FLASH_MODES = ['off', 'on', 'auto'] as const;
+type Flash = (typeof FLASH_MODES)[number];
+
+/**
+ * The framed area for each aspect ratio, sized to hold roughly the same area so
+ * cycling ratios reframes rather than zooms.
+ */
+const RATIOS = [
+  { key: '4:3', width: 204, height: 272 },
+  { key: '1:1', width: 236, height: 236 },
+  { key: '16:9', width: 280, height: 158 },
+] as const;
 
 /**
  * B1 · VIEWFINDER · "shutter is the mark, 84px target".
@@ -39,13 +60,14 @@ export function ViewfinderScreen() {
   const { hasPermission, requestPermission, canRequestPermission } = useCameraPermission();
   const device = useCameraDevice('back');
   const photoOutput = usePhotoOutput();
-  const [mode, setMode] = useState<Mode>('LIVE');
+  const [mode, setMode] = useState<Mode>('live');
   const [capturing, setCapturing] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [flash, setFlash] = useState<Flash>('off');
+  const [ratioIndex, setRatioIndex] = useState(0);
+  const ratio = RATIOS[ratioIndex] ?? RATIOS[0];
 
-  const { frameOutput, colors, deltaE, confidence } = useLiveRead({
-    enabled: hasPermission && !capturing,
-  });
+  const { read, colors, deltaE, confidence, reading } = usePhotoRead();
 
   // The sequence callback fires from a worklet completion, so it reads the latest
   // values through refs rather than closing over a stale render.
@@ -80,14 +102,31 @@ export function ViewfinderScreen() {
     void soundService.play('shutter');
     setCapturing(true);
     try {
-      const file = await photoOutput.capturePhotoToFile({}, {});
+      // The torch covers the LIVE reading; the flash fires for the frame the
+      // extractor actually reads, which is the one that has to be lit.
+      const file = await photoOutput.capturePhotoToFile({ flashMode: flash }, {});
       // `filePath` is a filesystem path, not a file:// URL — Image needs the scheme.
-      setPhotoUri(`file://${file.filePath}`);
+      const uri = `file://${file.filePath}`;
+      setPhotoUri(uri);
+      await read(uri);
     } catch {
-      // A failed shot still runs the sequence — the live read already has colours,
-      // so the user gets a palette even without a stored frame.
+      // A failed shot still finishes the sequence, which then finds no colours and
+      // leaves the user on the viewfinder rather than pushing an empty result.
     }
-  }, [photoOutput]);
+  }, [flash, photoOutput, read]);
+
+  /**
+   * The three modes are three different capture paths, so selecting one routes
+   * to it. LIVE is this screen, which is why it alone stays put.
+   */
+  const selectMode = useCallback(
+    (next: Mode) => {
+      setMode(next);
+      if (next === 'photo') router.push('/tools/import');
+      if (next === 'scan') router.push('/tools/scan');
+    },
+    [router],
+  );
 
   if (!hasPermission) {
     return (
@@ -108,9 +147,12 @@ export function ViewfinderScreen() {
         <Camera
           device={device}
           isActive
-          outputs={[photoOutput, frameOutput]}
+          outputs={[photoOutput]}
           ref={camera}
           style={StyleSheet.absoluteFill}
+          // 'auto' has no torch equivalent — it is a shutter-time decision — so
+          // the continuous light is only held on for the explicit ON setting.
+          torchMode={flash === 'on' ? 'on' : 'off'}
         />
       ) : (
         <View style={[StyleSheet.absoluteFill, styles.noDevice]}>
@@ -142,14 +184,33 @@ export function ViewfinderScreen() {
             <Text variant="chip">✕</Text>
           </Pressable>
           <View style={styles.topChips}>
-            <Chip label={t('capture.flash')} onPress={() => {}} />
-            <Chip label={t('capture.ratio')} onPress={() => {}} />
-            <Chip label={t('capture.autoWb')} tone="pro" />
+            <Chip
+              label={`${t('capture.flash')} ${t(`capture.flash.${flash}`)}`}
+              onPress={() =>
+                setFlash(
+                  FLASH_MODES[(FLASH_MODES.indexOf(flash) + 1) % FLASH_MODES.length] ?? 'off',
+                )
+              }
+              tone={flash === 'off' ? 'default' : 'selected'}
+            />
+            <Chip
+              label={ratio.key}
+              onPress={() => setRatioIndex((current) => (current + 1) % RATIOS.length)}
+              tone={ratioIndex === 0 ? 'default' : 'selected'}
+            />
+            {/* Locking white balance keeps a walk's readings comparable — Pro. */}
+            <Chip
+              label={t('capture.autoWb')}
+              onPress={() => router.push('/paywall?trigger=auto-wb')}
+              tone="pro"
+            />
           </View>
         </View>
 
+        {/* The ratio chip crops the framed area, so what the reticle encloses is
+            what the chosen ratio will contain. */}
         <View style={styles.reticleWrap}>
-          <View style={styles.reticle}>
+          <View style={[styles.reticle, { width: ratio.width, height: ratio.height }]}>
             <View style={styles.reticleDot} />
           </View>
         </View>
@@ -199,7 +260,7 @@ export function ViewfinderScreen() {
                 accessibilityHint={t('capture.shutterHint')}
                 accessibilityLabel={t('capture.shutter')}
                 accessibilityRole="button"
-                disabled={capturing}
+                disabled={capturing || reading}
                 onPress={() => void shoot()}
                 style={styles.shutter}
               >
@@ -220,21 +281,21 @@ export function ViewfinderScreen() {
           </View>
 
           <View style={styles.modes}>
-            {(['LIVE', 'PHOTO', 'SCAN'] as const).map((entry) => (
+            {MODES.map((entry) => (
               <Pressable
-                accessibilityLabel={entry}
+                accessibilityLabel={t(entry.labelKey)}
                 accessibilityRole="tab"
-                accessibilityState={{ selected: mode === entry }}
+                accessibilityState={{ selected: mode === entry.key }}
                 hitSlop={10}
-                key={entry}
-                onPress={() => setMode(entry)}
+                key={entry.key}
+                onPress={() => selectMode(entry.key)}
               >
                 <Text
-                  style={[styles.mode, mode === entry && styles.modeActive]}
-                  tone={mode === entry ? 'primary' : 'tertiary'}
+                  style={[styles.mode, mode === entry.key && styles.modeActive]}
+                  tone={mode === entry.key ? 'primary' : 'tertiary'}
                   variant="chip"
                 >
-                  {t(`capture.mode.${entry.toLowerCase()}` as never)}
+                  {t(entry.labelKey)}
                 </Text>
               </Pressable>
             ))}

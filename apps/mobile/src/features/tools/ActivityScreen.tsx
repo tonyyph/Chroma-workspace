@@ -1,10 +1,13 @@
 import { brandBands, space, ui } from '@chromawave/design-tokens';
-import type { Palette } from '@chromawave/domain';
+import { shortAge, type Palette } from '@chromawave/domain';
+import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Card, Chip, Gutter, Meta, Screen, ScreenHeader, Text } from '@/ui';
+import { Card, Chip, Gutter, Meta, Screen, ScreenHeader, SwatchStrip, Text } from '@/ui';
+
+import { unreadActivity } from './activity';
 
 /**
  * G9 · ACTIVITY · "collaboration feed + monthly colour recap".
@@ -14,26 +17,64 @@ import { Card, Chip, Gutter, Meta, Screen, ScreenHeader, Text } from '@/ui';
  * which is what the design's copy actually reports.
  */
 export function ActivityScreen({ palettes }: { palettes: readonly Palette[] }) {
-  const { t } = usePreferences();
+  const { t, preferences, markActivityRead } = usePreferences();
+  const router = useRouter();
   const recap = useMemo(() => buildRecap(palettes), [palettes]);
+  const unread = useMemo(
+    () => unreadActivity(palettes, preferences.activityReadAt),
+    [palettes, preferences.activityReadAt],
+  );
 
   return (
     <Screen tabBarInset>
       <Gutter style={styles.head}>
         <ScreenHeader
           title={t('activity.title')}
-          trailing={<Chip label={t('activity.markRead')} onPress={() => {}} />}
+          trailing={
+            unread.length ? (
+              <Chip label={t('activity.markRead')} onPress={() => void markActivityRead()} />
+            ) : (
+              <Chip label={t('activity.allRead')} />
+            )
+          }
         />
       </Gutter>
 
-      {/* No collaboration feed without a server — say so rather than seed fake events. */}
+      {/* There is no collaboration feed without a server, but there is a real
+          local one: the captures made since this screen was last cleared. */}
       <Gutter style={styles.notice}>
-        <Card style={styles.noticeCard}>
-          <Text variant="cardTitle">{t('activity.none.title')}</Text>
-          <Text tone="secondary" variant="body">
-            {t('activity.none.body')}
-          </Text>
-        </Card>
+        {unread.length ? (
+          <View style={styles.feed}>
+            {unread.map((palette) => (
+              <Card
+                accessibilityLabel={palette.name}
+                key={palette.id}
+                onPress={() => router.push(`/palette/${palette.id}`)}
+                style={styles.feedRow}
+              >
+                <SwatchStrip
+                  colors={palette.colors.slice(0, 3)}
+                  height={34}
+                  radius={9}
+                  style={styles.feedStrip}
+                />
+                <View style={styles.feedCopy}>
+                  <Text variant="cardTitle">{palette.name}</Text>
+                  <Meta style={styles.feedMeta}>
+                    {t('activity.captured', { age: shortAge(palette.capturedAt) })}
+                  </Meta>
+                </View>
+              </Card>
+            ))}
+          </View>
+        ) : (
+          <Card style={styles.noticeCard}>
+            <Text variant="cardTitle">{t('activity.none.title')}</Text>
+            <Text tone="secondary" variant="body">
+              {t('activity.none.body')}
+            </Text>
+          </Card>
+        )}
       </Gutter>
 
       <Gutter style={styles.sectionLabel}>
@@ -121,6 +162,11 @@ const styles = StyleSheet.create({
   head: { paddingTop: space.cardGap },
   notice: { paddingTop: space.md + 2 },
   noticeCard: { gap: space.xs },
+  feed: { gap: 10 },
+  feedRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  feedStrip: { width: 56 },
+  feedCopy: { flex: 1, gap: 3 },
+  feedMeta: { fontSize: 9, letterSpacing: 1 },
   sectionLabel: { paddingTop: space.sectionGap },
   recapWrap: { paddingTop: space.cardGap },
   recap: { gap: space.cardGap, padding: 18 },

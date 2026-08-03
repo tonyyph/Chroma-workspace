@@ -56,52 +56,15 @@ export function ApplyThemeScreen({
         ))}
       </Gutter>
 
+      {/* The surface chips change what is previewed, not just which chip is lit:
+          a palette that carries a dashboard can still fail as a poster, and the
+          only way to see that is to render both. */}
       <Gutter style={styles.previewWrap}>
         <View style={[styles.preview, { backgroundColor: roles.surface }]}>
-          <View style={styles.previewHead}>
-            <Text style={[styles.previewTitle, { color: roles.onSurface }]}>
-              {t('theme.dashboard')}
-            </Text>
-            <View style={[styles.previewGlyph, { backgroundColor: roles.primary }]} />
-          </View>
-
-          <View style={styles.stats}>
-            <Stat background={roles.primary} label={t('theme.uptime')} value="82%" />
-            <Stat background={roles.accent} label={t('theme.sessions')} value="1.4K" />
-            <Stat
-              background="transparent"
-              border={roles.onSurface}
-              label={t('theme.alerts')}
-              textColor={roles.onSurface}
-              value="36"
-            />
-          </View>
-
-          <View style={styles.chart}>
-            {[40, 66, 52, 88, 72, 58, 34].map((height, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.bar,
-                  {
-                    height: `${height}%`,
-                    backgroundColor: height === 88 ? roles.primary : roles.support,
-                  },
-                ]}
-              />
-            ))}
-          </View>
-
-          <View style={styles.previewActions}>
-            <View style={[styles.previewButton, { backgroundColor: roles.accent }]}>
-              <Text
-                style={{ color: safeForegroundFor(roles.accent), fontSize: 13, fontWeight: '600' }}
-              >
-                {t('theme.primaryAction')}
-              </Text>
-            </View>
-            <View style={[styles.previewGhost, { borderColor: roles.onSurface }]} />
-          </View>
+          {surface === 'APP UI' ? <AppUiPreview roles={roles} /> : null}
+          {surface === 'WEB' ? <WebPreview roles={roles} /> : null}
+          {surface === 'POSTER' ? <PosterPreview roles={roles} /> : null}
+          {surface === 'SLIDE' ? <SlidePreview roles={roles} /> : null}
         </View>
       </Gutter>
 
@@ -132,6 +95,126 @@ export function ApplyThemeScreen({
         <Button label={t('theme.export')} onPress={onExport} />
       </Gutter>
     </Screen>
+  );
+}
+
+type Roles = {
+  surface: string;
+  onSurface: string;
+  primary: string;
+  support: string;
+  accent: string;
+};
+
+/** The design's own preview: header, stat tiles, a chart and an action row. */
+function AppUiPreview({ roles }: { roles: Roles }) {
+  const { t } = usePreferences();
+  return (
+    <>
+      <View style={styles.previewHead}>
+        <Text style={[styles.previewTitle, { color: roles.onSurface }]}>
+          {t('theme.dashboard')}
+        </Text>
+        <View style={[styles.previewGlyph, { backgroundColor: roles.primary }]} />
+      </View>
+
+      <View style={styles.stats}>
+        <Stat background={roles.primary} label={t('theme.uptime')} value="82%" />
+        <Stat background={roles.accent} label={t('theme.sessions')} value="1.4K" />
+        <Stat
+          background="transparent"
+          border={roles.onSurface}
+          label={t('theme.alerts')}
+          textColor={roles.onSurface}
+          value="36"
+        />
+      </View>
+
+      <View style={styles.chart}>
+        {[40, 66, 52, 88, 72, 58, 34].map((height, index) => (
+          <View
+            key={index}
+            style={[
+              styles.bar,
+              {
+                height: `${height}%`,
+                backgroundColor: height === 88 ? roles.primary : roles.support,
+              },
+            ]}
+          />
+        ))}
+      </View>
+
+      <View style={styles.previewActions}>
+        <View style={[styles.previewButton, { backgroundColor: roles.accent }]}>
+          <Text style={{ color: safeForegroundFor(roles.accent), fontSize: 13, fontWeight: '600' }}>
+            {t('theme.primaryAction')}
+          </Text>
+        </View>
+        <View style={[styles.previewGhost, { borderColor: roles.onSurface }]} />
+      </View>
+    </>
+  );
+}
+
+/** A marketing page: nav, headline, body, call to action — long-form text on the ground. */
+function WebPreview({ roles }: { roles: Roles }) {
+  const { t } = usePreferences();
+  return (
+    <>
+      <View style={styles.webNav}>
+        <View style={[styles.webLogo, { backgroundColor: roles.primary }]} />
+        {[52, 40, 46].map((width, index) => (
+          <View
+            key={index}
+            style={[styles.webNavItem, { width, backgroundColor: roles.onSurface }]}
+          />
+        ))}
+      </View>
+      <Text style={[styles.webHeadline, { color: roles.onSurface }]}>{t('theme.webHeadline')}</Text>
+      {[100, 92, 74].map((width, index) => (
+        <View
+          key={index}
+          style={[styles.webLine, { width: `${width}%`, backgroundColor: roles.support }]}
+        />
+      ))}
+      <View style={[styles.webCta, { backgroundColor: roles.accent }]}>
+        <Text style={{ color: safeForegroundFor(roles.accent), fontSize: 12, fontWeight: '600' }}>
+          {t('theme.primaryAction')}
+        </Text>
+      </View>
+    </>
+  );
+}
+
+/** Type at poster scale on a full bleed — the hardest test of a palette's contrast. */
+function PosterPreview({ roles }: { roles: Roles }) {
+  const { t } = usePreferences();
+  return (
+    <View style={styles.poster}>
+      <View style={[styles.posterBleed, { backgroundColor: roles.primary }]} />
+      <Text style={[styles.posterTitle, { color: roles.onSurface }]}>{t('theme.posterTitle')}</Text>
+      <View style={styles.posterRule}>
+        <View style={[styles.posterRuleLine, { backgroundColor: roles.accent }]} />
+      </View>
+      <Text style={[styles.posterMeta, { color: roles.support }]}>{t('theme.posterMeta')}</Text>
+    </View>
+  );
+}
+
+/** A presentation slide: eyebrow, title, and a swatch row as the footer. */
+function SlidePreview({ roles }: { roles: Roles }) {
+  const { t } = usePreferences();
+  return (
+    <View style={styles.slide}>
+      <Text style={[styles.slideEyebrow, { color: roles.accent }]}>{t('theme.slideEyebrow')}</Text>
+      <Text style={[styles.slideTitle, { color: roles.onSurface }]}>{t('theme.slideTitle')}</Text>
+      <View style={styles.slideFooter}>
+        {[roles.primary, roles.support, roles.accent].map((hex) => (
+          <View key={hex} style={[styles.slideChip, { backgroundColor: hex }]} />
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -190,6 +273,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   previewGhost: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, opacity: 0.3 },
+  webNav: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  webLogo: { width: 22, height: 22, borderRadius: 7 },
+  webNavItem: { height: 6, borderRadius: 3, opacity: 0.55 },
+  webHeadline: { fontSize: 24, lineHeight: 28, fontWeight: '600', letterSpacing: -0.4 },
+  webLine: { height: 7, borderRadius: 4, opacity: 0.5 },
+  webCta: {
+    alignSelf: 'flex-start',
+    height: 38,
+    borderRadius: 19,
+    paddingHorizontal: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: space.xs,
+  },
+  poster: { gap: space.sm, minHeight: 232 },
+  posterBleed: { height: 74, borderRadius: round.control },
+  posterTitle: { fontSize: 34, lineHeight: 36, fontWeight: '700', letterSpacing: -1 },
+  posterRule: { flexDirection: 'row' },
+  posterRuleLine: { height: 4, flex: 1, borderRadius: 2 },
+  posterMeta: { fontSize: 11, letterSpacing: 2 },
+  slide: { gap: space.sm, minHeight: 232, justifyContent: 'center' },
+  slideEyebrow: { fontSize: 10, letterSpacing: 2, fontWeight: '600' },
+  slideTitle: { fontSize: 28, lineHeight: 32, fontWeight: '600', letterSpacing: -0.6 },
+  slideFooter: { flexDirection: 'row', gap: 8, marginTop: 'auto' },
+  slideChip: { flex: 1, height: 12, borderRadius: 6 },
   mappingWrap: { paddingTop: space.md + 2 },
   mapping: { gap: 10 },
   mappingRow: { flexDirection: 'row', justifyContent: 'space-between' },

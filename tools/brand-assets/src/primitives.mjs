@@ -1,6 +1,6 @@
 /**
  * Geometry + SVG primitives, ported 1:1 from the generator embedded in
- * `CHROMAWAVE Final Concept.dc.html` (class Component extends DCLogic).
+ * `Chroma Wave Final Concept.dc.html` (class Component extends DCLogic).
  *
  * The identity document renders its artwork through React.createElement; here the
  * same functions emit SVG source strings so the marks can be rasterised for
@@ -51,7 +51,7 @@ export function blur(id, sd) {
 
 /**
  * Polyline sampling of `mid + amp * sin(2π · cyc · t + ph)` across [x0, x1].
- * This is the single primitive behind every CHROMAWAVE band.
+ * This is the single primitive behind every Chroma Wave band.
  */
 export function sine(mid, amp, cyc, ph, x0, x1) {
   let d = '';

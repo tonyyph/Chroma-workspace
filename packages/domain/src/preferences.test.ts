@@ -17,7 +17,35 @@ describe('UserPreferences', () => {
       reminderTime: '20:00',
       language: 'en',
       theme: 'obsidian',
+      colorSpace: 'srgb',
+      defaultExport: 'css',
+      activityReadAt: null,
     });
+  });
+
+  it('fills in the settings added after v1 for a record written before they existed', () => {
+    // Colour space, default export and the activity read marker arrived with the
+    // D2 settings rows. A device that saved preferences before then has none of
+    // them on disk, and rejecting that record would reset every other choice the
+    // user had made.
+    const storedBeforeTheSettingsRows = {
+      schemaVersion: 1,
+      hapticsEnabled: false,
+      notificationsEnabled: true,
+      notificationIdentifier: 'daily-reminder',
+      reminderTime: '18:00',
+      language: 'vi',
+      theme: 'moss',
+    };
+
+    const parsed = userPreferencesSchema.parse(storedBeforeTheSettingsRows);
+
+    expect(parsed.colorSpace).toBe('srgb');
+    expect(parsed.defaultExport).toBe('css');
+    expect(parsed.activityReadAt).toBeNull();
+    // The choices that were on disk survive rather than reverting to defaults.
+    expect(parsed.theme).toBe('moss');
+    expect(parsed.hapticsEnabled).toBe(false);
   });
 
   it('rejects unsupported themes, times, and partial persisted data', () => {

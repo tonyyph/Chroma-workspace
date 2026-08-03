@@ -1,9 +1,13 @@
 import { round, space, ui } from '@chromawave/design-tokens';
 import type { Palette, PaletteSet } from '@chromawave/domain';
+import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, View } from 'react-native';
+import * as Linking from 'expo-linking';
+import { useState } from 'react';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
-import { Card, Chip, Gutter, Meta, NavBar, Screen, SwatchStrip, Text } from '@/ui';
+import { usePreferences } from '@/providers/PreferencesProvider';
+import { Card, Chip, Gutter, Meta, NavBar, PromptSheet, Screen, SwatchStrip, Text } from '@/ui';
 
 /**
  * C3 · COLLECTION · "shared set, merge is the Pro hook".
@@ -18,31 +22,89 @@ export function CollectionScreen({
   isPro,
   onBack,
   onMerge,
+  onRename,
+  onRemovePalette,
+  onDelete,
 }: {
   set: PaletteSet;
   palettes: readonly Palette[];
   isPro: boolean;
   onBack: () => void;
   onMerge: () => void;
+  onRename: (name: string) => void;
+  onRemovePalette: (paletteId: string) => void;
+  onDelete: () => void;
 }) {
+  const { t, feedback } = usePreferences();
   const members = set.members.length;
+  const [editing, setEditing] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+
+  /**
+   * Exporting a set is the palettes it holds, as one CSS block namespaced per
+   * palette — the format that survives being pasted into a stylesheet, which is
+   * what someone exporting a whole collection is about to do.
+   */
+  const exportSet = () => {
+    const blocks = palettes.map((palette) => {
+      const slug = palette.name.toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const lines = palette.colors.map(
+        (color, index) =>
+          `  --${slug}-${color.role === 'extra' ? `extra-${index}` : color.role}: ${color.hex.toLocaleLowerCase()};`,
+      );
+      return lines.join('\n');
+    });
+    void Clipboard.setStringAsync(`/* ${set.name} */\n:root {\n${blocks.join('\n')}\n}`);
+    void feedback.success();
+  };
+
+  /**
+   * There is no account system, so an invite is the deep link to this set. On a
+   * second device the link only resolves once the set exists there — which the
+   * copy says, rather than the button pretending to have sent something.
+   */
+  const invite = () => {
+    void Clipboard.setStringAsync(Linking.createURL(`/set/${set.id}`));
+    Alert.alert(t('collection.invite'), t('collection.inviteCopied'));
+  };
+
+  const confirmDelete = () => {
+    Alert.alert(t('collection.delete.title'), t('collection.delete.body', { name: set.name }), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('palette.delete.confirm'), style: 'destructive', onPress: onDelete },
+    ]);
+  };
 
   return (
     <Screen>
-      <NavBar leading="‹ LIBRARY" onLeading={onBack} trailing="EDIT" />
+      <NavBar
+        leading={t('collection.back')}
+        onLeading={onBack}
+        onTrailing={() => setEditing((current) => !current)}
+        trailing={t(editing ? 'common.done' : 'collection.edit')}
+      />
 
       <Gutter style={styles.head}>
         <Text variant="title">{set.name}</Text>
         <Meta>
-          {`${set.paletteIds.length} palettes${members > 1 ? ` · shared with ${members - 1} people` : ' · private'}`}
+          {members > 1
+            ? t('collection.meta.shared', { count: set.paletteIds.length, people: members - 1 })
+            : t('collection.meta.private', { count: set.paletteIds.length })}
         </Meta>
       </Gutter>
 
-      <Gutter style={styles.actions}>
-        <Chip fill label="MERGE ALL" onPress={onMerge} tone="pro" />
-        <Chip fill label="EXPORT SET" onPress={() => {}} />
-        <Chip fill label="INVITE" onPress={() => {}} />
-      </Gutter>
+      {editing ? (
+        <Gutter style={styles.actions}>
+          <Chip fill label={t('collection.rename')} onPress={() => setRenaming(true)} />
+          <Chip fill label={t('collection.deleteSet')} onPress={confirmDelete} tone="danger" />
+        </Gutter>
+      ) : (
+        <Gutter style={styles.actions}>
+          <Chip fill label={t('collection.mergeAll')} onPress={onMerge} tone="pro" />
+          <Chip fill label={t('collection.exportSet')} onPress={exportSet} />
+          <Chip fill label={t('collection.invite')} onPress={invite} />
+        </Gutter>
+      )}
 
       <Gutter style={styles.rows}>
         {palettes.map((palette) => (
@@ -50,14 +112,28 @@ export function CollectionScreen({
             <View style={styles.rowThumb} />
             <View style={styles.rowCopy}>
               <Text variant="cardTitle">{palette.name}</Text>
-              <Meta style={styles.rowMeta}>added by you</Meta>
+              <Meta style={styles.rowMeta}>{t('collection.addedByYou')}</Meta>
             </View>
-            <SwatchStrip
-              colors={palette.colors.slice(0, 3)}
-              height={26}
-              radius={8}
-              style={styles.rowStrip}
-            />
+            {editing ? (
+              <Pressable
+                accessibilityLabel={t('collection.removePalette', { name: palette.name })}
+                accessibilityRole="button"
+                hitSlop={10}
+                onPress={() => onRemovePalette(palette.id)}
+                style={styles.remove}
+              >
+                <Text tone="danger" variant="chip">
+                  ✕
+                </Text>
+              </Pressable>
+            ) : (
+              <SwatchStrip
+                colors={palette.colors.slice(0, 3)}
+                height={26}
+                radius={8}
+                style={styles.rowStrip}
+              />
+            )}
           </Card>
         ))}
       </Gutter>
@@ -71,21 +147,30 @@ export function CollectionScreen({
           style={styles.merged}
         >
           <Text style={styles.mergedLabel} variant="eyebrow">
-            {isPro ? 'MERGED SET · PRO' : 'MERGED SET · PRO REQUIRED'}
+            {t(isPro ? 'collection.merged' : 'collection.mergedLocked')}
           </Text>
           {set.merged?.length ? (
             <SwatchStrip colors={set.merged} height={52} radius={12} />
           ) : (
             <View style={styles.mergedEmpty}>
               <Text tone="secondary" variant="body">
-                {isPro
-                  ? 'Merge the set to build one palette from all of them.'
-                  : 'Pro merges a whole set into one palette.'}
+                {t(isPro ? 'collection.mergedBody' : 'collection.mergedLockedBody')}
               </Text>
             </View>
           )}
         </LinearGradient>
       </Gutter>
+
+      <PromptSheet
+        cancelLabel={t('common.cancel')}
+        confirmLabel={t('common.save')}
+        initialValue={set.name}
+        onConfirm={onRename}
+        onDismiss={() => setRenaming(false)}
+        placeholder={t('collection.renamePlaceholder')}
+        title={t('collection.rename')}
+        visible={renaming}
+      />
     </Screen>
   );
 }
@@ -99,6 +184,14 @@ const styles = StyleSheet.create({
   rowCopy: { flex: 1, gap: 3 },
   rowMeta: { fontSize: 9, letterSpacing: 1 },
   rowStrip: { width: 60 },
+  remove: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,107,90,.16)',
+  },
   mergedWrap: { paddingTop: space.sectionGap },
   merged: {
     borderRadius: round.card,

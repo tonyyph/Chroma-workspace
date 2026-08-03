@@ -1,0 +1,31 @@
+{
+  "cli": {
+    "version": ">= 21.4.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview"
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "ios": {
+        "image": "macos-tahoe-26.4-xcode-26.4"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "ynotechcially@gmail.com",
+        "ascAppId": "6797414279"
+      }
+    }
+  }
+}

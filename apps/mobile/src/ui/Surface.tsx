@@ -30,6 +30,12 @@ export function Card({
   }
   return (
     <Pressable
+      // Spreading here is not cosmetic: callers pass `accessibilityRole="radio"`
+      // and a label through `props`, and dropping them left the pressable card
+      // with no role at all — invisible to a screen reader and to any test that
+      // looks for controls by role.
+      {...props}
+      accessibilityRole={props.accessibilityRole ?? 'button'}
       onPress={onPress}
       style={({ pressed }) => [...box, pressed && { opacity: uiMotion.listPress.opacity }]}
     >

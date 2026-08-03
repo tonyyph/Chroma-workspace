@@ -113,10 +113,10 @@ describe('never-translated content', () => {
   });
 
   it('leaves the wordmark untranslated wherever it appears', () => {
-    const withWordmark = messageKeys.filter((key) => en[key].includes('CHROMAWAVE'));
+    const withWordmark = messageKeys.filter((key) => en[key].includes('Chroma Wave'));
     expect(withWordmark.length).toBeGreaterThan(0);
     for (const key of withWordmark) {
-      expect(vi[key]).toContain('CHROMAWAVE');
+      expect(vi[key]).toContain('Chroma Wave');
     }
   });
 

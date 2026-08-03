@@ -1,7 +1,7 @@
 /**
  * Splash storyboard, onboarding panels, empty-state glyphs and share cards.
  *
- * Ported from `CHROMAWAVE Final Concept.dc.html` — methods `splash(i)`,
+ * Ported from `Chroma Wave Final Concept.dc.html` — methods `splash(i)`,
  * `onboard(i)`, `emptyGlyph(i)` and `shareCard()`. The only addition is
  * `shareCard(ratio)`: the document draws the 1.91:1 card and then states the
  * rule for the rest ("Same three-zone grid across 1:1, 4:5, 9:16, 1.91:1 —
@@ -9,8 +9,8 @@
  * from that grid rather than invented.
  */
 
-import { blur, element, rg, sine, squircle, svg } from './primitives.mjs';
 import { palette } from './mark.mjs';
+import { blur, element, rg, sine, squircle, svg } from './primitives.mjs';
 
 const COLS = palette.bands;
 const SCREEN = '0 0 390 844';
@@ -111,7 +111,7 @@ export function splashFrame(i) {
           'font-size': 21,
           'letter-spacing': 3.4,
         },
-        'CHROMAWAVE',
+        'Chroma Wave',
       ),
     );
   }
@@ -430,22 +430,22 @@ export function shareCard(ratio = '1.91x1') {
   const strip = landscape
     ? { x0: 640, x1: 1144, y: 180, gap: 46, amp: 26, w: 38 }
     : {
-        x0: pad,
-        x1: width - pad,
-        y: photo.y + photo.h + Math.round(height * 0.075),
-        gap: Math.round(height * 0.032),
-        amp: Math.round(height * 0.018),
-        w: Math.round(height * 0.026),
-      };
+      x0: pad,
+      x1: width - pad,
+      y: photo.y + photo.h + Math.round(height * 0.075),
+      gap: Math.round(height * 0.032),
+      amp: Math.round(height * 0.018),
+      w: Math.round(height * 0.026),
+    };
   const meta = landscape
     ? { x: 640, y: 380, wide: 380, narrow: 280, mark: 540 }
     : {
-        x: pad,
-        y: strip.y + strip.gap * 3 + Math.round(height * 0.05),
-        wide: Math.round(width * 0.42),
-        narrow: Math.round(width * 0.3),
-        mark: height - pad * 2,
-      };
+      x: pad,
+      y: strip.y + strip.gap * 3 + Math.round(height * 0.05),
+      wide: Math.round(width * 0.42),
+      narrow: Math.round(width * 0.3),
+      mark: height - pad * 2,
+    };
 
   kids.push(
     element('rect', {
@@ -518,7 +518,7 @@ export function shareCard(ratio = '1.91x1') {
         'font-size': 26,
         'letter-spacing': 4,
       },
-      'CHROMAWAVE',
+      'Chroma Wave',
     ),
   );
   return svg(`0 0 ${width} ${height}`, defs, kids);

@@ -16,6 +16,7 @@ export {
 } from './Loops';
 export { BandRefreshControl, LaunchSequence, useCaptureSequence } from './Sequences';
 export { Field } from './Field';
+export { ActionSheet, PromptSheet, type MenuAction } from './Menu';
 export { Sheet, SheetGrabber } from './Sheet';
 export { Slider } from './Slider';
 export { Card, CardGroup, Gutter, Screen } from './Surface';

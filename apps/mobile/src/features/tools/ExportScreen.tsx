@@ -2,12 +2,13 @@ import type { ExportFormat } from '@chromawave/analytics';
 import { round, space, tint, ui } from '@chromawave/design-tokens';
 import { rgbToDisplayP3, type Palette } from '@chromawave/domain';
 import * as Clipboard from 'expo-clipboard';
+import * as Linking from 'expo-linking';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { analytics } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Button, Card, Chip, NavBar, Screen, Text, Toggle } from '@/ui';
+import { Button, Card, Chip, InlineError, NavBar, Screen, Text, Toggle } from '@/ui';
 
 const TARGETS = ['CSS', 'TAILWIND', 'SWIFT', 'JSON'] as const;
 type Target = (typeof TARGETS)[number];
@@ -28,10 +29,15 @@ export function ExportScreen({
   isPro: boolean;
   onClose: () => void;
 }) {
-  const { t } = usePreferences();
-  const [target, setTarget] = useState<Target>('CSS');
+  const { t, preferences } = usePreferences();
+  // D2's "DEFAULT EXPORT" row decides which target this opens on — that setting
+  // has no other effect, and a preference that changes nothing is not one.
+  const [target, setTarget] = useState<Target>(
+    preferences.defaultExport.toLocaleUpperCase() as Target,
+  );
   const [includeTints, setIncludeTints] = useState(true);
-  const [includeP3, setIncludeP3] = useState(true);
+  const [includeP3, setIncludeP3] = useState(preferences.colorSpace === 'p3');
+  const [sendFailed, setSendFailed] = useState(false);
 
   const code = useMemo(
     () => generate(palette, target, { includeTints, includeP3 }),
@@ -44,6 +50,18 @@ export function ExportScreen({
       format: target.toLowerCase() as ExportFormat,
       isPro,
     });
+  };
+
+  const sendTo = async (url: string) => {
+    setSendFailed(false);
+    copy();
+    try {
+      await Linking.openURL(url);
+    } catch {
+      // The code is on the clipboard either way, so the copy still happened —
+      // only the hand-off failed, and saying so is better than looking inert.
+      setSendFailed(true);
+    }
   };
 
   return (
@@ -81,20 +99,37 @@ export function ExportScreen({
         <Option label={t('export.semanticNames')} locked={!isPro} value={isPro} />
       </View>
 
+      {/* Neither destination has an API to post to without an account, so each
+          copies what it needs and opens the place it goes. That is one paste
+          short of automatic, and it is honest about what it did. */}
       <View style={styles.destinations}>
-        <Card style={styles.destination}>
+        <Card
+          accessibilityLabel={t('export.figma')}
+          onPress={() => void sendTo('https://www.figma.com/')}
+          style={styles.destination}
+        >
           <Text tone="tertiary" variant="eyebrow">
-            SEND TO
+            {t('export.sendTo')}
           </Text>
           <Text variant="cardTitle">{t('export.figma')}</Text>
         </Card>
-        <Card style={styles.destination}>
+        <Card
+          accessibilityLabel={t('export.gist')}
+          onPress={() => void sendTo('https://gist.github.com/')}
+          style={styles.destination}
+        >
           <Text tone="tertiary" variant="eyebrow">
-            SEND TO
+            {t('export.sendTo')}
           </Text>
           <Text variant="cardTitle">{t('export.gist')}</Text>
         </Card>
       </View>
+
+      {sendFailed ? (
+        <View style={styles.error}>
+          <InlineError detail={t('export.openFailedDetail')} title={t('export.openFailed')} />
+        </View>
+      ) : null}
 
       <View style={styles.action}>
         <Button label={t('export.copyToClipboard')} onPress={copy} variant="contrast" />
@@ -221,5 +256,6 @@ const styles = StyleSheet.create({
     paddingTop: space.md + 2,
   },
   destination: { flex: 1, gap: space.xs },
+  error: { paddingHorizontal: space.gutter, paddingTop: space.md },
   action: { paddingHorizontal: space.gutter, paddingTop: space.gutter },
 });

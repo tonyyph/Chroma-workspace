@@ -49,5 +49,13 @@ export function usePalettes() {
     [refresh],
   );
 
-  return { ...state, refresh, save };
+  const remove = useCallback(
+    async (id: string) => {
+      await paletteRepository.remove(id);
+      await refresh();
+    },
+    [refresh],
+  );
+
+  return { ...state, refresh, save, remove };
 }

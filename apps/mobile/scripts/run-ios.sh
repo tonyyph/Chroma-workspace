@@ -14,6 +14,6 @@ for chromawave_pod in "$HOME"/.rvm/gems/*/bin/pod; do
   fi
 done
 
-echo "CHROMAWAVE could not find a working CocoaPods executable." >&2
+echo "Chroma Wave could not find a working CocoaPods executable." >&2
 echo "Install CocoaPods for the active Ruby, then rerun this command." >&2
 exit 1

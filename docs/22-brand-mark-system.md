@@ -1,6 +1,6 @@
 # Brand mark system
 
-Source of truth: `CHROMAWAVE Final Concept.dc.html` — **CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026**,
+Source of truth: `Chroma Wave Final Concept.dc.html` — **CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026**,
 marked FINAL · LOCKED.
 
 One mark: a soft glass squircle carrying three refracted chroma bands. The document is

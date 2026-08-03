@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { usePalettes } from '@/hooks/usePalettes';
+import { useSets } from '@/hooks/useSets';
 import { analytics } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import {
@@ -29,13 +30,15 @@ export function LibraryScreen() {
   const [filter, setFilter] = useState<LibraryFilter>('all');
 
   const visible = useMemo(() => filterPalettes(palettes, filter), [palettes, filter]);
-  const collectionCount = 0;
+  // The header's collection count was hard-coded to zero, so creating a set left
+  // the library still claiming none existed.
+  const { sets } = useSets();
 
   return (
     <Screen tabBarInset>
       <Gutter style={styles.header}>
         <ScreenHeader
-          meta={t('library.meta', { palettes: palettes.length, collections: collectionCount })}
+          meta={t('library.meta', { palettes: palettes.length, collections: sets.length })}
           title={t('library.title')}
           trailing={
             <Pressable

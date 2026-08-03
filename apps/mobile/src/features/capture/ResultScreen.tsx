@@ -72,8 +72,15 @@ export function ResultScreen({
           ))}
           {extras.length ? (
             <View style={styles.extras}>
+              {/* The named rows copy on tap; the extras are the same kind of row
+                  at half width and were the only swatches that did not. */}
               {extras.map((color) => (
-                <Card key={color.hex} style={styles.extra}>
+                <Card
+                  accessibilityLabel={t('result.copyLabel', { hex: color.hex })}
+                  key={color.hex}
+                  onPress={() => copy(color.hex)}
+                  style={styles.extra}
+                >
                   <View style={[styles.extraSwatch, { backgroundColor: color.hex }]} />
                   <Text tone="secondary" variant="monoSmall">
                     {`${color.hex.slice(1)}\n${Math.round(color.weight * 100)}%`}

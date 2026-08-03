@@ -11,6 +11,7 @@ import {
   rgbToLab,
   rgbToOklch,
   safeForegroundFor,
+  simulateVisionHex,
   type Lab,
 } from './color';
 import { paletteSchema } from './palette';
@@ -187,5 +188,47 @@ describe('colour space conversions', () => {
   it('gives CIELAB white a lightness of 100', () => {
     expect(rgbToLab({ red: 255, green: 255, blue: 255 }).lightness).toBeCloseTo(100, 2);
     expect(rgbToLab({ red: 0, green: 0, blue: 0 }).lightness).toBeCloseTo(0, 6);
+  });
+});
+
+describe('colour vision simulation', () => {
+  it('collapses red and green towards each other for a deuteranope', () => {
+    // The point of the simulation: a pair a trichromat reads as two colours
+    // becomes one. If ΔE00 did not shrink, the chip would be decoration.
+    const before = hexDeltaE00('#D62828', '#2A9D3F');
+    const after = hexDeltaE00(
+      simulateVisionHex('#D62828', 'deuter'),
+      simulateVisionHex('#2A9D3F', 'deuter'),
+    );
+    expect(after).toBeLessThan(before / 2);
+  });
+
+  it('leaves a blue-yellow pair largely intact for a deuteranope but not a tritanope', () => {
+    const before = hexDeltaE00('#1D4ED8', '#FFC24A');
+    const deuter = hexDeltaE00(
+      simulateVisionHex('#1D4ED8', 'deuter'),
+      simulateVisionHex('#FFC24A', 'deuter'),
+    );
+    const tritan = hexDeltaE00(
+      simulateVisionHex('#1D4ED8', 'tritan'),
+      simulateVisionHex('#FFC24A', 'tritan'),
+    );
+    expect(deuter).toBeGreaterThan(before * 0.7);
+    expect(tritan).toBeLessThan(deuter);
+  });
+
+  it('leaves greys untouched under every dichromat matrix', () => {
+    for (const simulation of ['deuter', 'protan', 'tritan', 'grey'] as const) {
+      // A neutral has no chromatic content to project, so it must survive
+      // unchanged — a matrix that tints grey has a normalisation error.
+      expect(hexDeltaE00(simulateVisionHex('#808080', simulation), '#808080')).toBeLessThan(1);
+    }
+  });
+
+  it('makes greyscale drop chroma to nothing while holding lightness', () => {
+    const grey = simulateVisionHex('#7C5CFF', 'grey');
+    const { red, green, blue } = hexToRgb(grey);
+    expect(red).toBe(green);
+    expect(green).toBe(blue);
   });
 });

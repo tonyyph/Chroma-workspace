@@ -1,7 +1,7 @@
 # @chromawave/brand-assets
 
-Generates the CHROMAWAVE production asset system from the geometry published in
-`CHROMAWAVE Final Concept.dc.html` — **CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026**,
+Generates the Chroma Wave production asset system from the geometry published in
+`Chroma Wave Final Concept.dc.html` — **CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026**,
 marked FINAL · LOCKED. One mark, no alternates.
 
 ```sh

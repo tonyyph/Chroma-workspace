@@ -1,10 +1,10 @@
 import { DomainError, defaultUserPreferences, type UserPreferences } from '@chromawave/domain';
 
+import type { KeyValueStorage } from './KeyValueStorage';
 import {
   StoredPreferencesRepository,
   PREFERENCES_STORAGE_KEY,
 } from './StoredPreferencesRepository';
-import type { KeyValueStorage } from './KeyValueStorage';
 
 class PreferenceStorage implements KeyValueStorage {
   private readonly values = new Map<string, string>();

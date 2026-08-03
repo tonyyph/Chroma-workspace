@@ -12,7 +12,7 @@ const markIcon: number = require('../../assets/brand/runtime/icon.png');
 export function BrandMark({ size = 42 }: { size?: number }) {
   return (
     <View
-      accessibilityLabel="CHROMAWAVE"
+      accessibilityLabel="Chroma Wave"
       accessibilityRole="image"
       style={[
         styles.frame,

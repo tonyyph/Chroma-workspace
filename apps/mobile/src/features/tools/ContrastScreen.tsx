@@ -1,15 +1,28 @@
 import { brandColors, round, space, tint, ui } from '@chromawave/design-tokens';
-import { contrastRatio, type Palette } from '@chromawave/domain';
-import { useMemo, useState } from 'react';
+import {
+  contrastRatio,
+  simulateVisionHex,
+  type Palette,
+  type VisionSimulation,
+} from '@chromawave/domain';
+import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Card, Chip, Gutter, Meta, Screen, ScreenHeader, Text } from '@/ui';
+import { Button, Card, Chip, Gutter, Meta, Screen, ScreenHeader, Text } from '@/ui';
 
 type Verdict = 'AAA' | 'AA' | 'FAIL';
 
 const SIMULATIONS = ['DEUTER', 'PROTAN', 'TRITAN', 'GREY'] as const;
 type Simulation = (typeof SIMULATIONS)[number] | null;
+
+/** The chip labels map onto the domain's simulation names. */
+const SIMULATION_KEYS: Record<(typeof SIMULATIONS)[number], VisionSimulation> = {
+  DEUTER: 'deuter',
+  PROTAN: 'protan',
+  TRITAN: 'tritan',
+  GREY: 'grey',
+};
 
 /**
  * G4 · CONTRAST · "verdicts as text, one-tap accessible fix".
@@ -18,9 +31,27 @@ type Simulation = (typeof SIMULATIONS)[number] | null;
  * suggested fix is derived by walking luminance down while holding hue — the
  * design's own description of it ("Luminance −18, hue held").
  */
-export function ContrastScreen({ palette }: { palette: Palette }) {
+export function ContrastScreen({
+  palette,
+  onApplyFix,
+}: {
+  palette: Palette;
+  /** Writes the suggested colour back onto the palette. Absent when read-only. */
+  onApplyFix?: (from: string, to: string) => void;
+}) {
   const { t } = usePreferences();
   const [simulation, setSimulation] = useState<Simulation>(null);
+
+  /**
+   * Every colour drawn below goes through here, so selecting a simulation
+   * repaints the samples rather than captioning them. Ratios stay on the true
+   * colours: WCAG is defined for typical vision, and a dichromat's contrast is
+   * not what the standard measures.
+   */
+  const shown = useCallback(
+    (hex: string) => (simulation ? simulateVisionHex(hex, SIMULATION_KEYS[simulation]) : hex),
+    [simulation],
+  );
 
   const checks = useMemo(() => {
     const grounds: readonly { ground: string; label: string }[] = [
@@ -49,12 +80,14 @@ export function ContrastScreen({ palette }: { palette: Palette }) {
 
       <Gutter style={styles.samplesWrap}>
         <View style={styles.samples}>
-          <View style={[styles.sample, { backgroundColor: palette.colors[0]?.hex }]}>
+          <View
+            style={[styles.sample, { backgroundColor: shown(palette.colors[0]?.hex ?? '#000') }]}
+          >
             <Text style={styles.sampleTitle}>{t('contrast.largeSample')}</Text>
             <Text style={styles.sampleBody}>{t('contrast.largeBody')}</Text>
           </View>
           <View style={[styles.sample, { backgroundColor: brandColors.surface }]}>
-            <Text style={[styles.sampleTitle, { color: palette.colors[2]?.hex }]}>
+            <Text style={[styles.sampleTitle, { color: shown(palette.colors[2]?.hex ?? '#FFF') }]}>
               {t('contrast.signalOnInk')}
             </Text>
             <Text style={styles.sampleBodyMuted}>{t('contrast.signalBody')}</Text>
@@ -68,7 +101,7 @@ export function ContrastScreen({ palette }: { palette: Palette }) {
             key={check.label}
             style={[styles.check, check.verdict === 'FAIL' && styles.checkFail]}
           >
-            <View style={[styles.checkSwatch, { backgroundColor: check.foreground }]} />
+            <View style={[styles.checkSwatch, { backgroundColor: shown(check.foreground) }]} />
             <Text tone="secondary" variant="mono">
               {check.label}
             </Text>
@@ -101,11 +134,11 @@ export function ContrastScreen({ palette }: { palette: Palette }) {
               {t('contrast.suggestedFix')}
             </Text>
             <View style={styles.fixRow}>
-              <View style={[styles.fixSwatch, { backgroundColor: failing.foreground }]} />
+              <View style={[styles.fixSwatch, { backgroundColor: shown(failing.foreground) }]} />
               <Text tone="tertiary" variant="rowTitle">
                 →
               </Text>
-              <View style={[styles.fixSwatch, { backgroundColor: fix.hex }]} />
+              <View style={[styles.fixSwatch, { backgroundColor: shown(fix.hex) }]} />
               <View style={styles.fixCopy}>
                 <Text tone="secondary" variant="mono">
                   {`${fix.hex} · ${fix.ratio.toFixed(1)}:1 · ${verdictFor(fix.ratio)}`}
@@ -115,6 +148,15 @@ export function ContrastScreen({ palette }: { palette: Palette }) {
                 </Text>
               </View>
             </View>
+            {/* A suggestion the user cannot take is just a remark. Applying it
+                writes the corrected colour back onto the palette. */}
+            {onApplyFix && palette.colors.some((color) => color.hex === failing.foreground) ? (
+              <Button
+                label={t('contrast.applyFix')}
+                onPress={() => onApplyFix(failing.foreground, fix.hex)}
+                size="xs"
+              />
+            ) : null}
           </Card>
         </Gutter>
       ) : null}

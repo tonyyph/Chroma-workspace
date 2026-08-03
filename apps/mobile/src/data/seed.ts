@@ -1,7 +1,7 @@
 import { makeColor, type Color, type Palette } from '@chromawave/domain';
 
 /**
- * Seed content, transcribed from `CHROMAWAVE App.dc.html`.
+ * Seed content, transcribed from `Chroma Wave App.dc.html`.
  *
  * Every palette, name, hex and proportion below appears in the design document,
  * so the built screens can be compared against it directly. This is fixture

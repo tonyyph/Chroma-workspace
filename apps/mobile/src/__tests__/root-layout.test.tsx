@@ -1,0 +1,60 @@
+import { render, within } from '@testing-library/react-native';
+
+import RootLayout from '@/app/_layout';
+
+jest.mock('@expo-google-fonts/ibm-plex-mono', () => ({
+  IBMPlexMono_400Regular: 'IBMPlexMono_400Regular',
+  IBMPlexMono_500Medium: 'IBMPlexMono_500Medium',
+  IBMPlexMono_600SemiBold: 'IBMPlexMono_600SemiBold',
+}));
+jest.mock('@expo-google-fonts/space-grotesk', () => ({
+  SpaceGrotesk_400Regular: 'SpaceGrotesk_400Regular',
+  SpaceGrotesk_500Medium: 'SpaceGrotesk_500Medium',
+  SpaceGrotesk_600SemiBold: 'SpaceGrotesk_600SemiBold',
+  SpaceGrotesk_700Bold: 'SpaceGrotesk_700Bold',
+}));
+jest.mock('expo-font', () => ({ useFonts: () => [true, null] }));
+jest.mock('expo-splash-screen', () => ({
+  hideAsync: jest.fn(async () => undefined),
+  preventAutoHideAsync: jest.fn(async () => undefined),
+}));
+jest.mock('expo-status-bar', () => ({ StatusBar: () => null }));
+jest.mock('expo-router', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const Stack = Object.assign(
+    ({ children }: { children?: React.ReactNode }) =>
+      React.createElement(View, { testID: 'app-navigator' }, children),
+    { Screen: () => null },
+  );
+  return { Stack };
+});
+jest.mock('react-native-gesture-handler', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    GestureHandlerRootView: ({
+      children,
+      style,
+    }: {
+      children?: React.ReactNode;
+      style?: unknown;
+    }) => React.createElement(View, { style, testID: 'gesture-handler-root' }, children),
+  };
+});
+jest.mock('@/providers/PreferencesProvider', () => {
+  const React = require('react');
+  return {
+    PreferencesProvider: ({ children }: { children?: React.ReactNode }) =>
+      React.createElement(React.Fragment, null, children),
+  };
+});
+
+describe('RootLayout', () => {
+  it('keeps the navigator inside GestureHandlerRootView', () => {
+    const view = render(<RootLayout />);
+    const gestureRoot = view.getByTestId('gesture-handler-root');
+
+    expect(within(gestureRoot).getByTestId('app-navigator')).toBeTruthy();
+  });
+});

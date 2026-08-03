@@ -1,7 +1,7 @@
 /**
- * CHROMAWAVE app UI system.
+ * Chroma Wave app UI system.
  *
- * Source: `CHROMAWAVE App.dc.html` — SYSTEM F · UI SYSTEM & SPECS,
+ * Source: `Chroma Wave App.dc.html` — SYSTEM F · UI SYSTEM & SPECS,
  * APP UI · 390×844 · iOS FIRST · V1 · JUL 2026. Values are transcribed from that
  * section and from the measured screens, so a surface built only from these
  * tokens lands on the design without per-screen magic numbers.

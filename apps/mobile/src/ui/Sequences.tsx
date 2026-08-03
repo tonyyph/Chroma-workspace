@@ -117,7 +117,7 @@ export function LaunchSequence({ onDone }: { onDone: () => void }) {
           <BrandMark size={156} />
         </Animated.View>
         <Animated.View style={[styles.wordmark, wordStyle]}>
-          <Text style={styles.wordmarkText}>CHROMAWAVE</Text>
+          <Text style={styles.wordmarkText}>Chroma Wave</Text>
         </Animated.View>
       </View>
       <View style={[styles.launchFooter, { top: height - 100 }]}>

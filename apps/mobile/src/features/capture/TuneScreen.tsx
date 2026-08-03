@@ -33,6 +33,7 @@ export function TuneScreen({
   const { t } = usePreferences();
   const [role, setRole] = useState<ColorRole>('dominant');
   const [adjust, setAdjust] = useState<Record<string, Adjust>>({});
+  const [showing, setShowing] = useState<'before' | 'after'>('after');
   const current = adjust[role] ?? NEUTRAL;
 
   const tunedColors = useMemo(
@@ -45,7 +46,10 @@ export function TuneScreen({
     [palette.colors, adjust],
   );
 
-  const bandColors = tunedColors
+  // BEFORE shows the capture as it came off the extractor, so the two chips are
+  // an A/B of the edit rather than a pair of labels.
+  const previewColors = showing === 'before' ? palette.colors : tunedColors;
+  const bandColors = previewColors
     .filter((color) => color.role !== 'extra')
     .map((color) => color.hex);
   const signal = tunedColors.find((color) => color.role === 'signal');
@@ -75,8 +79,16 @@ export function TuneScreen({
           width={width - space.gutter * 2}
         />
         <View style={styles.previewChips}>
-          <Chip label={t('tune.before')} />
-          <Chip label={t('tune.after')} tone="selected" />
+          <Chip
+            label={t('tune.before')}
+            onPress={() => setShowing('before')}
+            tone={showing === 'before' ? 'selected' : 'default'}
+          />
+          <Chip
+            label={t('tune.after')}
+            onPress={() => setShowing('after')}
+            tone={showing === 'after' ? 'selected' : 'default'}
+          />
         </View>
       </View>
 

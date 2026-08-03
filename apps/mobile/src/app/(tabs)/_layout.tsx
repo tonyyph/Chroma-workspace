@@ -3,12 +3,17 @@ import { Tabs, useRouter } from 'expo-router';
 
 import { TabBar, type TabKey } from '@/ui';
 
-const routeForTab: Record<TabKey, string> = {
+/**
+ * Tab key to route name. Typed as the literal names so `navigate` accepts it
+ * without a cast — a cast here would hide a renamed route until someone tapped
+ * the tab and nothing happened.
+ */
+const routeForTab = {
   library: 'index',
   explore: 'explore',
   sets: 'sets',
   you: 'you',
-};
+} as const satisfies Record<TabKey, string>;
 
 const tabForRoute: Record<string, TabKey> = {
   index: 'library',
@@ -36,7 +41,7 @@ export default function TabLayout() {
         <TabBar
           active={tabForRoute[state.routes[state.index]?.name ?? 'index'] ?? 'library'}
           onCapture={() => router.push('/capture')}
-          onSelect={(key) => navigation.navigate(routeForTab[key] as never)}
+          onSelect={(key) => navigation.navigate(routeForTab[key])}
         />
       )}
     >

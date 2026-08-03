@@ -1,5 +1,5 @@
 import { DomainError } from './errors';
-import { makeColor, type Color, type ColorRole } from './palette';
+import type { Color, ColorRole } from './palette';
 
 /** An extracted cluster before it is narrowed to the shipped swatch shape. */
 type ExtractedColor = Readonly<{
@@ -230,9 +230,25 @@ export const extractPaletteFromRgba = (
   // reference palette ("Harbour dusk": 38 / 24 / 18%) assigns them that way, so
   // role follows weight rather than a separate salience score.
   const roles: readonly ColorRole[] = ['dominant', 'support', 'signal'];
-  const swatches: Color[] = colors.map((color, index) =>
-    makeColor(color.hex, color.weight, roles[index] ?? 'extra'),
-  );
+  // Built here rather than through `palette.makeColor`: importing a value from
+  // `palette` would form a require cycle, since `palette` needs this module's
+  // colour conversions. `makeColor` derives exactly these fields the same way.
+  const swatches: Color[] = colors.map((color, index) => {
+    const rgb = hexToRgb(color.hex);
+    const oklch = rgbToOklch(rgb);
+    return {
+      hex: color.hex,
+      rgb,
+      oklch: {
+        lightness: clamp(oklch.lightness),
+        chroma: Math.min(0.5, Math.max(0, oklch.chroma)),
+        hue: oklch.hue,
+      },
+      role: roles[index] ?? 'extra',
+      weight: color.weight,
+      locked: false,
+    };
+  });
 
   // Weights are rounded for storage; the remainder rides on the dominant swatch
   // so the schema's "must sum to one" invariant still holds.
@@ -429,3 +445,58 @@ export const rgbToDisplayP3 = ({ red, green, blue }: Rgb): Rgb => {
     blue: linearToSrgb(0.0358458302 * x - 0.0761723893 * y + 0.956884524 * z),
   };
 };
+
+/** The colour-vision deficiencies G4 can preview, plus achromatopsia. */
+export type VisionSimulation = 'deuter' | 'protan' | 'tritan' | 'grey';
+
+/**
+ * Viénot, Brettel & Mollon (1999) dichromat matrices, in linear RGB.
+ *
+ * They work by projecting the colour onto the plane the missing cone type
+ * collapses the gamut to, which is why a red-green pair that a trichromat reads
+ * as two colours comes back as one. Applying them in gamma-encoded sRGB — which
+ * is the usual shortcut — shifts luminance and understates the collapse, so the
+ * conversion to linear light on either side is not optional.
+ */
+const VISION_MATRICES: Record<Exclude<VisionSimulation, 'grey'>, readonly number[]> = {
+  protan: [
+    0.152286, 1.052583, -0.204868, 0.114503, 0.786281, 0.099216, -0.003882, -0.048116, 1.051998,
+  ],
+  deuter: [
+    0.367322, 0.860646, -0.227968, 0.280085, 0.672501, 0.047413, -0.01182, 0.04294, 0.968881,
+  ],
+  tritan: [
+    1.255528, -0.076749, -0.178779, -0.078411, 0.930809, 0.147602, 0.004733, 0.691367, 0.3039,
+  ],
+};
+
+/**
+ * How a colour appears to someone with the named vision type.
+ *
+ * This is what makes the G4 simulation chips honest: they transform the sample
+ * swatches rather than annotating them, so a palette whose signal disappears
+ * under deuteranopia visibly disappears.
+ */
+export const simulateVision = (rgb: Rgb, simulation: VisionSimulation): Rgb => {
+  const r = srgbToLinear(rgb.red);
+  const g = srgbToLinear(rgb.green);
+  const b = srgbToLinear(rgb.blue);
+
+  if (simulation === 'grey') {
+    // Rec. 709 luminance, the same weighting `relativeLuminance` uses.
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    const channel = linearToSrgb(luminance);
+    return { red: channel, green: channel, blue: channel };
+  }
+
+  const m = VISION_MATRICES[simulation];
+  return {
+    red: linearToSrgb((m[0] ?? 0) * r + (m[1] ?? 0) * g + (m[2] ?? 0) * b),
+    green: linearToSrgb((m[3] ?? 0) * r + (m[4] ?? 0) * g + (m[5] ?? 0) * b),
+    blue: linearToSrgb((m[6] ?? 0) * r + (m[7] ?? 0) * g + (m[8] ?? 0) * b),
+  };
+};
+
+/** `simulateVision` on a hex string, which is what the screens hold. */
+export const simulateVisionHex = (hex: string, simulation: VisionSimulation): string =>
+  rgbToHex(simulateVision(hexToRgb(hex), simulation));

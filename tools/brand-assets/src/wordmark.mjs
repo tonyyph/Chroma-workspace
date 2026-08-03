@@ -10,21 +10,21 @@
  * and the running app cannot disagree.
  */
 
-import opentype from 'opentype.js';
-import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import opentype from 'opentype.js';
 
-import { element, svg } from './primitives.mjs';
 import { palette, symbol } from './mark.mjs';
+import { element, svg } from './primitives.mjs';
 
 const require = createRequire(import.meta.url);
 
 /** Section 05: "Medium for wordmark (+0.06em)". */
 const WEIGHT = 'SpaceGrotesk_500Medium';
 const TRACKING_EM = 0.06;
-const WORD = 'CHROMAWAVE';
+const WORD = 'Chroma Wave';
 
-/** The three letters the design tints — the W, A and V of "CHROMAWAVE". */
+/** The three letters the design tints — the W, A and V of "Chroma Wave". */
 const TINTED = { 6: 0, 7: 1, 8: 2 };
 
 function loadFont() {

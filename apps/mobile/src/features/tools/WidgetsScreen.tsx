@@ -5,7 +5,8 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandMark } from '@/components/BrandMark';
-import { Meta, SwatchStrip, Text } from '@/ui';
+import { usePreferences } from '@/providers/PreferencesProvider';
+import { Meta, NavBar, SwatchStrip, Text } from '@/ui';
 
 /**
  * G8 · WIDGETS & LOCK SCREEN · "small/medium widgets, capture shortcut".
@@ -14,8 +15,9 @@ import { Meta, SwatchStrip, Text } from '@/ui';
  * the JS bundle, so this shows what will be built and how it composes against a
  * lock screen. Wallpaper is the brand gradient rather than a user photo.
  */
-export function WidgetsScreen({ palette }: { palette: Palette }) {
+export function WidgetsScreen({ palette, onClose }: { palette: Palette; onClose?: () => void }) {
   const insets = useSafeAreaInsets();
+  const { t } = usePreferences();
   const now = new Date();
   const time = now.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit', hour12: false });
   const date = now
@@ -29,6 +31,13 @@ export function WidgetsScreen({ palette }: { palette: Palette }) {
       start={{ x: 0.2, y: 0 }}
       style={[styles.root, { paddingTop: insets.top }]}
     >
+      {/* A full-bleed preview with no chrome had no way out but the OS gesture. */}
+      {onClose ? (
+        <View style={styles.nav}>
+          <NavBar leading={t('widgets.close')} onLeading={onClose} />
+        </View>
+      ) : null}
+
       <Text style={styles.clock}>{time}</Text>
       <Meta style={styles.date}>{date}</Meta>
 
@@ -45,7 +54,7 @@ export function WidgetsScreen({ palette }: { palette: Palette }) {
       <View style={styles.mediumWidget}>
         <View style={styles.mediumHead}>
           <Meta style={styles.widgetLabel}>PALETTE OF THE DAY</Meta>
-          <Meta style={styles.widgetLabel}>CHROMAWAVE</Meta>
+          <Meta style={styles.widgetLabel}>Chroma Wave</Meta>
         </View>
         <SwatchStrip colors={palette.colors} height={52} radius={12} />
         <Text style={styles.mediumTitle}>{palette.name}</Text>
@@ -73,6 +82,7 @@ const paper = '#F1E7D6';
 
 const styles = StyleSheet.create({
   root: { flex: 1, alignItems: 'center' },
+  nav: { alignSelf: 'stretch' },
   clock: {
     fontSize: 76,
     lineHeight: 80,

@@ -1,8 +1,8 @@
-# CHROMAWAVE — Codex Working Agreement
+# Chroma Wave — Codex Working Agreement
 
 ## Product
 
-CHROMAWAVE is a synesthetic memory platform combining photography,
+Chroma Wave is a synesthetic memory platform combining photography,
 color palettes, music discovery and emotional journaling.
 
 A Memory is the central domain aggregate.
@@ -30,7 +30,7 @@ A Memory is the central domain aggregate.
 ## UI and motion
 
 - Use semantic design tokens; do not scatter raw styling values.
-- Preserve CHROMAWAVE's distinctive visual identity.
+- Preserve Chroma Wave's distinctive visual identity.
 - Do not replace intentional layouts with generic bordered-card dashboards.
 - Motion must have purpose, reduced-motion behavior and performance awareness.
 - User-derived palette colors must pass contrast and readability safeguards.

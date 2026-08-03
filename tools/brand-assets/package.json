@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Generates the CHROMAWAVE production asset system from the identity document geometry",
+  "description": "Generates the Chroma Wave production asset system from the identity document geometry",
   "scripts": {
     "build": "node src/generate.mjs",
     "typecheck": "node --check src/generate.mjs",

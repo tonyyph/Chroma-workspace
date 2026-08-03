@@ -1,7 +1,8 @@
 import { round, space, tint, ui } from '@chromawave/design-tokens';
 import type { Palette } from '@chromawave/domain';
+import { Image } from 'expo-image';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { Button, ButtonRow, Card, Sheet, SwatchStrip, Text, Toggle } from '@/ui';
@@ -14,6 +15,15 @@ const FORMATS = [
 ] as const;
 
 export type ShareFormat = (typeof FORMATS)[number]['key'];
+
+/** What the card should contain — the three option rows, resolved. */
+export type ShareOptions = {
+  format: ShareFormat;
+  includePhoto: boolean;
+  showHex: boolean;
+  /** Free cards carry the wordmark; removing it is the Pro gate. */
+  watermark: boolean;
+};
 
 /**
  * C4 · SHARE SHEET · "format picker + Pro upsell inline".
@@ -29,18 +39,23 @@ export function ShareSheet({
 }: {
   palette: Palette;
   isPro: boolean;
-  onShare: (format: ShareFormat) => void;
-  onSaveImage: (format: ShareFormat) => void;
+  onShare: (options: ShareOptions) => void;
+  onSaveImage: (options: ShareOptions) => void;
 }) {
   const { t } = usePreferences();
   const [format, setFormat] = useState<ShareFormat>(FORMATS[0].key);
   const [includePhoto, setIncludePhoto] = useState(true);
   const [showHex, setShowHex] = useState(true);
 
+  const options: ShareOptions = { format, includePhoto, showHex, watermark: !isPro };
+
   return (
     <Sheet style={styles.sheet}>
       <Text variant="section">{t('share.title', { name: palette.name })}</Text>
 
+      {/* The tiles preview the card at each ratio and reflect the option rows,
+          so toggling "SHOW HEX" changes what is about to be exported rather
+          than only what the switch looks like. */}
       <View style={styles.formats}>
         {FORMATS.map((entry) => {
           const selected = entry.key === format;
@@ -48,13 +63,26 @@ export function ShareSheet({
             <Card
               accessibilityLabel={t(entry.labelKey)}
               accessibilityRole="radio"
+              accessibilityState={{ selected }}
               key={entry.key}
               onPress={() => setFormat(entry.key)}
               padded={false}
               style={[styles.format, selected && styles.formatSelected]}
             >
-              <View style={styles.formatPreview}>
+              <View style={[styles.formatPreview, RATIOS[entry.key]]}>
+                {includePhoto && palette.photoUri ? (
+                  <Image
+                    contentFit="cover"
+                    source={{ uri: palette.photoUri }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                ) : null}
                 <SwatchStrip colors={palette.colors} height={26} />
+                {showHex ? (
+                  <Text style={styles.formatHex} variant="monoSmall">
+                    {palette.colors[0]?.hex.slice(1)}
+                  </Text>
+                ) : null}
               </View>
               <Text style={styles.formatLabel} tone={selected ? 'link' : 'tertiary'} variant="chip">
                 {t(entry.labelKey)}
@@ -77,11 +105,11 @@ export function ShareSheet({
       <ButtonRow>
         <Button
           label={t('share.saveImage')}
-          onPress={() => onSaveImage(format)}
+          onPress={() => onSaveImage(options)}
           style={styles.half}
           variant="secondary"
         />
-        <Button label={t('share.share')} onPress={() => onShare(format)} style={styles.wide} />
+        <Button label={t('share.share')} onPress={() => onShare(options)} style={styles.wide} />
       </ButtonRow>
     </Sheet>
   );
@@ -117,17 +145,25 @@ function OptionRow({
   );
 }
 
+/** Tile heights that read as the ratio they stand for. */
+const RATIOS: Record<ShareFormat, ViewStyle> = {
+  '1x1': { height: 96 },
+  '4x5': { height: 112 },
+  '9x16': { height: 132 },
+};
+
 const styles = StyleSheet.create({
   sheet: { flex: 0, paddingHorizontal: space.gutter, gap: space.md },
   formats: { flexDirection: 'row', gap: 10 },
   format: { flex: 1, overflow: 'hidden', paddingBottom: space.xs },
   formatSelected: { borderColor: ui.action.primary, borderWidth: 2 },
   formatPreview: {
-    height: 96,
     backgroundColor: ui.bg.media,
     justifyContent: 'flex-end',
     paddingBottom: space.sm,
+    overflow: 'hidden',
   },
+  formatHex: { textAlign: 'center', paddingTop: 5, color: 'rgba(237,234,227,.72)' },
   formatLabel: { textAlign: 'center', paddingTop: space.xs },
   options: { gap: 9 },
   option: {

@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+// The working colour space is the same set a palette is tagged with, so the
+// preference reuses that schema rather than declaring a parallel one that could
+// drift from it.
+import { colorSpaceSchema } from './palette';
+
 export const languageSchema = z.enum(['en', 'vi']);
 export const themeIdSchema = z.enum([
   'obsidian',
@@ -11,6 +16,9 @@ export const themeIdSchema = z.enum([
 ]);
 export const reminderTimeSchema = z.enum(['18:00', '20:00', '21:30']);
 
+/** Which target G7 opens on, so the format someone always uses is one tap away. */
+export const exportTargetSchema = z.enum(['css', 'tailwind', 'swift', 'json']);
+
 export const userPreferencesSchema = z.object({
   schemaVersion: z.literal(1),
   hapticsEnabled: z.boolean(),
@@ -19,6 +27,17 @@ export const userPreferencesSchema = z.object({
   reminderTime: reminderTimeSchema,
   language: languageSchema,
   theme: themeIdSchema,
+  // The three below arrived after v1 shipped. They carry defaults so a stored
+  // record written before they existed still parses instead of being rejected
+  // as invalid and throwing the user back to factory preferences.
+  colorSpace: colorSpaceSchema.default('srgb'),
+  defaultExport: exportTargetSchema.default('css'),
+  /**
+   * When the activity feed was last cleared, as an ISO timestamp. Anything
+   * captured after it counts as unread, which is what G9's "MARK ALL READ"
+   * acts on and what the D2 row badges.
+   */
+  activityReadAt: z.string().datetime().nullable().default(null),
 });
 
 export const defaultUserPreferences = userPreferencesSchema.parse({
@@ -29,11 +48,16 @@ export const defaultUserPreferences = userPreferencesSchema.parse({
   reminderTime: '20:00',
   language: 'en',
   theme: 'obsidian',
+  colorSpace: 'srgb',
+  defaultExport: 'css',
+  activityReadAt: null,
 });
 
 export type Language = z.infer<typeof languageSchema>;
 export type ReminderTime = z.infer<typeof reminderTimeSchema>;
 export type ThemeId = z.infer<typeof themeIdSchema>;
+export type ColorSpacePreference = z.infer<typeof colorSpaceSchema>;
+export type ExportTarget = z.infer<typeof exportTargetSchema>;
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
 
 export interface PreferencesRepository {

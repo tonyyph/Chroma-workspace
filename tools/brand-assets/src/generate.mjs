@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Builds the CHROMAWAVE production asset system from the geometry published in
- * `CHROMAWAVE Final Concept.dc.html` — CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026.
+ * Builds the Chroma Wave production asset system from the geometry published in
+ * `Chroma Wave Final Concept.dc.html` — CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026.
  *
  *   node tools/brand-assets/src/generate.mjs [--out <dir>] [--group <a,b>] [--concurrency <n>]
  *
@@ -15,11 +15,9 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 import { appIconSizes, buildForSize, builds, channelSizes, channels, tiers } from './builds.mjs';
+import { lottieFiles } from './lottie.mjs';
 import { adaptiveForeground, geometryPlate, palette, symbol } from './mark.mjs';
 import { defaultConcurrency, runRenderJobs } from './pool.mjs';
-import { lottieFiles } from './lottie.mjs';
-import { soundNames, sounds } from './sound.mjs';
-import { wordmark, wordmarkVariants } from './wordmark.mjs';
 import {
   emptyGlyph,
   emptyGlyphNames,
@@ -30,6 +28,8 @@ import {
   splashField,
   splashFrame,
 } from './scenes.mjs';
+import { soundNames, sounds } from './sound.mjs';
+import { wordmark, wordmarkVariants } from './wordmark.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const DEFAULT_OUT = join(ROOT, 'apps/mobile/assets/brand');
@@ -388,7 +388,7 @@ async function main() {
   if (isFullRun) {
     const manifest = {
       generatedFrom:
-        'CHROMAWAVE Final Concept.dc.html · CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026',
+        'Chroma Wave Final Concept.dc.html · CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026',
       mark: { number: '07', name: 'Chroma Signal', bands: palette.bands },
       fileCount: written.length,
       totalBytes,
@@ -404,7 +404,7 @@ async function main() {
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
   console.log(
     `${written.length} files · ${(totalBytes / 1024).toFixed(0)} KB · ${seconds}s · ` +
-      `${concurrency} workers · Chroma Signal`,
+    `${concurrency} workers · Chroma Signal`,
   );
 }
 

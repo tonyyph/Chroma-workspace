@@ -1,6 +1,8 @@
 import { themeModes, themePalettes, type ThemePalette } from '@chromawave/design-tokens';
 import {
   defaultUserPreferences,
+  type ColorSpacePreference,
+  type ExportTarget,
   type Language,
   type NotificationPermission,
   type ReminderTime,
@@ -27,7 +29,16 @@ import {
 import { translate, type MessageKey } from '@/localization/messages';
 
 type PreferenceError = 'load' | 'save' | 'notification' | null;
-type PreferenceAction = 'haptics' | 'language' | 'theme' | 'notifications' | 'reminder' | null;
+type PreferenceAction =
+  | 'haptics'
+  | 'language'
+  | 'theme'
+  | 'notifications'
+  | 'reminder'
+  | 'colorSpace'
+  | 'defaultExport'
+  | 'activity'
+  | null;
 
 type PreferencesContextValue = {
   preferences: UserPreferences;
@@ -43,6 +54,10 @@ type PreferencesContextValue = {
   setTheme: (theme: ThemeId) => Promise<void>;
   setNotificationsEnabled: (enabled: boolean) => Promise<void>;
   setReminderTime: (time: ReminderTime) => Promise<void>;
+  setColorSpace: (space: ColorSpacePreference) => Promise<void>;
+  setDefaultExport: (target: ExportTarget) => Promise<void>;
+  /** Clears the activity feed's unread count by stamping "read" at now. */
+  markActivityRead: () => Promise<void>;
   refreshNotificationPermission: () => Promise<void>;
   clearError: () => void;
   feedback: {
@@ -67,6 +82,9 @@ const defaultContextValue: PreferencesContextValue = {
   setTheme: noop,
   setNotificationsEnabled: noop,
   setReminderTime: noop,
+  setColorSpace: noop,
+  setDefaultExport: noop,
+  markActivityRead: noop,
   refreshNotificationPermission: noop,
   clearError: () => {},
   feedback: { selection: noop, success: noop },
@@ -272,6 +290,33 @@ export function PreferencesProvider({
     [preferences, save, scheduleFor],
   );
 
+  const setColorSpace = useCallback(
+    async (colorSpace: ColorSpacePreference) => {
+      const didSave = await save({ ...preferences, colorSpace }, 'colorSpace');
+      if (!didSave) return;
+      if (preferences.hapticsEnabled) await hapticsService.selection();
+    },
+    [preferences, save],
+  );
+
+  const setDefaultExport = useCallback(
+    async (defaultExport: ExportTarget) => {
+      const didSave = await save({ ...preferences, defaultExport }, 'defaultExport');
+      if (!didSave) return;
+      if (preferences.hapticsEnabled) await hapticsService.selection();
+    },
+    [preferences, save],
+  );
+
+  const markActivityRead = useCallback(async () => {
+    const didSave = await save(
+      { ...preferences, activityReadAt: new Date().toISOString() },
+      'activity',
+    );
+    if (!didSave) return;
+    if (preferences.hapticsEnabled) await hapticsService.success();
+  }, [preferences, save]);
+
   const refreshNotificationPermission = useCallback(async () => {
     setNotificationPermission(await notificationScheduler.getPermission());
   }, []);
@@ -303,6 +348,9 @@ export function PreferencesProvider({
       setTheme,
       setNotificationsEnabled,
       setReminderTime,
+      setColorSpace,
+      setDefaultExport,
+      markActivityRead,
       refreshNotificationPermission,
       clearError: () => setError(null),
       feedback,
@@ -312,9 +360,12 @@ export function PreferencesProvider({
       error,
       feedback,
       hydrated,
+      markActivityRead,
       notificationPermission,
       preferences,
       refreshNotificationPermission,
+      setColorSpace,
+      setDefaultExport,
       setHapticsEnabled,
       setLanguage,
       setNotificationsEnabled,

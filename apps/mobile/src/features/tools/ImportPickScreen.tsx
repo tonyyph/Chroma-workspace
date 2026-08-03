@@ -2,7 +2,7 @@ import { round, space, ui } from '@chromawave/design-tokens';
 import { makeColor, type Color } from '@chromawave/domain';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useImageSampler } from '@/hooks/useImageSampler';
@@ -35,29 +35,109 @@ export function ImportPickScreen({
   const [radius, setRadius] = useState(12);
   const [mode, setMode] = useState<(typeof MODES)[number]>('MANUAL');
   const [layout, setLayout] = useState({ width: 0, height: 0 });
+  const [pickFailed, setPickFailed] = useState(false);
   const { sampleAt, dimensions, ready, failed } = useImageSampler(uri);
 
-  useEffect(() => {
-    void (async () => {
+  /**
+   * Opens the photo library. Exposed as an action as well as run on mount: if
+   * the first pick is cancelled, or is simply the wrong photo, the screen would
+   * otherwise be a dead end with no way back to the picker.
+   */
+  const pick = useCallback(async () => {
+    setPickFailed(false);
+    try {
       const result = await ImagePicker.launchImageLibraryAsync({ quality: 1 });
-      if (!result.canceled && result.assets[0]) setUri(result.assets[0].uri);
-    })();
+      // The picker can resolve to nothing at all when the sheet is dismissed by
+      // the system rather than by the user, so the shape is checked, not assumed.
+      const picked = result?.canceled === false ? result.assets?.[0]?.uri : undefined;
+      if (!picked) return;
+      setUri(picked);
+      // Points are positions in the old photo; keeping them would label the new
+      // one with colours it does not contain.
+      setPoints([]);
+      setMode('MANUAL');
+    } catch {
+      setPickFailed(true);
+    }
   }, []);
 
-  const addPoint = (x: number, y: number) => {
-    if (points.length >= MAX_POINTS || !dimensions || layout.width === 0) return;
+  useEffect(() => {
+    void pick();
+  }, [pick]);
 
-    // The photo is drawn with `cover`, so view coordinates map to image
-    // coordinates through the same scale-and-crop the renderer applied.
+  /**
+   * Samples one view coordinate. The photo is drawn with `cover`, so view
+   * coordinates map to image coordinates through the same scale-and-crop the
+   * renderer applied — sampling the raw view position would read the wrong pixel
+   * on any photo whose aspect ratio differs from the frame.
+   */
+  const sampleView = (x: number, y: number): string | null => {
+    if (!dimensions || layout.width === 0) return null;
     const scale = Math.max(dimensions.width / layout.width, dimensions.height / layout.height);
     const cropX = (dimensions.width - layout.width * scale) / 2;
     const cropY = (dimensions.height - layout.height * scale) / 2;
-    const hex = sampleAt(cropX + x * scale, cropY + y * scale, radius * scale);
+    return sampleAt(cropX + x * scale, cropY + y * scale, radius * scale);
+  };
+
+  const addPoint = (x: number, y: number) => {
+    if (points.length >= MAX_POINTS) return;
+    const hex = sampleView(x, y);
     if (!hex) return;
 
     setPoints((current) => [...current, { x, y, hex }]);
     // BUILD KIT · haptic map: "colour pinned (scan) → impact · light".
     void hapticsService.fire('colourPinned');
+  };
+
+  /**
+   * AUTO 5 and EDGES are placements, not filters: each lays its own points down
+   * and replaces whatever was there, which is what makes them worth tapping.
+   * AUTO 5 takes the rule-of-thirds intersections plus the centre — where a
+   * photograph's subject usually is. EDGES walks the border, where the ground
+   * and the frame colours live.
+   */
+  const applyMode = (next: (typeof MODES)[number]) => {
+    setMode(next);
+    if (next === 'MANUAL') {
+      setPoints([]);
+      return;
+    }
+
+    const { width, height } = layout;
+    if (width === 0 || height === 0) return;
+
+    const targets: readonly [number, number][] =
+      next === 'AUTO 5'
+        ? [
+            [width / 3, height / 3],
+            [(width * 2) / 3, height / 3],
+            [width / 2, height / 2],
+            [width / 3, (height * 2) / 3],
+            [(width * 2) / 3, (height * 2) / 3],
+          ]
+        : [
+            [width / 2, height * 0.08],
+            [width * 0.92, height / 2],
+            [width / 2, height * 0.92],
+            [width * 0.08, height / 2],
+            [width / 2, height / 2],
+          ];
+
+    const placed = targets
+      .map(([x, y]) => {
+        const hex = sampleView(x, y);
+        return hex ? { x, y, hex } : null;
+      })
+      .filter((point): point is Point => point !== null);
+
+    if (!placed.length) return;
+    setPoints(placed.slice(0, MAX_POINTS));
+    void hapticsService.fire('colourPinned');
+  };
+
+  /** Tapping a placed point removes it — otherwise a misplaced tap is permanent. */
+  const removePoint = (index: number) => {
+    setPoints((current) => current.filter((_, entry) => entry !== index));
   };
 
   const extract = () => {
@@ -99,8 +179,11 @@ export function ImportPickScreen({
             </Text>
           )}
           {points.map((point, index) => (
-            <View
+            <Pressable
+              accessibilityLabel={t('import.removePoint', { hex: point.hex })}
+              accessibilityRole="button"
               key={index}
+              onPress={() => removePoint(index)}
               style={[
                 styles.point,
                 {
@@ -116,7 +199,7 @@ export function ImportPickScreen({
           ))}
           <View style={styles.canvasHint}>
             <Text tone="secondary" variant="chip">
-              {failed
+              {failed || pickFailed
                 ? t('import.failed')
                 : ready
                   ? t('import.points', { count: points.length, max: MAX_POINTS })
@@ -147,11 +230,16 @@ export function ImportPickScreen({
               fill
               key={entry}
               label={entry}
-              onPress={() => setMode(entry)}
+              onPress={() => applyMode(entry)}
               tone={mode === entry ? 'pro' : 'default'}
             />
           ))}
         </View>
+        <Chip
+          fill
+          label={t(uri ? 'import.changePhoto' : 'import.choosePhoto')}
+          onPress={() => void pick()}
+        />
       </View>
 
       <View style={styles.preview}>

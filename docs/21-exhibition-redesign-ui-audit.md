@@ -1,7 +1,7 @@
 # Exhibition redesign UI/UX audit
 
 Audit date: 2026-07-28. Target: native iOS development build on iPhone 16 Plus
-Simulator. Source: CHROMAWAVE Product Blueprint, especially the Collection,
+Simulator. Source: Chroma Wave Product Blueprint, especially the Collection,
 sharing, positioning, screen inventory, and semantic-token sections.
 
 ## Outcome
@@ -40,7 +40,7 @@ without displacing Memory as the central object.
 | --------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Visual hierarchy      | Pass   | Each primary viewport has one dominant statement; supporting data is grouped in one raised tray rather than multiple competing cards.                               |
 | Layout                | Pass   | The floating dock remains above scroll content, respects the safe area, and keeps five destinations stable even when the app opens through a deep link.             |
-| Brand distinctiveness | Pass   | Editorial serif typography, chromatic artwork, asymmetric overlap, numbered sections, and the center BrandMark produce a recognizable CHROMAWAVE silhouette.        |
+| Brand distinctiveness | Pass   | Editorial serif typography, chromatic artwork, asymmetric overlap, numbered sections, and the center BrandMark produce a recognizable Chroma Wave silhouette.        |
 | Color                 | Pass   | Six full semantic atmospheres replace isolated color swaps; extracted palette colors remain decorative and do not drive body-copy contrast.                         |
 | Interaction           | Pass   | Capture is the visual center; all dock targets are at least 44 points, Collections use checkbox semantics, and actions expose loading or error states where needed. |
 | Motion                | Pass   | Dock entry motion is short and disabled when Reduce Motion is active; the redesign does not add decorative looping motion.                                          |

@@ -1,9 +1,13 @@
 {
-  "generatedFrom": "CHROMAWAVE Final Concept.dc.html · CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026",
+  "generatedFrom": "Chroma Wave Final Concept.dc.html · CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026",
   "mark": {
     "number": "07",
     "name": "Chroma Signal",
-    "bands": ["#7C5CFF", "#22D3EE", "#FF7A5C"]
+    "bands": [
+      "#7C5CFF",
+      "#22D3EE",
+      "#FF7A5C"
+    ]
   },
   "fileCount": 160,
   "totalBytes": 7806476,

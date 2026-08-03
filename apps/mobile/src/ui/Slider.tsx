@@ -1,6 +1,6 @@
 import { size, ui, uiShadow } from '@chromawave/design-tokens';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
@@ -34,9 +34,13 @@ export function Slider({
   const [width, setWidth] = useState(0);
   const fraction = useSharedValue(normalise(value, minimumValue, maximumValue));
 
-  // Keep the thumb in step when the value changes from outside a drag.
+  // Writing a shared value during render is not allowed in Reanimated — it has to
+  // happen in an effect. This keeps the thumb in step when `value` changes from
+  // outside a drag (a preset button, a reset) without fighting the gesture.
   const external = normalise(value, minimumValue, maximumValue);
-  if (Math.abs(external - fraction.value) > 0.001) fraction.value = external;
+  useEffect(() => {
+    fraction.value = external;
+  }, [external, fraction]);
 
   const commit = (next: number) => {
     onChange(minimumValue + next * (maximumValue - minimumValue));

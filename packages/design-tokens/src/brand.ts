@@ -1,7 +1,7 @@
 /**
- * CHROMAWAVE brand.
+ * Chroma Wave brand.
  *
- * Source: `CHROMAWAVE Final Concept.dc.html` — CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026,
+ * Source: `Chroma Wave Final Concept.dc.html` — CONCEPT 07 · CHROMA SIGNAL · V1 · JUL 2026,
  * marked FINAL · LOCKED. One mark: a soft glass squircle carrying three refracted
  * chroma bands. There are no alternates and no fallback concepts; the raster
  * assets are produced by `@chromawave/brand-assets` from the same geometry.

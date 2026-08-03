@@ -47,7 +47,7 @@ palette transition continuity; it should not introduce a generic card dashboard.
 
 ## Implementation checklist
 
-- [x] Replace template icon with deterministic CHROMAWAVE brand asset.
+- [x] Replace template icon with deterministic Chroma Wave brand asset.
 - [x] Protect footer actions from the home indicator.
 - [x] Allow local/offline disclosure to shrink on narrow widths.
 - [x] Use semantic brand colors instead of screen-local raw values.

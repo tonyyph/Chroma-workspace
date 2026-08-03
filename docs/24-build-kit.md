@@ -1,6 +1,6 @@
 # Build kit implementation
 
-Source: `CHROMAWAVE Build Kit.dc.html` — CONCEPT 07 · MOTION + ASSETS + ENGINEERING · V1 · JUL 2026.
+Source: `Chroma Wave Build Kit.dc.html` — CONCEPT 07 · MOTION + ASSETS + ENGINEERING · V1 · JUL 2026.
 
 This is the third document in the set. The identity file fixed the mark, the app
 file fixed the screens, and this one fixes how they move, sound, export and are
@@ -133,7 +133,7 @@ in linear light, mapping view coordinates through the same scale-and-crop the
    entry, both carry the same string. That is what keeps the kit's "name
    on-device processing explicitly" requirement true in the built `Info.plist`;
    verify with
-   `plutil -extract NSCameraUsageDescription raw ios/CHROMAWAVE/Info.plist`.
+   `plutil -extract NSCameraUsageDescription raw ios/Chroma Wave/Info.plist`.
 3. **Renaming exported assets breaks `app.json` silently.** Moving to the kit's
    `{component}-{variant}-{size}` convention invalidated every icon path. There is
    a path-resolution check worth re-running after any rename — it reads `app.json`

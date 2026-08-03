@@ -1,5 +1,14 @@
 import { brandBands, motionRules, ui, uiMotion } from '@chromawave/design-tokens';
-import { Blur, Canvas, Group, Path, Rect, Skia, type SkPath } from '@shopify/react-native-skia';
+import {
+  Blur,
+  Canvas,
+  Group,
+  Paint,
+  Path,
+  Rect,
+  Skia,
+  type SkPath,
+} from '@shopify/react-native-skia';
 import { useEffect, useMemo } from 'react';
 import {
   Easing,
@@ -12,6 +21,19 @@ import {
 } from 'react-native-reanimated';
 
 import { sine } from './BandField';
+
+/**
+ * A blurred offscreen layer.
+ *
+ * `Group.layer` takes a *Paint*; `Blur` is an image filter and has to sit inside
+ * one. Passing the filter directly type-checks — the prop widens to any child
+ * node — but produces an invalid layer at render time.
+ */
+const blurLayer = (sigma: number) => (
+  <Paint>
+    <Blur blur={sigma} />
+  </Paint>
+);
 
 /**
  * The band field, rendered on the GPU.
@@ -59,7 +81,7 @@ export function BandCanvas({
     <Canvas style={[{ width, height }, style]}>
       {background ? <Rect color={background} height={height} width={width} x={0} y={0} /> : null}
       {/* One Group carries the blur, so it is a single GPU layer for all three bands. */}
-      <Group layer={<Blur blur={sigma} />} opacity={0.85}>
+      <Group layer={blurLayer(sigma)} opacity={0.85}>
         {paths.map((path, i) =>
           path ? (
             <Path
@@ -133,7 +155,7 @@ export function BandSweepCanvas({
   return (
     <Canvas style={{ width, height }}>
       <Rect color={ui.bg.media} height={height} width={width} x={0} y={0} />
-      <Group layer={<Blur blur={height * 0.13} />} opacity={0.85} transform={transform}>
+      <Group layer={blurLayer(height * 0.13)} opacity={0.85} transform={transform}>
         {paths.map((path, i) =>
           path ? (
             <Path
@@ -182,7 +204,7 @@ export function ScanSweep({
 
   return (
     <Canvas pointerEvents="none" style={{ width, height }}>
-      <Group layer={<Blur blur={height * 0.04} />} opacity={opacity} transform={transform}>
+      <Group layer={blurLayer(height * 0.04)} opacity={opacity} transform={transform}>
         <Path
           color={color}
           path={path}

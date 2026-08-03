@@ -1,10 +1,11 @@
 import { space, tint, ui } from '@chromawave/design-tokens';
 import { hexDeltaE00, type Palette } from '@chromawave/domain';
-import { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { usePreferences } from '@/providers/PreferencesProvider';
 import {
+  ActionSheet,
   Button,
   ButtonRow,
   Card,
@@ -14,6 +15,7 @@ import {
   ScreenHeader,
   SwatchStrip,
   Text,
+  type MenuAction,
 } from '@/ui';
 
 /**
@@ -26,17 +28,28 @@ import {
 export function CompareScreen({
   first,
   second,
-  onAddThird,
+  candidates = [],
+  onPick,
+  onSwap,
   onMerge,
 }: {
   first: Palette;
   second: Palette;
-  onAddThird: () => void;
+  /** Everything else in the library, offered when choosing what to compare against. */
+  candidates?: readonly Palette[];
+  onPick: (paletteId: string) => void;
+  onSwap: () => void;
   onMerge: () => void;
 }) {
   const { t } = usePreferences();
+  const [picking, setPicking] = useState(false);
   const rows = first.colors.slice(0, 3);
   const columns = second.colors.slice(0, 3);
+
+  const pickActions: readonly MenuAction[] = candidates.map((palette) => ({
+    label: palette.name,
+    onPress: () => onPick(palette.id),
+  }));
 
   const matrix = useMemo(
     () => rows.map((row) => columns.map((column) => hexDeltaE00(row.hex, column.hex))),
@@ -62,9 +75,23 @@ export function CompareScreen({
         <ScreenHeader meta={t('compare.meta')} title={t('compare.title')} />
       </Gutter>
 
+      {/* Tapping either tile is how the comparison changes — A becomes B on swap,
+          B opens the picker. Without those the screen only ever shows the two
+          palettes the route happened to resolve. */}
       <Gutter style={styles.cards}>
-        <PaletteTile letter="A" palette={first} selected />
-        <PaletteTile letter="B" palette={second} />
+        <PaletteTile
+          label={t('compare.swapSides')}
+          letter="A"
+          onPress={onSwap}
+          palette={first}
+          selected
+        />
+        <PaletteTile
+          label={t('compare.choose')}
+          letter="B"
+          onPress={pickActions.length ? () => setPicking(true) : undefined}
+          palette={second}
+        />
       </Gutter>
 
       <Gutter style={styles.matrixWrap}>
@@ -120,9 +147,16 @@ export function CompareScreen({
               </Text>
               <Meta>{`${closestRow.hex} ↔ ${closestColumn.hex} · ΔE ${Math.round(closest.distance)}`}</Meta>
             </View>
-            <Text tone="secondary" variant="chip">
-              {t('compare.swap')}
-            </Text>
+            <Pressable
+              accessibilityLabel={t('compare.swapSides')}
+              accessibilityRole="button"
+              hitSlop={10}
+              onPress={onSwap}
+            >
+              <Text tone="secondary" variant="chip">
+                {t('compare.swap')}
+              </Text>
+            </Pressable>
           </Card>
           <Card style={styles.finding}>
             <View style={styles.findingCopy}>
@@ -136,14 +170,23 @@ export function CompareScreen({
       <Gutter style={styles.actions}>
         <ButtonRow>
           <Button
+            disabled={pickActions.length === 0}
             label={t('compare.addThird')}
-            onPress={onAddThird}
+            onPress={() => setPicking(true)}
             style={styles.flex}
             variant="secondary"
           />
           <Button label={t('compare.merge')} onPress={onMerge} style={styles.wide} />
         </ButtonRow>
       </Gutter>
+
+      <ActionSheet
+        actions={pickActions}
+        cancelLabel={t('common.cancel')}
+        onDismiss={() => setPicking(false)}
+        title={t('compare.choose')}
+        visible={picking}
+      />
     </Screen>
   );
 }
@@ -152,13 +195,25 @@ function PaletteTile({
   palette,
   letter,
   selected = false,
+  label,
+  onPress,
 }: {
   palette: Palette;
   letter: string;
   selected?: boolean;
+  label: string;
+  onPress?: (() => void) | undefined;
 }) {
   return (
-    <Card padded={false} style={[styles.tile, selected && styles.tileSelected]}>
+    <Card
+      accessibilityLabel={onPress ? `${palette.name}. ${label}` : palette.name}
+      padded={false}
+      style={[styles.tile, selected && styles.tileSelected]}
+      // Spread rather than pass `undefined`: `exactOptionalPropertyTypes` treats
+      // an explicit undefined as a different thing from an absent prop, and Card
+      // switches between View and Pressable on the prop's presence.
+      {...(onPress ? { onPress } : {})}
+    >
       <SwatchStrip colors={palette.colors.slice(0, 3)} height={74} />
       <View style={styles.tileCopy}>
         <Text variant="cardTitle">{palette.name}</Text>

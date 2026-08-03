@@ -140,7 +140,7 @@ function rgbTriplet(hex: string): number[] {
  * Three inserted stops per gap is enough that the remaining sRGB interpolation
  * between them is imperceptible.
  */
-function expand(colors: readonly string[], interpolation: Interpolation): string[] {
+export function expand(colors: readonly string[], interpolation: Interpolation): string[] {
   const source = colors.length >= 2 ? colors : ['#7C5CFF', '#22D3EE'];
   if (interpolation === 'srgb') return [...source];
 
