@@ -18,10 +18,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Chroma Wave uses the camera to read colour from what you point at. Frames are analysed on device and discarded unless you save a capture.",
         "ITSAppUsesNonExemptEncryption": false,
-        "CFBundleLocalizations": [
-          "en",
-          "vi"
-        ]
+        "CFBundleLocalizations": ["en", "vi"]
       }
     },
     "android": {
@@ -32,9 +29,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.chromawave.app",
-      "permissions": [
-        "android.permission.CAMERA"
-      ]
+      "permissions": ["android.permission.CAMERA"]
     },
     "web": {
       "output": "static",
@@ -86,6 +81,12 @@
         "projectId": "d6cc3c4e-e6c7-456b-8a3f-482a23401abc"
       }
     },
-    "owner": "cuongphan2"
+    "owner": "cuongphan2",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/d6cc3c4e-e6c7-456b-8a3f-482a23401abc"
+    }
   }
 }

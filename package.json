@@ -18,6 +18,7 @@
     "eas:build:preview:ios": "corepack pnpm --filter @chromawave/mobile exec corepack pnpm dlx eas-cli@21.4.0 build --platform ios --profile preview",
     "eas:build:preview:android": "corepack pnpm --filter @chromawave/mobile exec corepack pnpm dlx eas-cli@21.4.0 build --platform android --profile preview",
     "eas:build:production:ios": "corepack pnpm --filter @chromawave/mobile exec corepack pnpm dlx eas-cli@21.4.0 build --platform ios --profile production",
+    "eas:build:submit:production:ios": "corepack pnpm --filter @chromawave/mobile exec corepack pnpm dlx eas-cli@21.4.0 build --platform ios --profile production --auto-submit-with-profile production",
     "eas:build:production:android": "corepack pnpm --filter @chromawave/mobile exec corepack pnpm dlx eas-cli@21.4.0 build --platform android --profile production",
     "eas:submit:production:ios": "corepack pnpm --filter @chromawave/mobile exec corepack pnpm dlx eas-cli@21.4.0 submit --platform ios --profile production",
     "eas:submit:production:android": "corepack pnpm --filter @chromawave/mobile exec corepack pnpm dlx eas-cli@21.4.0 submit --platform android --profile production",
