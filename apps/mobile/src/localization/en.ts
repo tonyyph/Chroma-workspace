@@ -21,6 +21,14 @@ export const en = {
   'onboarding.role.supportBody': 'What holds it up — surfaces and shadow',
   'onboarding.role.signal': 'Signal',
   'onboarding.role.signalBody': 'The accent that makes people look',
+  'onboarding.tune.title': 'Make every band\nyour own',
+  'onboarding.tune.body':
+    'Tune hue, saturation and light without losing the relationship to the original frame.',
+  'onboarding.share.title': 'Keep the photo.\nShare the signal.',
+  'onboarding.share.body':
+    'Every saved palette stays visual, ready for your library, a set, or a share card.',
+  'onboarding.share.previewName': 'Harbour dusk',
+  'onboarding.share.previewMeta': '5 COLOURS · READY TO SHARE',
   'onboarding.permission.title': 'We need the camera to read light',
   'onboarding.permission.body':
     'Frames are processed on device and discarded unless you save a capture. Nothing is uploaded by default.',
@@ -33,6 +41,8 @@ export const en = {
   'onboarding.allowCamera': 'Allow camera',
   'onboarding.importInstead': 'Import a photo instead',
   'onboarding.step': 'Step {current} of {total}',
+  'onboarding.saveFailed.title': 'Could not finish setup',
+  'onboarding.saveFailed.body': 'Try again. Your choices have not been lost.',
 
   /* --------------------------------------------------------------- B · capture */
   'capture.close': 'Close capture',
@@ -216,6 +226,7 @@ export const en = {
   'you.sound': 'Sound effects',
   'you.reminder': 'Daily reminder',
   'you.language': 'Language',
+  'you.languageSwitch': 'Switch between English and Vietnamese',
   'you.open': 'OPEN',
   'you.unread': '{count} NEW',
   'you.version': 'V{version} · PRIVACY · SUPPORT',

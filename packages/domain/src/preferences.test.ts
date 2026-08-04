@@ -20,6 +20,7 @@ describe('UserPreferences', () => {
       colorSpace: 'srgb',
       soundEnabled: false,
       defaultExport: 'css',
+      onboardingCompleted: false,
       activityReadAt: null,
     });
   });
@@ -44,6 +45,7 @@ describe('UserPreferences', () => {
     expect(parsed.colorSpace).toBe('srgb');
     expect(parsed.soundEnabled).toBe(false);
     expect(parsed.defaultExport).toBe('css');
+    expect(parsed.onboardingCompleted).toBe(true);
     expect(parsed.activityReadAt).toBeNull();
     // The choices that were on disk survive rather than reverting to defaults.
     expect(parsed.theme).toBe('moss');

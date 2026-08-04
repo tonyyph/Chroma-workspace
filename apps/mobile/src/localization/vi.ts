@@ -24,6 +24,14 @@ export const vi: Record<MessageKey, string> = {
   'onboarding.role.supportBody': 'Thứ giữ nó lại — bề mặt và bóng tối',
   'onboarding.role.signal': 'Tín hiệu',
   'onboarding.role.signalBody': 'Điểm nhấn khiến người ta phải nhìn',
+  'onboarding.tune.title': 'Tinh chỉnh từng dải\ntheo cách của bạn',
+  'onboarding.tune.body':
+    'Chỉnh tông, độ bão hoà và độ sáng mà vẫn giữ liên hệ với khung hình gốc.',
+  'onboarding.share.title': 'Giữ lại ảnh.\nChia sẻ tín hiệu.',
+  'onboarding.share.body':
+    'Mỗi bảng màu đã lưu luôn có hình ảnh, sẵn sàng vào thư viện, bộ màu hoặc thẻ chia sẻ.',
+  'onboarding.share.previewName': 'Hoàng hôn bến cảng',
+  'onboarding.share.previewMeta': '5 MÀU · SẴN SÀNG CHIA SẺ',
   'onboarding.permission.title': 'Cần camera để đọc ánh sáng',
   'onboarding.permission.body':
     'Khung hình được xử lý trên máy và bị loại bỏ trừ khi bạn lưu. Không có gì được tải lên theo mặc định.',
@@ -36,6 +44,8 @@ export const vi: Record<MessageKey, string> = {
   'onboarding.allowCamera': 'Cho phép camera',
   'onboarding.importInstead': 'Chọn ảnh có sẵn',
   'onboarding.step': 'Bước {current} / {total}',
+  'onboarding.saveFailed.title': 'Chưa hoàn tất thiết lập',
+  'onboarding.saveFailed.body': 'Thử lại. Lựa chọn của bạn vẫn được giữ.',
 
   /* --------------------------------------------------------------- B · capture */
   'capture.close': 'Đóng',
@@ -217,6 +227,7 @@ export const vi: Record<MessageKey, string> = {
   'you.sound': 'Âm thanh',
   'you.reminder': 'Nhắc hằng ngày',
   'you.language': 'Ngôn ngữ',
+  'you.languageSwitch': 'Chuyển giữa tiếng Anh và tiếng Việt',
   'you.open': 'MỞ',
   'you.unread': '{count} MỚI',
   'you.version': 'V{version} · BẢO MẬT · HỖ TRỢ',

@@ -1,8 +1,20 @@
-import { round, space, typeExtra, ui, uiMotion } from '@chromawave/design-tokens';
+import { round, space, typeExtra, ui, uiMotion, uiShadow } from '@chromawave/design-tokens';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Button } from './Button';
+import { SheetGrabber } from './Sheet';
 import { Text } from './Text';
 
 export type MenuAction = {
@@ -13,13 +25,64 @@ export type MenuAction = {
 };
 
 /**
- * The overflow menu behind a "•••" control.
- *
- * Deliberately not `ActionSheetIOS`: the design's sheet radius, ground and type
- * are all specified, and the platform sheet honours none of them. The dismiss
- * affordances are the backdrop, the cancel row and the hardware back button, so
- * a menu can always be left without choosing something.
+ * Shared modal shell for every in-app sheet. It keeps presentation, safe-area,
+ * backdrop and keyboard behaviour consistent instead of recreating a slightly
+ * different platform-looking modal at every call site.
  */
+export function ModalSheet({
+  visible,
+  title,
+  dismissLabel,
+  onDismiss,
+  children,
+  keyboardAware = false,
+}: {
+  visible: boolean;
+  title: string;
+  dismissLabel: string;
+  onDismiss: () => void;
+  children: React.ReactNode;
+  keyboardAware?: boolean;
+}) {
+  const insets = useSafeAreaInsets();
+  const dismiss = () => {
+    Keyboard.dismiss();
+    onDismiss();
+  };
+
+  return (
+    <Modal
+      animationType="fade"
+      onRequestClose={dismiss}
+      presentationStyle="overFullScreen"
+      statusBarTranslucent
+      transparent
+      visible={visible}
+    >
+      <KeyboardAvoidingView
+        behavior={keyboardAware ? (Platform.OS === 'ios' ? 'padding' : 'height') : undefined}
+        style={styles.modalRoot}
+      >
+        <Pressable accessibilityLabel={dismissLabel} onPress={dismiss} style={styles.backdrop} />
+        <View
+          accessibilityViewIsModal
+          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, space.md) }]}
+        >
+          <SheetGrabber />
+          <View style={styles.heading}>
+            <View style={styles.headingRule} />
+            <Text accessibilityRole="header" style={styles.title} variant="section">
+              {title}
+            </Text>
+          </View>
+          {children}
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+/** The overflow menu behind a more-options control. */
 export function ActionSheet({
   visible,
   title,
@@ -33,58 +96,40 @@ export function ActionSheet({
   cancelLabel: string;
   onDismiss: () => void;
 }) {
-  const insets = useSafeAreaInsets();
-
   return (
-    <Modal animationType="fade" onRequestClose={onDismiss} transparent visible={visible}>
-      <Pressable accessibilityLabel={cancelLabel} onPress={onDismiss} style={styles.backdrop} />
-      <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, space.md) }]}>
-        <Text style={styles.title} tone="tertiary" variant="eyebrow">
-          {title}
-        </Text>
-        {actions.map((action) => (
+    <ModalSheet dismissLabel={cancelLabel} onDismiss={onDismiss} title={title} visible={visible}>
+      <View style={styles.actionGroup}>
+        {actions.map((action, index) => (
           <Pressable
             accessibilityLabel={action.label}
             accessibilityRole="button"
             key={action.label}
             onPress={() => {
-              // Dismissing first keeps the menu from lingering over whatever the
-              // action navigates to.
               onDismiss();
               action.onPress();
             }}
             style={({ pressed }) => [
               styles.row,
+              index < actions.length - 1 && styles.rowDivider,
               pressed && { opacity: uiMotion.listPress.opacity },
             ]}
           >
-            <Text tone={action.destructive ? 'danger' : 'primary'}>{action.label}</Text>
+            <Text tone={action.destructive ? 'danger' : 'primary'} variant="rowTitle">
+              {action.label}
+            </Text>
+            <View
+              accessibilityElementsHidden
+              style={[styles.actionMark, action.destructive && styles.actionMarkDanger]}
+            />
           </Pressable>
         ))}
-        <Pressable
-          accessibilityLabel={cancelLabel}
-          accessibilityRole="button"
-          onPress={onDismiss}
-          style={({ pressed }) => [
-            styles.row,
-            styles.cancel,
-            pressed && { opacity: uiMotion.listPress.opacity },
-          ]}
-        >
-          <Text tone="secondary">{cancelLabel}</Text>
-        </Pressable>
       </View>
-    </Modal>
+      <Button label={cancelLabel} onPress={onDismiss} size="xs" variant="secondary" />
+    </ModalSheet>
   );
 }
 
-/**
- * A one-field prompt — rename a palette, name a tag.
- *
- * `Alert.prompt` would be fewer lines but exists only on iOS, and a rename that
- * silently does nothing on Android is exactly the class of bug this screen set
- * is meant to be rid of.
- */
+/** A keyboard-safe one-field prompt for rename and tag actions. */
 export function PromptSheet({
   visible,
   title,
@@ -104,11 +149,8 @@ export function PromptSheet({
   onConfirm: (value: string) => void;
   onDismiss: () => void;
 }) {
-  const insets = useSafeAreaInsets();
   const [value, setValue] = useState(initialValue);
 
-  // Reopening the same prompt should start from the current value rather than
-  // whatever was typed and abandoned last time.
   useEffect(() => {
     if (visible) setValue(initialValue);
   }, [visible, initialValue]);
@@ -116,103 +158,187 @@ export function PromptSheet({
   const trimmed = value.trim();
   const submit = () => {
     if (!trimmed) return;
+    Keyboard.dismiss();
     onConfirm(trimmed);
     onDismiss();
   };
 
   return (
-    <Modal animationType="fade" onRequestClose={onDismiss} transparent visible={visible}>
-      <Pressable accessibilityLabel={cancelLabel} onPress={onDismiss} style={styles.backdrop} />
-      <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, space.md) }]}>
-        <Text style={styles.title} tone="tertiary" variant="eyebrow">
-          {title}
-        </Text>
+    <ModalSheet
+      dismissLabel={cancelLabel}
+      keyboardAware
+      onDismiss={onDismiss}
+      title={title}
+      visible={visible}
+    >
+      <ScrollView
+        contentContainerStyle={styles.promptContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <TextInput
           accessibilityLabel={title}
+          autoCapitalize="sentences"
           autoFocus
           onChangeText={setValue}
           onSubmitEditing={submit}
           placeholder={placeholder}
           placeholderTextColor={ui.text.tertiary}
           returnKeyType="done"
+          selectTextOnFocus
           style={styles.input}
           value={value}
         />
         <View style={styles.promptActions}>
-          <Pressable
-            accessibilityLabel={cancelLabel}
-            accessibilityRole="button"
+          <Button
+            label={cancelLabel}
             onPress={onDismiss}
-            style={({ pressed }) => [
-              styles.promptButton,
-              pressed && { opacity: uiMotion.listPress.opacity },
-            ]}
-          >
-            <Text tone="secondary">{cancelLabel}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityLabel={confirmLabel}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: trimmed.length === 0 }}
+            size="xs"
+            style={styles.promptButton}
+            variant="secondary"
+          />
+          <Button
             disabled={trimmed.length === 0}
+            label={confirmLabel}
             onPress={submit}
-            style={({ pressed }) => [
-              styles.promptButton,
-              styles.promptConfirm,
-              trimmed.length === 0 && styles.promptDisabled,
-              pressed && { opacity: uiMotion.listPress.opacity },
-            ]}
-          >
-            <Text style={styles.promptConfirmLabel}>{confirmLabel}</Text>
-          </Pressable>
+            size="xs"
+            style={styles.promptButton}
+          />
         </View>
+      </ScrollView>
+    </ModalSheet>
+  );
+}
+
+/** Branded destructive confirmation, replacing platform `Alert.alert`. */
+export function ConfirmSheet({
+  visible,
+  title,
+  body,
+  confirmLabel,
+  cancelLabel,
+  onConfirm,
+  onDismiss,
+}: {
+  visible: boolean;
+  title: string;
+  body: string;
+  confirmLabel: string;
+  cancelLabel: string;
+  onConfirm: () => void;
+  onDismiss: () => void;
+}) {
+  return (
+    <ModalSheet dismissLabel={cancelLabel} onDismiss={onDismiss} title={title} visible={visible}>
+      <Text tone="secondary" variant="body">
+        {body}
+      </Text>
+      <View style={styles.promptActions}>
+        <Button
+          label={cancelLabel}
+          onPress={onDismiss}
+          size="xs"
+          style={styles.promptButton}
+          variant="secondary"
+        />
+        <Button
+          label={confirmLabel}
+          onPress={() => {
+            onDismiss();
+            onConfirm();
+          }}
+          size="xs"
+          style={styles.promptButton}
+          variant="destructive"
+        />
       </View>
-    </Modal>
+    </ModalSheet>
+  );
+}
+
+/** Branded informational acknowledgement, replacing one-button alerts. */
+export function NoticeSheet({
+  visible,
+  title,
+  body,
+  confirmLabel,
+  onDismiss,
+}: {
+  visible: boolean;
+  title: string;
+  body: string;
+  confirmLabel: string;
+  onDismiss: () => void;
+}) {
+  return (
+    <ModalSheet dismissLabel={confirmLabel} onDismiss={onDismiss} title={title} visible={visible}>
+      <Text tone="secondary" variant="body">
+        {body}
+      </Text>
+      <Button label={confirmLabel} onPress={onDismiss} size="xs" />
+    </ModalSheet>
   );
 }
 
 const styles = StyleSheet.create({
+  modalRoot: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: ui.scrim.strong },
   sheet: {
-    marginTop: 'auto',
+    maxHeight: '88%',
     backgroundColor: ui.bg.sheet,
     borderTopLeftRadius: round.sheet,
     borderTopRightRadius: round.sheet,
     borderTopWidth: 1,
-    borderTopColor: ui.border.hairlineStrong,
-    paddingTop: space.md,
+    borderTopColor: ui.border.control,
+    paddingTop: space.sm,
     paddingHorizontal: space.sectionGap,
+    gap: space.md,
+    ...uiShadow.sheet,
   },
-  title: { paddingBottom: space.xs },
+  heading: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  headingRule: {
+    width: 5,
+    height: 28,
+    borderRadius: round.full,
+    backgroundColor: ui.action.primary,
+  },
+  title: { flex: 1 },
+  actionGroup: {
+    overflow: 'hidden',
+    borderRadius: round.card,
+    borderWidth: 1,
+    borderColor: ui.border.hairlineStrong,
+    backgroundColor: ui.fill.card,
+  },
   row: {
-    minHeight: 52,
-    justifyContent: 'center',
-    borderTopWidth: 1,
-    borderTopColor: ui.border.hairline,
+    minHeight: 54,
+    paddingHorizontal: space.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space.md,
   },
-  cancel: { marginTop: space.xs },
+  rowDivider: { borderBottomWidth: 1, borderBottomColor: ui.border.hairline },
+  actionMark: {
+    width: 6,
+    height: 6,
+    borderRadius: round.full,
+    backgroundColor: ui.action.primary,
+  },
+  actionMarkDanger: { backgroundColor: ui.status.danger },
+  promptContent: { gap: space.md },
   input: {
-    height: 46,
+    minHeight: 52,
     borderRadius: round.control,
     backgroundColor: ui.fill.chip,
     borderWidth: 1,
-    borderColor: ui.border.hairlineStrong,
-    paddingHorizontal: space.sm,
+    borderColor: ui.border.control,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
     color: ui.text.primary,
     fontFamily: typeExtra.button.fontFamily,
-    fontSize: 14,
+    fontSize: typeExtra.button.fontSize,
   },
-  promptActions: { flexDirection: 'row', gap: space.xs, paddingTop: space.md },
-  promptButton: {
-    flex: 1,
-    minHeight: 46,
-    borderRadius: round.control,
-    borderWidth: 1,
-    borderColor: ui.border.hairlineStrong,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  promptConfirm: { backgroundColor: ui.action.primary, borderColor: ui.action.primary },
-  promptDisabled: { opacity: 0.4 },
-  promptConfirmLabel: { color: '#FFFFFF', fontWeight: '600' },
+  promptActions: { flexDirection: 'row', gap: space.xs },
+  promptButton: { flex: 1 },
 });

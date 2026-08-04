@@ -4,7 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Crypto from 'expo-crypto';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { ShareSheet, type ShareOptions } from '@/features/capture/ShareSheet';
 import { paletteRepository } from '@/infrastructure/dependencies';
@@ -17,6 +17,7 @@ import {
   Card,
   Chip,
   ColorRow,
+  ConfirmSheet,
   Gutter,
   Icon,
   InlineError,
@@ -38,6 +39,7 @@ export function PaletteDetailScreen() {
   const [palette, setPalette] = useState<Palette | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [prompt, setPrompt] = useState<Prompt>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [writeFailed, setWriteFailed] = useState(false);
 
@@ -87,26 +89,15 @@ export function PaletteDetailScreen() {
   }, []);
 
   const remove = useCallback(
-    (target: Palette) => {
-      Alert.alert(t('palette.delete.title'), t('palette.delete.body', { name: target.name }), [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('palette.delete.confirm'),
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              try {
-                await paletteRepository.remove(target.id);
-                router.back();
-              } catch {
-                setWriteFailed(true);
-              }
-            })();
-          },
-        },
-      ]);
+    async (target: Palette) => {
+      try {
+        await paletteRepository.remove(target.id);
+        router.back();
+      } catch {
+        setWriteFailed(true);
+      }
     },
-    [router, t],
+    [router],
   );
 
   const duplicate = useCallback(
@@ -166,7 +157,11 @@ export function PaletteDetailScreen() {
       },
     },
     { label: t('palette.menu.duplicate'), onPress: () => void duplicate(palette) },
-    { label: t('palette.menu.delete'), onPress: () => remove(palette), destructive: true },
+    {
+      label: t('palette.menu.delete'),
+      onPress: () => setDeleteConfirmOpen(true),
+      destructive: true,
+    },
   ];
 
   return (
@@ -225,12 +220,7 @@ export function PaletteDetailScreen() {
             tone="pro"
           />
         ))}
-        <Chip
-          icon="add"
-          label={t('palette.addTag')}
-          onPress={() => setPrompt('tag')}
-          tone="add"
-        />
+        <Chip icon="add" label={t('palette.addTag')} onPress={() => setPrompt('tag')} tone="add" />
       </Gutter>
 
       <Gutter style={styles.list}>
@@ -352,6 +342,15 @@ export function PaletteDetailScreen() {
         )}
         title={t(prompt === 'tag' ? 'palette.addTag' : 'palette.menu.rename')}
         visible={prompt !== null}
+      />
+      <ConfirmSheet
+        body={t('palette.delete.body', { name: palette.name })}
+        cancelLabel={t('common.cancel')}
+        confirmLabel={t('palette.delete.confirm')}
+        onConfirm={() => void remove(palette)}
+        onDismiss={() => setDeleteConfirmOpen(false)}
+        title={t('palette.delete.title')}
+        visible={deleteConfirmOpen}
       />
     </Screen>
   );

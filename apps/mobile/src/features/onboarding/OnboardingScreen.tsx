@@ -1,88 +1,122 @@
-import { brandBands, round, space, ui } from '@chromawave/design-tokens';
+import { brandBands, duration, round, size, space, ui } from '@chromawave/design-tokens';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  ReduceMotion,
+  useReducedMotion,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCameraPermission } from 'react-native-vision-camera';
 
 import { BrandMark } from '@/components/BrandMark';
 import { analytics } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { BandCanvas, Button, Card, Text } from '@/ui';
+import { Button, Card, InlineError, SwatchStrip, Text } from '@/ui';
 
-type Step = 1 | 2 | 3;
+const welcomePhoto: number = require('../../../assets/brand/library/harbour-dusk.jpg');
+const steps = [1, 2, 3, 4, 5] as const;
+type Step = (typeof steps)[number];
+type Destination = '/(tabs)' | '/tools/import';
 
-/**
- * FLOW A · A2-A4. "Four taps to first capture. Permissions are asked in
- * context, never on screen one." A1 is the native splash plus the launch
- * sequence, so this stack starts at A2.
- */
+/** Five-step first-launch flow: value, model, tune, share, then permission. */
 export function OnboardingScreen() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
+  const [completing, setCompleting] = useState(false);
+  const [completionFailed, setCompletionFailed] = useState(false);
   const insets = useSafeAreaInsets();
-  const { t } = usePreferences();
-
+  const reducedMotion = useReducedMotion();
+  const { t, completeOnboarding } = usePreferences();
   const { hasPermission, requestPermission } = useCameraPermission();
 
-  const finish = () => {
-    analytics.track('onboarding_completed', { stepCount: 3 });
-    router.replace('/(tabs)');
+  useEffect(() => {
+    analytics.track('onboarding_started', {});
+  }, []);
+
+  const finish = async (destination: Destination) => {
+    setCompleting(true);
+    setCompletionFailed(false);
+    const completed = await completeOnboarding();
+    setCompleting(false);
+    if (!completed) {
+      setCompletionFailed(true);
+      return;
+    }
+    analytics.track('onboarding_completed', { stepCount: steps.length });
+    router.replace(destination);
   };
 
-  /**
-   * A4's whole point is asking in context, so the button asks. The intro is over
-   * either way — a refusal is an answer, and the capture screen has its own gate
-   * for that case.
-   */
   const allowCamera = async () => {
     if (!hasPermission) await requestPermission().catch(() => undefined);
-    finish();
+    await finish('/(tabs)');
   };
 
-  /** "Import a photo instead" has to actually reach the importer. */
-  const importInstead = () => {
-    analytics.track('onboarding_completed', { stepCount: 3 });
-    router.replace('/tools/import');
-  };
+  const next = () => setStep((current) => Math.min(steps.length, current + 1) as Step);
+  const back = () => setStep((current) => Math.max(1, current - 1) as Step);
+  const entry = reducedMotion
+    ? FadeIn.duration(120).reduceMotion(ReduceMotion.System)
+    : FadeInDown.duration(duration.enter).reduceMotion(ReduceMotion.System);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {step === 1 ? <Welcome /> : null}
-      {step === 2 ? <HowItWorks /> : null}
-      {step === 3 ? <CameraPermission /> : null}
+      <Animated.View entering={entry} key={step} style={styles.animatedBody}>
+        {step === 1 ? <Welcome /> : null}
+        {step === 2 ? <HowItWorks /> : null}
+        {step === 3 ? <TuneIntroduction /> : null}
+        {step === 4 ? <ShareIntroduction /> : null}
+        {step === 5 ? <CameraPermission /> : null}
+      </Animated.View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + space.md }]}>
+        {completionFailed ? (
+          <InlineError
+            detail={t('onboarding.saveFailed.body')}
+            title={t('onboarding.saveFailed.title')}
+          />
+        ) : null}
         <Dots active={step} />
-        {step === 3 ? (
+        {step === steps.length ? (
           <>
             <Button
+              disabled={completing}
               label={t('onboarding.allowCamera')}
               onPress={() => void allowCamera()}
               size="lg"
             />
             <Button
+              disabled={completing}
               label={t('onboarding.importInstead')}
-              onPress={importInstead}
-              size="md"
+              onPress={() => void finish('/tools/import')}
+              size="xs"
               variant="secondary"
             />
           </>
         ) : (
           <>
             <Button
+              disabled={completing}
               label={t('onboarding.continue')}
-              onPress={() => setStep((current) => (current + 1) as Step)}
+              onPress={next}
               size="lg"
             />
             {step === 1 ? (
-              <Button label={t('onboarding.skip')} onPress={finish} variant="ghost" />
-            ) : (
-              // Step 2 has no skip, so without this there is no way back to
-              // step 1 once "Continue" has been tapped.
               <Button
+                disabled={completing}
+                label={t('onboarding.skip')}
+                onPress={() => void finish('/(tabs)')}
+                size="xs"
+                variant="ghost"
+              />
+            ) : (
+              <Button
+                disabled={completing}
                 label={t('onboarding.back')}
-                onPress={() => setStep((current) => Math.max(1, current - 1) as Step)}
+                onPress={back}
+                size="xs"
                 variant="ghost"
               />
             )}
@@ -93,31 +127,39 @@ export function OnboardingScreen() {
   );
 }
 
-/** A2 · WELCOME · 1 of 3 */
 function Welcome() {
-  const { width } = useWindowDimensions();
+  const { height } = useWindowDimensions();
   const { t } = usePreferences();
+  const visualHeight = Math.max(210, Math.min(330, height * 0.36));
   return (
     <View style={styles.body}>
-      <View style={styles.photoSlot}>
-        <Text tone="tertiary" variant="chip">
+      <View style={[styles.heroPhoto, { height: visualHeight }]}>
+        <Image
+          accessibilityElementsHidden
+          contentFit="cover"
+          source={welcomePhoto}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.photoScrim} />
+        <Text style={styles.photoLabel} variant="chip">
           {t('onboarding.welcome.photoSlot')}
         </Text>
+        <View style={styles.heroStrip}>
+          <SwatchStrip
+            colors={brandBands.map((hex, index) => ({
+              hex,
+              weight: [0.46, 0.32, 0.22][index] ?? 0,
+            }))}
+            height={14}
+            radius={7}
+          />
+        </View>
       </View>
-      <View style={styles.bands}>
-        <BandCanvas blur={10} height={86} strokeWidth={22} width={width} />
-      </View>
-      <View style={styles.copy}>
-        <Text variant="display">{t('onboarding.welcome.title')}</Text>
-        <Text tone="secondary" variant="body">
-          {t('onboarding.welcome.body')}
-        </Text>
-      </View>
+      <SlideCopy body={t('onboarding.welcome.body')} title={t('onboarding.welcome.title')} />
     </View>
   );
 }
 
-/** A3 · HOW IT WORKS · 2 of 3 — the three roles, named once and used everywhere after. */
 function HowItWorks() {
   const { t } = usePreferences();
   const roles = [
@@ -139,9 +181,7 @@ function HowItWorks() {
   ];
   return (
     <View style={styles.body}>
-      <View style={styles.copy}>
-        <Text variant="headline">{t('onboarding.how.title')}</Text>
-      </View>
+      <SlideCopy title={t('onboarding.how.title')} />
       <View style={styles.roleList}>
         {roles.map((role) => (
           <Card key={role.title} style={styles.roleCard}>
@@ -159,7 +199,56 @@ function HowItWorks() {
   );
 }
 
-/** A4 · PERMISSION · in-context, after value shown. */
+/** New slide 3: makes the tune controls familiar before the first capture. */
+function TuneIntroduction() {
+  const { t } = usePreferences();
+  return (
+    <View style={styles.body}>
+      <SlideCopy body={t('onboarding.tune.body')} title={t('onboarding.tune.title')} />
+      <Card style={styles.featureCard}>
+        <SwatchStrip
+          colors={brandBands.map((hex, index) => ({ hex, weight: [0.46, 0.32, 0.22][index] ?? 0 }))}
+          height={64}
+          radius={round.swatch}
+        />
+        <PreviewSlider label={t('tune.hue')} position="72%" />
+        <PreviewSlider label={t('tune.saturation')} position="46%" />
+        <PreviewSlider label={t('tune.luminance')} position="61%" />
+      </Card>
+    </View>
+  );
+}
+
+/** New slide 4: shows that a saved palette stays tied to its photograph. */
+function ShareIntroduction() {
+  const { t } = usePreferences();
+  return (
+    <View style={styles.body}>
+      <SlideCopy body={t('onboarding.share.body')} title={t('onboarding.share.title')} />
+      <Card padded={false} style={styles.sharePreview}>
+        <View style={styles.sharePhoto}>
+          <Image
+            accessibilityElementsHidden
+            contentFit="cover"
+            source={welcomePhoto}
+            style={StyleSheet.absoluteFill}
+          />
+        </View>
+        <SwatchStrip
+          colors={brandBands.map((hex, index) => ({ hex, weight: [0.46, 0.32, 0.22][index] ?? 0 }))}
+          height={18}
+        />
+        <View style={styles.shareCopy}>
+          <Text variant="section">{t('onboarding.share.previewName')}</Text>
+          <Text tone="tertiary" variant="mono">
+            {t('onboarding.share.previewMeta')}
+          </Text>
+        </View>
+      </Card>
+    </View>
+  );
+}
+
 function CameraPermission() {
   const { t } = usePreferences();
   const reasons = [
@@ -169,8 +258,8 @@ function CameraPermission() {
   ];
   return (
     <View style={styles.body}>
-      <View style={styles.copy}>
-        <BrandMark size={76} />
+      <View style={styles.permissionCopy}>
+        <BrandMark size={72} />
         <Text variant="headline">{t('onboarding.permission.title')}</Text>
         <Text tone="secondary" variant="body">
           {t('onboarding.permission.body')}
@@ -192,20 +281,47 @@ function CameraPermission() {
   );
 }
 
+function SlideCopy({ title, body }: { title: string; body?: string }) {
+  return (
+    <View style={styles.copy}>
+      <Text variant="headline">{title}</Text>
+      {body ? (
+        <Text tone="secondary" variant="body">
+          {body}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+function PreviewSlider({ label, position }: { label: string; position: `${number}%` }) {
+  return (
+    <View style={styles.previewControl}>
+      <Text tone="tertiary" variant="eyebrow">
+        {label}
+      </Text>
+      <View style={styles.previewTrack}>
+        <View style={[styles.previewFill, { width: position }]} />
+        <View style={[styles.previewKnob, { left: position }]} />
+      </View>
+    </View>
+  );
+}
+
 function Dots({ active }: { active: Step }) {
   const { t } = usePreferences();
   return (
     <View
-      accessibilityLabel={t('onboarding.step', { current: active, total: 3 })}
+      accessibilityLabel={t('onboarding.step', { current: active, total: steps.length })}
       style={styles.dots}
     >
-      {([1, 2, 3] as const).map((index) => (
+      {steps.map((index) => (
         <View
           key={index}
           style={[
             styles.dot,
             index === active && styles.dotActive,
-            index === active && { backgroundColor: brandBands[index - 1] },
+            index === active && { backgroundColor: brandBands[(index - 1) % brandBands.length] },
           ]}
         />
       ))}
@@ -215,20 +331,28 @@ function Dots({ active }: { active: Step }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: ui.bg.base },
-  body: { flex: 1 },
-  photoSlot: {
+  animatedBody: { flex: 1, minHeight: 0 },
+  body: { flex: 1, minHeight: 0 },
+  heroPhoto: {
     marginHorizontal: space.sectionGap,
     marginTop: space.cardGap,
-    height: 360,
-    borderRadius: 26,
+    borderRadius: round.media,
     backgroundColor: ui.bg.media,
-    borderWidth: 1.5,
-    borderColor: 'rgba(237,234,227,.18)',
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: 'hidden',
   },
-  bands: { height: 86, marginTop: space.sectionGap, overflow: 'hidden' },
+  photoScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(8,7,14,.18)' },
+  photoLabel: {
+    position: 'absolute',
+    top: space.md,
+    left: space.md,
+    color: ui.text.primary,
+  },
+  heroStrip: {
+    position: 'absolute',
+    left: space.md,
+    right: space.md,
+    bottom: space.md,
+  },
   copy: { paddingHorizontal: space.sectionGap, paddingTop: space.lg, gap: space.sm },
   roleList: {
     paddingHorizontal: space.sectionGap,
@@ -238,15 +362,48 @@ const styles = StyleSheet.create({
   roleCard: { flexDirection: 'row', alignItems: 'center', gap: space.cardGap },
   roleSwatch: { width: 52, height: 52, borderRadius: round.control },
   roleCopy: { flex: 1, gap: 3 },
+  featureCard: {
+    marginHorizontal: space.sectionGap,
+    marginTop: space.lg,
+    gap: space.sm,
+  },
+  previewControl: { gap: space.xs },
+  previewTrack: {
+    height: size.sliderTrack,
+    borderRadius: round.full,
+    backgroundColor: ui.fill.track,
+  },
+  previewFill: {
+    height: size.sliderTrack,
+    borderRadius: round.full,
+    backgroundColor: ui.action.primary,
+  },
+  previewKnob: {
+    position: 'absolute',
+    top: -(size.sliderThumb - size.sliderTrack) / 2,
+    width: size.sliderThumb,
+    height: size.sliderThumb,
+    marginLeft: -size.sliderThumb / 2,
+    borderRadius: round.full,
+    backgroundColor: ui.text.primary,
+  },
+  sharePreview: {
+    marginHorizontal: space.sectionGap,
+    marginTop: space.lg,
+    overflow: 'hidden',
+  },
+  sharePhoto: { height: 190, backgroundColor: ui.bg.media },
+  shareCopy: { padding: space.md, gap: space.xs },
+  permissionCopy: { paddingHorizontal: space.sectionGap, paddingTop: space.lg, gap: space.sm },
   reasons: { marginHorizontal: space.sectionGap, marginTop: space.lg, gap: space.sm },
-  reasonRow: { flexDirection: 'row', gap: 10 },
+  reasonRow: { flexDirection: 'row', gap: space.sm },
   reasonText: { flex: 1 },
   footer: {
     paddingHorizontal: space.sectionGap,
-    paddingTop: space.md,
+    paddingTop: space.sm,
     gap: space.cardGap,
   },
-  dots: { flexDirection: 'row', gap: 7, justifyContent: 'center', paddingBottom: 6 },
-  dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: 'rgba(237,234,227,.25)' },
+  dots: { flexDirection: 'row', gap: 7, justifyContent: 'center', paddingBottom: 2 },
+  dot: { width: 5, height: 5, borderRadius: round.full, backgroundColor: ui.text.quaternary },
   dotActive: { width: 22 },
 });

@@ -1,6 +1,9 @@
 import { Redirect } from 'expo-router';
 
-/** The app opens on the library; onboarding is presented from there on first run. */
+import { usePreferences } from '@/providers/PreferencesProvider';
+
+/** First installs see onboarding; returning installs resume in the library. */
 export default function Entry() {
-  return <Redirect href="/(tabs)" />;
+  const { preferences } = usePreferences();
+  return <Redirect href={preferences.onboardingCompleted ? '/(tabs)' : '/onboarding'} />;
 }

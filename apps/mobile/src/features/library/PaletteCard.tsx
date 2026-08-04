@@ -1,10 +1,11 @@
 import { round, space, ui, uiMotion } from '@chromawave/design-tokens';
 import { shortAge, type Palette } from '@chromawave/domain';
-import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { Meta, SwatchStrip, Text } from '@/ui';
+
+import { PalettePhoto } from './PalettePhoto';
 
 /**
  * FLOW C · "Cards are photo + band strip + metadata — the same three-zone grid
@@ -22,17 +23,7 @@ export function PaletteCard({ palette, onPress }: { palette: Palette; onPress: (
       style={({ pressed }) => [styles.card, pressed && { opacity: uiMotion.listPress.opacity }]}
     >
       <View style={styles.media}>
-        {palette.photoUri ? (
-          <Image
-            contentFit="cover"
-            source={{ uri: palette.photoUri }}
-            style={StyleSheet.absoluteFill}
-          />
-        ) : (
-          <Text tone="quaternary" variant="monoSmall">
-            PHOTO
-          </Text>
-        )}
+        <PalettePhoto palette={palette} style={StyleSheet.absoluteFill} />
       </View>
       <SwatchStrip colors={palette.colors} height={10} />
       <View style={styles.copy}>

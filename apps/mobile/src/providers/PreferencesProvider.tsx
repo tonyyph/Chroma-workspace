@@ -39,6 +39,7 @@ type PreferenceAction =
   | 'colorSpace'
   | 'sound'
   | 'defaultExport'
+  | 'onboarding'
   | 'activity'
   | null;
 
@@ -59,6 +60,7 @@ type PreferencesContextValue = {
   setColorSpace: (space: ColorSpacePreference) => Promise<void>;
   setSoundEnabled: (enabled: boolean) => Promise<void>;
   setDefaultExport: (target: ExportTarget) => Promise<void>;
+  completeOnboarding: () => Promise<boolean>;
   /** Clears the activity feed's unread count by stamping "read" at now. */
   markActivityRead: () => Promise<void>;
   refreshNotificationPermission: () => Promise<void>;
@@ -88,6 +90,7 @@ const defaultContextValue: PreferencesContextValue = {
   setColorSpace: noop,
   setSoundEnabled: noop,
   setDefaultExport: noop,
+  completeOnboarding: async () => false,
   markActivityRead: noop,
   refreshNotificationPermission: noop,
   clearError: () => {},
@@ -327,6 +330,13 @@ export function PreferencesProvider({
     [preferences, save],
   );
 
+  const completeOnboarding = useCallback(async () => {
+    if (preferences.onboardingCompleted) return true;
+    const didSave = await save({ ...preferences, onboardingCompleted: true }, 'onboarding');
+    if (didSave && preferences.hapticsEnabled) await hapticsService.success();
+    return didSave;
+  }, [preferences, save]);
+
   const markActivityRead = useCallback(async () => {
     const didSave = await save(
       { ...preferences, activityReadAt: new Date().toISOString() },
@@ -370,6 +380,7 @@ export function PreferencesProvider({
       setColorSpace,
       setSoundEnabled,
       setDefaultExport,
+      completeOnboarding,
       markActivityRead,
       refreshNotificationPermission,
       clearError: () => setError(null),
@@ -377,6 +388,7 @@ export function PreferencesProvider({
     }),
     [
       busyAction,
+      completeOnboarding,
       error,
       feedback,
       hydrated,
@@ -391,7 +403,6 @@ export function PreferencesProvider({
       setLanguage,
       setNotificationsEnabled,
       setReminderTime,
-      setSoundEnabled,
       setTheme,
     ],
   );

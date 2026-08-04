@@ -45,7 +45,11 @@ export function ResultScreen({
             <Icon name="close" scale="inline" />
             <Text variant="chip">{t('result.close')}</Text>
           </Card>
-          <Card accessibilityLabel={t('result.retake')} onPress={onRetake} style={styles.captureChip}>
+          <Card
+            accessibilityLabel={t('result.retake')}
+            onPress={onRetake}
+            style={styles.captureChip}
+          >
             <Text variant="chip">{t('result.retake')}</Text>
           </Card>
         </View>

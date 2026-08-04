@@ -4,16 +4,19 @@ import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { PalettePhoto } from '@/features/library/PalettePhoto';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import {
   Card,
   Chip,
+  ConfirmSheet,
   Gutter,
   Icon,
   Meta,
   NavBar,
+  NoticeSheet,
   PromptSheet,
   Screen,
   SwatchStrip,
@@ -50,6 +53,8 @@ export function CollectionScreen({
   const members = set.members.length;
   const [editing, setEditing] = useState(false);
   const [renaming, setRenaming] = useState(false);
+  const [inviteNoticeOpen, setInviteNoticeOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   /**
    * Exporting a set is the palettes it holds, as one CSS block namespaced per
@@ -76,14 +81,7 @@ export function CollectionScreen({
    */
   const invite = () => {
     void Clipboard.setStringAsync(Linking.createURL(`/set/${set.id}`));
-    Alert.alert(t('collection.invite'), t('collection.inviteCopied'));
-  };
-
-  const confirmDelete = () => {
-    Alert.alert(t('collection.delete.title'), t('collection.delete.body', { name: set.name }), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('palette.delete.confirm'), style: 'destructive', onPress: onDelete },
-    ]);
+    setInviteNoticeOpen(true);
   };
 
   return (
@@ -108,7 +106,12 @@ export function CollectionScreen({
       {editing ? (
         <Gutter style={styles.actions}>
           <Chip fill label={t('collection.rename')} onPress={() => setRenaming(true)} />
-          <Chip fill label={t('collection.deleteSet')} onPress={confirmDelete} tone="danger" />
+          <Chip
+            fill
+            label={t('collection.deleteSet')}
+            onPress={() => setDeleteConfirmOpen(true)}
+            tone="danger"
+          />
         </Gutter>
       ) : (
         <Gutter style={styles.actions}>
@@ -121,7 +124,7 @@ export function CollectionScreen({
       <Gutter style={styles.rows}>
         {palettes.map((palette) => (
           <Card key={palette.id} style={styles.row}>
-            <View style={styles.rowThumb} />
+            <PalettePhoto palette={palette} style={styles.rowThumb} />
             <View style={styles.rowCopy}>
               <Text variant="cardTitle">{palette.name}</Text>
               <Meta style={styles.rowMeta}>{t('collection.addedByYou')}</Meta>
@@ -180,6 +183,22 @@ export function CollectionScreen({
         placeholder={t('collection.renamePlaceholder')}
         title={t('collection.rename')}
         visible={renaming}
+      />
+      <ConfirmSheet
+        body={t('collection.delete.body', { name: set.name })}
+        cancelLabel={t('common.cancel')}
+        confirmLabel={t('palette.delete.confirm')}
+        onConfirm={onDelete}
+        onDismiss={() => setDeleteConfirmOpen(false)}
+        title={t('collection.delete.title')}
+        visible={deleteConfirmOpen}
+      />
+      <NoticeSheet
+        body={t('collection.inviteCopied')}
+        confirmLabel={t('common.done')}
+        onDismiss={() => setInviteNoticeOpen(false)}
+        title={t('collection.invite')}
+        visible={inviteNoticeOpen}
       />
     </Screen>
   );

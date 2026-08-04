@@ -5,8 +5,8 @@ import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { usePalettes } from '@/hooks/usePalettes';
 import { unreadActivityCount } from '@/features/tools/activity';
+import { usePalettes } from '@/hooks/usePalettes';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { Card, CardGroup, Gutter, Icon, Meta, Screen, Text, Toggle } from '@/ui';
 
@@ -19,6 +19,7 @@ export function YouScreen() {
   const {
     preferences,
     setHapticsEnabled,
+    setLanguage,
     setNotificationsEnabled,
     setColorSpace,
     setDefaultExport,
@@ -78,6 +79,25 @@ export function YouScreen() {
             label={t('you.defaultExport')}
             onPress={cycleExport}
             value={preferences.defaultExport.toLocaleUpperCase()}
+          />
+          <Row
+            label={t('you.language')}
+            trailing={
+              <View style={styles.languageSwitch}>
+                <Text tone={preferences.language === 'en' ? 'primary' : 'tertiary'} variant="mono">
+                  EN
+                </Text>
+                <Toggle
+                  disabled={busyAction !== null}
+                  label={t('you.languageSwitch')}
+                  onValueChange={(vietnamese) => void setLanguage(vietnamese ? 'vi' : 'en')}
+                  value={preferences.language === 'vi'}
+                />
+                <Text tone={preferences.language === 'vi' ? 'primary' : 'tertiary'} variant="mono">
+                  VI
+                </Text>
+              </View>
+            }
           />
           <Row
             label={t('you.haptics')}
@@ -235,6 +255,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  languageSwitch: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.xs,
   },
   footer: {
     paddingTop: space.md,

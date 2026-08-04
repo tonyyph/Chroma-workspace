@@ -47,4 +47,16 @@ describe('StoredPreferencesRepository', () => {
       code: 'PERSISTED_DATA_INVALID',
     });
   });
+
+  it('shows onboarding only to new installs, not users upgrading from older preferences', async () => {
+    const storage = new PreferenceStorage();
+    const repository = new StoredPreferencesRepository(storage);
+
+    expect((await repository.get()).onboardingCompleted).toBe(false);
+
+    const { onboardingCompleted: _omitted, ...legacyPreferences } = defaultUserPreferences;
+    await storage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(legacyPreferences));
+
+    expect((await repository.get()).onboardingCompleted).toBe(true);
+  });
 });

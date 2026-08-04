@@ -35,6 +35,12 @@ export const userPreferencesSchema = z.object({
   soundEnabled: z.boolean().default(false),
   defaultExport: exportTargetSchema.default('css'),
   /**
+   * A stored v1 record without this field belongs to an existing installation,
+   * so it defaults to complete during migration. A genuinely new installation
+   * receives `defaultUserPreferences` below, where the explicit value is false.
+   */
+  onboardingCompleted: z.boolean().default(true),
+  /**
    * When the activity feed was last cleared, as an ISO timestamp. Anything
    * captured after it counts as unread, which is what G9's "MARK ALL READ"
    * acts on and what the D2 row badges.
@@ -53,6 +59,7 @@ export const defaultUserPreferences = userPreferencesSchema.parse({
   colorSpace: 'srgb',
   soundEnabled: false,
   defaultExport: 'css',
+  onboardingCompleted: false,
   activityReadAt: null,
 });
 
