@@ -18,7 +18,8 @@ import { useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { PreferencesProvider } from '@/providers/PreferencesProvider';
+import { PreferencesProvider, usePreferences } from '@/providers/PreferencesProvider';
+import { UnderScreenCanvas } from '@/ui';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -56,13 +57,22 @@ export default function RootLayout() {
 }
 
 function AppNavigator() {
+  const { preferences } = usePreferences();
+
   return (
     <>
       <StatusBar style="light" />
+      {/* Behind the whole navigator, so it survives every push and pop rather
+          than restarting its loop on each screen. */}
+      <UnderScreenCanvas enabled={true} />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: ui.bg.base },
+          // Transparent, or each screen would paint an opaque ground over the
+          // backdrop and there would be nothing to see.
+          contentStyle: {
+            backgroundColor: preferences.ambientBackdrop ? 'transparent' : ui.bg.base,
+          },
           animation: 'fade',
         }}
       >

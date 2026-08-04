@@ -1,7 +1,7 @@
 import { round, size, space, ui, uiMotion } from '@chromawave/design-tokens';
 import { readStability, type Color } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -77,39 +77,66 @@ export function ViewfinderScreen() {
   const [ratioIndex, setRatioIndex] = useState(0);
   const ratio = RATIOS[ratioIndex] ?? RATIOS[0];
 
-  const { read, colors, deltaE, confidence, reading } = usePhotoRead();
-
-  // The sequence callback fires from a worklet completion, so it reads the latest
-  // values through refs rather than closing over a stale render.
-  const colorsRef = useRef<readonly Color[]>([]);
-  const photoRef = useRef<string | null>(null);
-  const metricsRef = useRef({ deltaE: 0, confidence: 0 });
-  colorsRef.current = colors;
-  photoRef.current = photoUri;
-  metricsRef.current = { deltaE, confidence };
+  const { read, colors, deltaE, confidence, reading, latest } = usePhotoRead();
 
   const begin = useCaptureStore((state) => state.begin);
+
+  /**
+   * A capture finishes when two independent things have both finished: the
+   * shutter storyboard, which runs on a fixed clock, and the decode-and-extract,
+   * which takes as long as the photo takes.
+   *
+   * They used to be treated as one. `onSettled` fired when the animation ended
+   * and gave up silently if the colours were not ready yet — which, for a
+   * full-resolution frame, was most of the time. The shutter appeared to do
+   * nothing at all. Tracking them separately and committing when the second one
+   * lands is the whole fix.
+   */
+  const [sequenceDone, setSequenceDone] = useState(false);
+  const [readDone, setReadDone] = useState(false);
+  const [captureError, setCaptureError] = useState(false);
+  const photoRef = useRef<string | null>(null);
+  photoRef.current = photoUri;
 
   const onSettled = useCallback(() => {
     void hapticsService.fire('extractionComplete');
     void soundService.play('extractDone');
-    setCapturing(false);
-    if (!colorsRef.current.length) return;
-    begin({
-      colors: colorsRef.current,
-      photoUri: photoRef.current,
-      deltaE: metricsRef.current.deltaE,
-      confidence: metricsRef.current.confidence,
-      source: photoRef.current ? 'photo' : 'live',
-    });
-    router.push('/capture/result');
-  }, [begin, router]);
+    setSequenceDone(true);
+  }, []);
 
   const sequence = useCaptureSequence(capturing, onSettled);
+
+  useEffect(() => {
+    if (!capturing || !sequenceDone || !readDone) return;
+
+    setCapturing(false);
+    setSequenceDone(false);
+    setReadDone(false);
+
+    const outcome = latest.current;
+    if (!outcome?.ok || outcome.result.colors.length === 0) {
+      // Say so rather than stranding the user on a viewfinder that appears to
+      // have ignored them.
+      setCaptureError(true);
+      return;
+    }
+
+    begin({
+      colors: outcome.result.colors,
+      photoUri: photoRef.current,
+      deltaE: outcome.result.deltaE,
+      confidence: outcome.result.confidence,
+      source: 'photo',
+    });
+    router.push('/capture/result');
+  }, [begin, capturing, latest, readDone, router, sequenceDone]);
 
   const shoot = useCallback(async () => {
     void hapticsService.fire('shutterPress');
     void soundService.play('shutter');
+    setCaptureError(false);
+    setSequenceDone(false);
+    setReadDone(false);
     setCapturing(true);
     try {
       // The torch covers the LIVE reading; the flash fires for the frame the
@@ -120,10 +147,13 @@ export function ViewfinderScreen() {
       setPhotoUri(uri);
       await read(uri);
     } catch {
-      // A failed shot still finishes the sequence, which then finds no colours and
-      // leaves the user on the viewfinder rather than pushing an empty result.
+      latest.current = { ok: false, reason: 'decode' };
+    } finally {
+      // Marked done on every path, or a failed shot would leave the capture
+      // waiting forever with the shutter disabled.
+      setReadDone(true);
     }
-  }, [flash, photoOutput, read]);
+  }, [flash, latest, photoOutput, read]);
 
   /**
    * The three modes are three different capture paths, so selecting one routes
@@ -231,10 +261,12 @@ export function ViewfinderScreen() {
               <Text tone="tertiary" variant="eyebrow">
                 {t('capture.liveRead')}
               </Text>
-              <Meta tone={stability === 'stable' ? 'info' : 'tertiary'}>
-                {readColors.length
-                  ? `ΔE ${deltaE} · ${t(`common.stability.${stability}`)} · ${Math.round(confidence * 100)}%`
-                  : t('capture.reading')}
+              <Meta tone={captureError ? 'danger' : stability === 'stable' ? 'info' : 'tertiary'}>
+                {captureError
+                  ? t('capture.readFailed')
+                  : readColors.length
+                    ? `ΔE ${deltaE} · ${t(`common.stability.${stability}`)} · ${Math.round(confidence * 100)}%`
+                    : t('capture.reading')}
               </Meta>
             </View>
             {readColors.length ? (

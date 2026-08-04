@@ -36,7 +36,7 @@ export function ExploreScreen() {
   const router = useRouter();
   const [query, setQuery] = useState(q ?? '');
   const { t } = usePreferences();
-  const { palettes, save } = usePalettes();
+  const { palettes, refreshing, refresh, save } = usePalettes();
   // Trending id → the id of the palette it was copied into, so a saved row can
   // open the copy the user now owns rather than the fixture.
   const [saved, setSaved] = useState<Readonly<Record<string, string>>>({});
@@ -125,7 +125,7 @@ export function ExploreScreen() {
   };
 
   return (
-    <Screen tabBarInset>
+    <Screen onRefresh={() => void refresh()} refreshing={refreshing} tabBarInset>
       <Gutter style={styles.head}>
         <Text accessibilityRole="header" variant="title">
           {t('explore.title')}

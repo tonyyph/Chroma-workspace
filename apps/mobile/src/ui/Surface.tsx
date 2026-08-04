@@ -9,6 +9,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { usePreferences } from '@/providers/PreferencesProvider';
+
+import { BandRefreshControl } from './Sequences';
+
 /**
  * A card: `fill/card` over the ground with a hairline border. The recurring
  * container behind list rows, stat tiles and panels.
@@ -67,23 +71,43 @@ export function Screen({
   scroll = true,
   /** Extra bottom padding so content clears the floating tab bar. */
   tabBarInset = false,
+  /**
+   * Pull-to-refresh. Supply both and the screen becomes refreshable; a screen
+   * with nothing to re-read leaves them off rather than showing a gesture that
+   * does nothing.
+   */
+  refreshing,
+  onRefresh,
   style,
 }: {
   children: React.ReactNode;
   scroll?: boolean;
   tabBarInset?: boolean;
+  refreshing?: boolean;
+  onRefresh?: (() => void) | undefined;
   style?: ViewStyle;
 }) {
   const insets = useSafeAreaInsets();
+  const { preferences } = usePreferences();
   const paddingBottom = tabBarInset ? size.tabBar + space.sectionGap * 2 : space.xl;
+  // The backdrop lives behind the navigator and supplies the ground itself, so
+  // a screen that painted its own would hide it completely.
+  const ground = preferences.ambientBackdrop ? styles.transparent : styles.ground;
 
   if (!scroll) {
-    return <View style={[styles.screen, { paddingTop: insets.top }, style]}>{children}</View>;
+    return (
+      <View style={[styles.screen, ground, { paddingTop: insets.top }, style]}>{children}</View>
+    );
   }
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={[styles.screen, ground, { paddingTop: insets.top }]}>
       <ScrollView
         contentContainerStyle={[{ paddingBottom: paddingBottom + insets.bottom }, style]}
+        refreshControl={
+          onRefresh ? (
+            <BandRefreshControl onRefresh={onRefresh} refreshing={refreshing ?? false} />
+          ) : undefined
+        }
         showsVerticalScrollIndicator={false}
       >
         {children}
@@ -100,8 +124,9 @@ export function Gutter({ children, style }: { children: React.ReactNode; style?:
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: ui.bg.base,
   },
+  ground: { backgroundColor: ui.bg.base },
+  transparent: { backgroundColor: 'transparent' },
   gutter: {
     paddingHorizontal: space.gutter,
   },

@@ -1,11 +1,11 @@
 import type { PaletteSet } from '@chromawave/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
 import { CollectionScreen } from '@/features/sets/CollectionScreen';
 import { ToolFallback } from '@/features/tools/ToolFallback';
 import { usePalettes } from '@/hooks/usePalettes';
-import { setRepository } from '@/infrastructure/dependencies';
+import { useSets } from '@/hooks/useSets';
 import { usePreferences } from '@/providers/PreferencesProvider';
 
 export default function SetRoute() {
@@ -13,32 +13,22 @@ export default function SetRoute() {
   const router = useRouter();
   const { t } = usePreferences();
   const { palettes } = usePalettes();
-  const [set, setSet] = useState<PaletteSet | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Read the set out of the shared store rather than fetching a private copy:
+  // a rename made here has to be the same object the Sets list is rendering.
+  const { sets, loading, save: saveSet, remove: removeSet } = useSets();
+  const set = sets.find((entry) => entry.id === id) ?? null;
 
-  useEffect(() => {
-    if (!id) return;
-    void setRepository
-      .get(id)
-      .then(setSet)
-      .finally(() => setLoading(false));
-  }, [id]);
-
-  /**
-   * Edits persist through the repository and then re-read, rather than mutating
-   * the local copy — the Sets list reads from the same store and would otherwise
-   * keep showing the old name until relaunch.
-   */
-  const update = useCallback(async (next: PaletteSet) => {
-    const stamped = { ...next, updatedAt: new Date().toISOString() };
-    try {
-      await setRepository.save(stamped);
-      setSet(stamped);
-    } catch {
-      // What is on screen is still what is on disk, so nothing untrue is shown;
-      // the edit simply did not take.
-    }
-  }, []);
+  const update = useCallback(
+    async (next: PaletteSet) => {
+      try {
+        await saveSet({ ...next, updatedAt: new Date().toISOString() });
+      } catch {
+        // What is on screen is still what is on disk, so nothing untrue is
+        // shown; the edit simply did not take.
+      }
+    },
+    [saveSet],
+  );
 
   if (!set) return <ToolFallback loading={loading} title={t('sets.title')} />;
 
@@ -47,8 +37,7 @@ export default function SetRoute() {
       isPro={false}
       onBack={router.back}
       onDelete={() => {
-        void setRepository
-          .remove(set.id)
+        void removeSet(set.id)
           .then(() => router.back())
           .catch(() => undefined);
       }}

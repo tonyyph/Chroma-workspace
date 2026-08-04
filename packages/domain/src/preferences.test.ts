@@ -19,6 +19,7 @@ describe('UserPreferences', () => {
       theme: 'obsidian',
       colorSpace: 'srgb',
       soundEnabled: false,
+      ambientBackdrop: true,
       defaultExport: 'css',
       onboardingCompleted: false,
       activityReadAt: null,
@@ -44,6 +45,7 @@ describe('UserPreferences', () => {
 
     expect(parsed.colorSpace).toBe('srgb');
     expect(parsed.soundEnabled).toBe(false);
+    expect(parsed.ambientBackdrop).toBe(true);
     expect(parsed.defaultExport).toBe('css');
     expect(parsed.onboardingCompleted).toBe(true);
     expect(parsed.activityReadAt).toBeNull();

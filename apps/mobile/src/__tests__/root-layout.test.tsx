@@ -47,6 +47,11 @@ jest.mock('@/providers/PreferencesProvider', () => {
   return {
     PreferencesProvider: ({ children }: { children?: React.ReactNode }) =>
       React.createElement(React.Fragment, null, children),
+    // The layout reads preferences to decide whether the ambient backdrop is on.
+    // Without this the hook is undefined, the layout throws, and the error
+    // boundary renders instead — which looks like a safe-area failure rather
+    // than an incomplete mock.
+    usePreferences: () => ({ preferences: { ambientBackdrop: false } }),
   };
 });
 

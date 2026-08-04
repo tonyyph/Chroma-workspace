@@ -452,6 +452,67 @@ export const uiShadow = {
   },
 } as const;
 
+/**
+ * DEPTH. Three steps, each a shadow plus the border treatment that goes with it.
+ *
+ * The shadow alone is not what separates a surface from the ground here: on a
+ * near-black ground a soft dark shadow is close to invisible. What actually
+ * reads is the *top-edge highlight* — a lighter hairline along the upper border,
+ * as if the surface were catching light from above — with the shadow doing the
+ * work underneath. Both scale together, which is why they are one token.
+ */
+export const elevation = {
+  /** Flush with the ground: dividers, inert chips. */
+  flat: {
+    borderColor: 'rgba(237,234,227,.07)',
+    highlightColor: 'rgba(237,234,227,.10)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  /** Lifted off it: cards, rows, panels. The default for content. */
+  raised: {
+    borderColor: 'rgba(237,234,227,.10)',
+    highlightColor: 'rgba(237,234,227,.22)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.45,
+    shadowRadius: 22,
+    elevation: 8,
+  },
+  /** Above everything: sheets, menus, the tab shell. */
+  floating: {
+    borderColor: 'rgba(237,234,227,.14)',
+    highlightColor: 'rgba(237,234,227,.34)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 22 },
+    shadowOpacity: 0.6,
+    shadowRadius: 44,
+    elevation: 18,
+  },
+} as const;
+
+export type ElevationLevel = keyof typeof elevation;
+
+/**
+ * GLASS. Translucent surfaces that let the moving backdrop through.
+ *
+ * `intensity` is what `expo-blur` takes. The values are deliberately low —
+ * heavy blur turns the field behind into grey mud and costs a full-screen pass
+ * per surface. The tint is what actually carries the darkness; the blur only
+ * has to soften what shows through enough that text stays readable over it.
+ */
+export const glass = {
+  /** Content surfaces. Enough tint that body copy holds contrast over any band. */
+  card: { intensity: 18, tint: 'rgba(23,18,51,.62)' },
+  /** Navigation and sheets sit closer to opaque, because they overlap content. */
+  shell: { intensity: 28, tint: 'rgba(16,14,28,.78)' },
+  /** Controls: chips, pills, small pressables. */
+  control: { intensity: 14, tint: 'rgba(237,234,227,.07)' },
+} as const;
+
 export const uiLayer = {
   base: 0,
   content: 10,

@@ -1,9 +1,7 @@
-import { extractPaletteFromRgba, type Color } from '@chromawave/domain';
-import { Skia } from '@shopify/react-native-skia';
-import { useCallback, useState } from 'react';
+import type { Color } from '@chromawave/domain';
+import { useCallback, useRef, useState } from 'react';
 
-/** Grid the photo is reduced to before clustering. 48×48 = 2304 samples. */
-const GRID = 48;
+import { readPalette, type ReadOutcome } from '@/lib/readPalette';
 
 /**
  * Reads a palette out of a captured photo.
@@ -14,71 +12,45 @@ const GRID = 48;
  * private header those pods do not expose. So the read happens on the frame the
  * shutter captures rather than continuously.
  *
- * The user-visible difference is that the LIVE READ strip fills in after the
- * shutter instead of tracking the lens. Everything downstream is unchanged: the
- * same extractor, the same ΔE00, the same roles.
- *
- * Sampling is a 48×48 grid rather than the full image, which is what keeps a 12MP
- * frame well inside the extraction budget.
+ * The read is also exposed through a ref, not only through state. The capture
+ * screen has to decide what to do the moment *both* the shutter animation and
+ * this have finished, and a state value it re-read at that moment would still be
+ * the previous render's.
  */
 export function usePhotoRead() {
   const [colors, setColors] = useState<readonly Color[]>([]);
   const [deltaE, setDeltaE] = useState(0);
   const [confidence, setConfidence] = useState(0);
   const [reading, setReading] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const latest = useRef<ReadOutcome | null>(null);
 
-  const read = useCallback(async (uri: string, colorCount = 5) => {
+  const read = useCallback(async (uri: string, colorCount = 5): Promise<ReadOutcome> => {
     setReading(true);
-    try {
-      const data = await Skia.Data.fromURI(uri);
-      const image = Skia.Image.MakeImageFromEncoded(data);
-      if (!image) return null;
+    setFailed(false);
+    const outcome = await readPalette(uri, colorCount);
+    latest.current = outcome;
 
-      const width = image.width();
-      const height = image.height();
-      const pixels = image.readPixels(0, 0, {
-        width,
-        height,
-        colorType: 4, // RGBA_8888
-        alphaType: 1, // Unpremul
-      });
-      if (!pixels) return null;
-
-      // Subsample into a small RGBA buffer; the extractor caps its own sample
-      // anyway, but reading 12M pixels into JS first would not be free.
-      const grid = new Uint8Array(GRID * GRID * 4);
-      for (let gy = 0; gy < GRID; gy++) {
-        const y = Math.min(height - 1, Math.floor(((gy + 0.5) / GRID) * height));
-        for (let gx = 0; gx < GRID; gx++) {
-          const x = Math.min(width - 1, Math.floor(((gx + 0.5) / GRID) * width));
-          const from = (y * width + x) * 4;
-          const to = (gy * GRID + gx) * 4;
-          grid[to] = pixels[from] ?? 0;
-          grid[to + 1] = pixels[from + 1] ?? 0;
-          grid[to + 2] = pixels[from + 2] ?? 0;
-          grid[to + 3] = 255;
-        }
-      }
-
-      const result = extractPaletteFromRgba(grid, GRID, GRID, colorCount);
-      setColors(result.colors);
-      setDeltaE(result.deltaE);
-      setConfidence(result.confidence);
-      return result;
-    } catch {
-      // A frame that cannot be decoded leaves the previous read in place rather
-      // than blanking the strip.
-      return null;
-    } finally {
-      setReading(false);
+    if (outcome.ok) {
+      setColors(outcome.result.colors);
+      setDeltaE(outcome.result.deltaE);
+      setConfidence(outcome.result.confidence);
+    } else {
+      // A failed read used to leave the previous strip in place and return null,
+      // which read as "nothing happened" rather than "that did not work".
+      setFailed(true);
     }
+    setReading(false);
+    return outcome;
   }, []);
 
   const reset = useCallback(() => {
+    latest.current = null;
     setColors([]);
     setDeltaE(0);
     setConfidence(0);
+    setFailed(false);
   }, []);
 
-  return { read, reset, colors, deltaE, confidence, reading };
+  return { read, reset, colors, deltaE, confidence, reading, failed, latest };
 }

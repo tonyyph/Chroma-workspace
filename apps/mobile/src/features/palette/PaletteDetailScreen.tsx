@@ -3,11 +3,12 @@ import { shortAge, type Palette } from '@chromawave/domain';
 import * as Clipboard from 'expo-clipboard';
 import * as Crypto from 'expo-crypto';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { ShareSheet, type ShareOptions } from '@/features/capture/ShareSheet';
-import { paletteRepository } from '@/infrastructure/dependencies';
+import { ToolFallback } from '@/features/tools/ToolFallback';
+import { usePalettes } from '@/hooks/usePalettes';
 import { renderShareCard, shareFile } from '@/lib/export';
 import { persistPhoto } from '@/lib/photos';
 import { usePreferences } from '@/providers/PreferencesProvider';
@@ -36,7 +37,7 @@ export function PaletteDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { t, feedback } = usePreferences();
-  const [palette, setPalette] = useState<Palette | null>(null);
+  const { palettes, loading, save: savePalette, remove: removePalette } = usePalettes();
   const [menuOpen, setMenuOpen] = useState(false);
   const [prompt, setPrompt] = useState<Prompt>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -68,36 +69,37 @@ export function PaletteDetailScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!id) return;
-    void paletteRepository.get(id).then(setPalette);
-  }, [id]);
+  // The palette comes from the shared store, so a rename here reaches the
+  // library grid, the sets that contain it and Explore's search at once.
+  const palette = palettes.find((entry) => entry.id === id) ?? null;
 
   /**
    * Every menu action is a write-then-reflect: persist first, and only update
    * the screen if the write landed. Updating state first would show a rename
    * that silently did not survive the next launch.
    */
-  const commit = useCallback(async (next: Palette) => {
-    setWriteFailed(false);
-    try {
-      await paletteRepository.save(next);
-      setPalette(next);
-    } catch {
-      setWriteFailed(true);
-    }
-  }, []);
+  const commit = useCallback(
+    async (next: Palette) => {
+      setWriteFailed(false);
+      try {
+        await savePalette(next);
+      } catch {
+        setWriteFailed(true);
+      }
+    },
+    [savePalette],
+  );
 
   const remove = useCallback(
     async (target: Palette) => {
       try {
-        await paletteRepository.remove(target.id);
+        await removePalette(target.id);
         router.back();
       } catch {
         setWriteFailed(true);
       }
     },
-    [router],
+    [removePalette, router],
   );
 
   const duplicate = useCallback(
@@ -119,22 +121,27 @@ export function PaletteDetailScreen() {
       };
       setWriteFailed(false);
       try {
-        await paletteRepository.save(copy);
+        await savePalette(copy);
         router.replace(`/palette/${copy.id}`);
       } catch {
         setWriteFailed(true);
       }
     },
-    [router, t],
+    [router, savePalette, t],
   );
 
   if (!palette) {
-    return (
+    // Once the store has loaded, a missing id means the palette was deleted —
+    // which is a different thing from still loading, and "Loading" forever is
+    // what a deep link to a deleted palette used to show.
+    return loading ? (
       <Screen>
         <Gutter style={styles.head}>
           <Meta>{t('palette.loading')}</Meta>
         </Gutter>
       </Screen>
+    ) : (
+      <ToolFallback loading={false} title={t('palette.tools')} />
     );
   }
 

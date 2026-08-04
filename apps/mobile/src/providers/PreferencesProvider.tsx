@@ -38,6 +38,7 @@ type PreferenceAction =
   | 'reminder'
   | 'colorSpace'
   | 'sound'
+  | 'backdrop'
   | 'defaultExport'
   | 'onboarding'
   | 'activity'
@@ -59,6 +60,7 @@ type PreferencesContextValue = {
   setReminderTime: (time: ReminderTime) => Promise<void>;
   setColorSpace: (space: ColorSpacePreference) => Promise<void>;
   setSoundEnabled: (enabled: boolean) => Promise<void>;
+  setAmbientBackdrop: (enabled: boolean) => Promise<void>;
   setDefaultExport: (target: ExportTarget) => Promise<void>;
   completeOnboarding: () => Promise<boolean>;
   /** Clears the activity feed's unread count by stamping "read" at now. */
@@ -89,6 +91,7 @@ const defaultContextValue: PreferencesContextValue = {
   setReminderTime: noop,
   setColorSpace: noop,
   setSoundEnabled: noop,
+  setAmbientBackdrop: noop,
   setDefaultExport: noop,
   completeOnboarding: async () => false,
   markActivityRead: noop,
@@ -312,6 +315,15 @@ export function PreferencesProvider({
     [preferences, save],
   );
 
+  const setAmbientBackdrop = useCallback(
+    async (enabled: boolean) => {
+      const didSave = await save({ ...preferences, ambientBackdrop: enabled }, 'backdrop');
+      if (!didSave) return;
+      if (preferences.hapticsEnabled) await hapticsService.selection();
+    },
+    [preferences, save],
+  );
+
   const setColorSpace = useCallback(
     async (colorSpace: ColorSpacePreference) => {
       const didSave = await save({ ...preferences, colorSpace }, 'colorSpace');
@@ -379,6 +391,7 @@ export function PreferencesProvider({
       setReminderTime,
       setColorSpace,
       setSoundEnabled,
+      setAmbientBackdrop,
       setDefaultExport,
       completeOnboarding,
       markActivityRead,
@@ -398,6 +411,7 @@ export function PreferencesProvider({
       refreshNotificationPermission,
       setColorSpace,
       setSoundEnabled,
+      setAmbientBackdrop,
       setDefaultExport,
       setHapticsEnabled,
       setLanguage,

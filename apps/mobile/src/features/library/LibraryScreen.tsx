@@ -11,6 +11,7 @@ import { analytics } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import {
   Button,
+  BandRefreshControl,
   CardSkeleton,
   Chip,
   EmptyGlyph,
@@ -27,7 +28,7 @@ import { PaletteCard } from './PaletteCard';
 /** C1 · LIBRARY — two-column grid of palette cards under a filter rail. */
 export function LibraryScreen() {
   const router = useRouter();
-  const { palettes, loading } = usePalettes();
+  const { palettes, loading, refreshing, refresh } = usePalettes();
   const { t } = usePreferences();
   const [filter, setFilter] = useState<LibraryFilter>('all');
 
@@ -115,6 +116,9 @@ export function LibraryScreen() {
           )
         }
         ListHeaderComponent={header}
+        refreshControl={
+          <BandRefreshControl onRefresh={() => void refresh()} refreshing={refreshing} />
+        }
         initialNumToRender={8}
         maxToRenderPerBatch={8}
         numColumns={2}

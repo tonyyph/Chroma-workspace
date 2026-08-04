@@ -24,6 +24,7 @@ export function YouScreen() {
     setColorSpace,
     setDefaultExport,
     setSoundEnabled,
+    setAmbientBackdrop,
     busyAction,
     t,
   } = usePreferences();
@@ -118,6 +119,17 @@ export function YouScreen() {
                 label={t('you.sound')}
                 onValueChange={(value) => void setSoundEnabled(value)}
                 value={preferences.soundEnabled}
+              />
+            }
+          />
+          <Row
+            label={t('you.backdrop')}
+            trailing={
+              <Toggle
+                disabled={busyAction !== null}
+                label={t('you.backdrop')}
+                onValueChange={(value) => void setAmbientBackdrop(value)}
+                value={preferences.ambientBackdrop}
               />
             }
           />

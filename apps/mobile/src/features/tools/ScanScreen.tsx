@@ -34,6 +34,7 @@ export function ScanScreen({
   const insets = useSafeAreaInsets();
   const { t } = usePreferences();
   const [pins, setPins] = useState<readonly string[]>([]);
+  const [pinFailed, setPinFailed] = useState(false);
   const { hasPermission } = useCameraPermission();
   const device = useCameraDevice('back');
   const photoOutput = usePhotoOutput({ targetResolution: { width: 640, height: 480 } });
@@ -48,16 +49,25 @@ export function ScanScreen({
    */
   const addPin = async () => {
     if (pins.length >= MAX_PINS || reading) return;
+    setPinFailed(false);
     try {
       const file = await photoOutput.capturePhotoToFile({}, {});
-      const result = await read(`file://${file.filePath}`, 3);
-      const hex = result?.colors.find((color) => color.role === 'dominant')?.hex;
-      if (!hex) return;
+      const outcome = await read(`file://${file.filePath}`, 3);
+      const hex = outcome.ok
+        ? (outcome.result.colors.find((color) => color.role === 'dominant')?.hex ??
+          outcome.result.colors[0]?.hex)
+        : undefined;
+      if (!hex) {
+        // A tap that pins nothing has to look different from one that worked,
+        // or the user keeps tapping a scene that is never going to read.
+        setPinFailed(true);
+        return;
+      }
       setPins((current) => [...current, hex]);
       // BUILD KIT · haptic map: "colour pinned (scan) → impact · light".
       void hapticsService.fire('colourPinned');
     } catch {
-      // A missed grab is not worth interrupting a walk for.
+      setPinFailed(true);
     }
   };
 
@@ -120,8 +130,12 @@ export function ScanScreen({
             <Text tone="secondary" variant="eyebrow">
               {t('scan.pinnedWhileWalking')}
             </Text>
-            <Text tone="secondary" variant="eyebrow">
-              {dominant ? t('scan.now', { hex: dominant.hex.slice(1) }) : t('capture.reading')}
+            <Text tone={pinFailed ? 'danger' : 'secondary'} variant="eyebrow">
+              {pinFailed
+                ? t('capture.readFailed')
+                : dominant
+                  ? t('scan.now', { hex: dominant.hex.slice(1) })
+                  : t('capture.reading')}
             </Text>
           </View>
           {dominant ? null : <LiveReadPulse />}

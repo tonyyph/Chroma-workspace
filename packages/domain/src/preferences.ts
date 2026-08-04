@@ -33,6 +33,13 @@ export const userPreferencesSchema = z.object({
   colorSpace: colorSpaceSchema.default('srgb'),
   /** BUILD KIT · 05 · SOUND — "opt-in, off by default". */
   soundEnabled: z.boolean().default(false),
+  /**
+   * The drifting colour field behind every screen. On by default because it is
+   * the app's surface, but a full-screen animation is exactly the thing some
+   * people need to switch off — and the OS reduce-motion setting overrides it
+   * regardless.
+   */
+  ambientBackdrop: z.boolean().default(true),
   defaultExport: exportTargetSchema.default('css'),
   /**
    * A stored v1 record without this field belongs to an existing installation,
@@ -58,6 +65,7 @@ export const defaultUserPreferences = userPreferencesSchema.parse({
   theme: 'obsidian',
   colorSpace: 'srgb',
   soundEnabled: false,
+  ambientBackdrop: true,
   defaultExport: 'css',
   onboardingCompleted: false,
   activityReadAt: null,

@@ -1,16 +1,17 @@
 import { round, space, ui } from '@chromawave/design-tokens';
-import { makeColor, type Color } from '@chromawave/domain';
+import { makeColor, type Color, type ExtractionResult } from '@chromawave/domain';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useImageSampler } from '@/hooks/useImageSampler';
+import { readPalette } from '@/lib/readPalette';
 import { hapticsService } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { Card, Chip, NavBar, Screen, Slider, Text } from '@/ui';
 
-const MODES = ['MANUAL', 'AUTO 5', 'EDGES'] as const;
+const MODES = ['AUTO', 'MANUAL', 'EDGES'] as const;
 const MAX_POINTS = 8;
 
 type Point = { x: number; y: number; hex: string };
@@ -34,9 +35,13 @@ export function ImportPickScreen({
   const [uri, setUri] = useState<string | null>(null);
   const [points, setPoints] = useState<readonly Point[]>([]);
   const [radius, setRadius] = useState(12);
-  const [mode, setMode] = useState<(typeof MODES)[number]>('MANUAL');
+  const [mode, setMode] = useState<(typeof MODES)[number]>('AUTO');
   const [layout, setLayout] = useState({ width: 0, height: 0 });
   const [pickFailed, setPickFailed] = useState(false);
+  /** The whole-image read, which is what AUTO extracts. */
+  const [auto, setAuto] = useState<ExtractionResult | null>(null);
+  const [autoFailed, setAutoFailed] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const { sampleAt, dimensions, ready, failed } = useImageSampler(uri);
 
   /**
@@ -56,9 +61,25 @@ export function ImportPickScreen({
       // Points are positions in the old photo; keeping them would label the new
       // one with colours it does not contain.
       setPoints([]);
-      setMode('MANUAL');
+      setMode('AUTO');
+
+      /**
+       * Read the whole photo straight away, the same way the shutter does.
+       *
+       * Picking a photo and being handed an empty canvas that demands two taps
+       * before it will do anything is not what "import a photo" means — the
+       * palette is already determined by the image. Manual points remain as a
+       * refinement on top of the automatic read, not a precondition for it.
+       */
+      setAutoFailed(false);
+      setExtracting(true);
+      const outcome = await readPalette(picked, 5);
+      setExtracting(false);
+      if (outcome.ok && outcome.result.colors.length) setAuto(outcome.result);
+      else setAutoFailed(true);
     } catch {
       setPickFailed(true);
+      setExtracting(false);
     }
   }, []);
 
@@ -91,15 +112,15 @@ export function ImportPickScreen({
   };
 
   /**
-   * AUTO 5 and EDGES are placements, not filters: each lays its own points down
-   * and replaces whatever was there, which is what makes them worth tapping.
-   * AUTO 5 takes the rule-of-thirds intersections plus the centre — where a
-   * photograph's subject usually is. EDGES walks the border, where the ground
-   * and the frame colours live.
+   * The three modes are three ways of deciding which colours the photo yields.
+   *
+   * AUTO is the whole-image read and needs no points at all. MANUAL clears them
+   * so the user places their own. EDGES samples the border, where the ground and
+   * frame colours live and where a subject-weighted read under-represents them.
    */
   const applyMode = (next: (typeof MODES)[number]) => {
     setMode(next);
-    if (next === 'MANUAL') {
+    if (next !== 'EDGES') {
       setPoints([]);
       return;
     }
@@ -107,24 +128,15 @@ export function ImportPickScreen({
     const { width, height } = layout;
     if (width === 0 || height === 0) return;
 
-    const targets: readonly [number, number][] =
-      next === 'AUTO 5'
-        ? [
-            [width / 3, height / 3],
-            [(width * 2) / 3, height / 3],
-            [width / 2, height / 2],
-            [width / 3, (height * 2) / 3],
-            [(width * 2) / 3, (height * 2) / 3],
-          ]
-        : [
-            [width / 2, height * 0.08],
-            [width * 0.92, height / 2],
-            [width / 2, height * 0.92],
-            [width * 0.08, height / 2],
-            [width / 2, height / 2],
-          ];
-
-    const placed = targets
+    const placed = (
+      [
+        [width / 2, height * 0.08],
+        [width * 0.92, height / 2],
+        [width / 2, height * 0.92],
+        [width * 0.08, height / 2],
+        [width / 2, height / 2],
+      ] as const
+    )
       .map(([x, y]) => {
         const hex = sampleView(x, y);
         return hex ? { x, y, hex } : null;
@@ -141,24 +153,41 @@ export function ImportPickScreen({
     setPoints((current) => current.filter((_, entry) => entry !== index));
   };
 
+  /**
+   * Points take precedence when there are any: a user who placed them is asking
+   * for those exact colours. Otherwise the automatic read is what ships, which
+   * is what makes picking a photo a one-tap operation.
+   */
+  const usingPoints = points.length >= 2;
+  const canExtract = usingPoints || Boolean(auto?.colors.length);
+
   const extract = () => {
-    const weight = Math.round((1 / points.length) * 1000) / 1000;
-    const roles = ['dominant', 'support', 'signal'] as const;
-    const colors = points.map((point, index) =>
-      makeColor(point.hex, weight, roles[index] ?? 'extra'),
-    );
-    const drift = 1 - colors.reduce((sum, color) => sum + color.weight, 0);
-    const first = colors[0];
-    if (first) colors[0] = { ...first, weight: Math.round((first.weight + drift) * 1000) / 1000 };
-    onExtract(colors, uri);
+    if (usingPoints) {
+      const weight = Math.round((1 / points.length) * 1000) / 1000;
+      const roles = ['dominant', 'support', 'signal'] as const;
+      const colors = points.map((point, index) =>
+        makeColor(point.hex, weight, roles[index] ?? 'extra'),
+      );
+      const drift = 1 - colors.reduce((sum, color) => sum + color.weight, 0);
+      const first = colors[0];
+      if (first) colors[0] = { ...first, weight: Math.round((first.weight + drift) * 1000) / 1000 };
+      onExtract(colors, uri);
+      return;
+    }
+    if (auto?.colors.length) onExtract(auto.colors, uri);
   };
+
+  /** What the swatch row previews: the placed points, or the automatic read. */
+  const preview: readonly string[] = usingPoints
+    ? points.map((point) => point.hex)
+    : (auto?.colors.map((color) => color.hex) ?? []);
 
   return (
     <Screen>
       <NavBar
         leading={t('import.cancel')}
         onLeading={onCancel}
-        onTrailing={points.length >= 2 ? extract : undefined}
+        onTrailing={canExtract ? extract : undefined}
         title={t('import.title')}
         trailing={t('import.extract')}
       />
@@ -200,11 +229,15 @@ export function ImportPickScreen({
           ))}
           <View style={styles.canvasHint}>
             <Text tone="secondary" variant="chip">
-              {failed || pickFailed
+              {failed || pickFailed || autoFailed
                 ? t('import.failed')
-                : ready
-                  ? t('import.points', { count: points.length, max: MAX_POINTS })
-                  : t('import.decoding')}
+                : extracting
+                  ? t('import.reading')
+                  : usingPoints || !auto
+                    ? ready
+                      ? t('import.points', { count: points.length, max: MAX_POINTS })
+                      : t('import.decoding')
+                    : t('import.autoRead', { count: auto.colors.length })}
             </Text>
           </View>
         </Pressable>
@@ -230,7 +263,7 @@ export function ImportPickScreen({
             <Chip
               fill
               key={entry}
-              label={entry}
+              label={t(`import.mode.${entry.toLowerCase() as Lowercase<typeof entry>}`)}
               onPress={() => applyMode(entry)}
               tone={mode === entry ? 'pro' : 'default'}
             />
@@ -244,12 +277,12 @@ export function ImportPickScreen({
       </View>
 
       <View style={styles.preview}>
-        {Array.from({ length: 4 }, (_, index) => {
-          const point = points[index];
-          return point ? (
-            <View key={index} style={[styles.swatch, { backgroundColor: point.hex }]}>
+        {Array.from({ length: 5 }, (_, index) => {
+          const hex = preview[index];
+          return hex ? (
+            <View key={`${hex}-${index}`} style={[styles.swatch, { backgroundColor: hex }]}>
               <Text style={styles.swatchLabel} variant="monoSmall">
-                {point.hex.slice(1)}
+                {hex.slice(1)}
               </Text>
             </View>
           ) : (
@@ -258,13 +291,13 @@ export function ImportPickScreen({
         })}
       </View>
 
-      {points.length < 2 ? (
+      {canExtract ? null : (
         <Card style={styles.hint}>
           <Text tone="secondary" variant="body">
             {t('import.hint')}
           </Text>
         </Card>
-      ) : null}
+      )}
     </Screen>
   );
 }

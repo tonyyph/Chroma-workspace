@@ -26,7 +26,7 @@ import {
 export default function SetsScreen() {
   const router = useRouter();
   const { t } = usePreferences();
-  const { sets, save } = useSets();
+  const { sets, refreshing, refresh, save } = useSets();
   const [createFailed, setCreateFailed] = useState(false);
   const { palettes } = usePalettes();
 
@@ -55,7 +55,7 @@ export default function SetsScreen() {
   };
 
   return (
-    <Screen tabBarInset>
+    <Screen onRefresh={() => void refresh()} refreshing={refreshing} tabBarInset>
       <Gutter style={styles.head}>
         <ScreenHeader meta={t('sets.meta', { count: sets.length })} title={t('sets.title')} />
       </Gutter>

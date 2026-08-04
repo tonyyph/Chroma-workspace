@@ -70,7 +70,12 @@ jest.mock('@shopify/react-native-skia', () => {
     FontWidth: { Normal: 5 },
     FontSlant: { Upright: 0 },
     Skia: {
-      Path: { MakeFromSVGString: () => ({}) },
+      Path: {
+        MakeFromSVGString: () => ({}),
+        // The ambient backdrop builds its bands with `Make`, so a mock without
+        // it takes down the whole root layout rather than just the canvas.
+        Make: () => ({ moveTo() {}, lineTo() {}, close() {} }),
+      },
       RuntimeEffect: { Make: () => ({}) },
       Data: { fromURI: jest.fn(async () => ({})) },
       Image: { MakeImageFromEncoded: () => null },

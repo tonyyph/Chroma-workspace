@@ -32,4 +32,5 @@ export { ColorRow, SwatchStrip, type SwatchEntry } from './Swatch';
 export { TabBar, type TabKey } from './TabBar';
 export { Meta, Text, type TextTone, type TextVariant } from './Text';
 export { Toggle } from './Toggle';
+export { UnderScreenCanvas } from './UnderScreenCanvas';
 export { NavBar, ScreenHeader } from './Nav';

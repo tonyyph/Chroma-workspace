@@ -16,7 +16,15 @@ import { unreadActivity } from './activity';
  * real: it bins the user's own palettes by dominant hue and names the leader,
  * which is what the design's copy actually reports.
  */
-export function ActivityScreen({ palettes }: { palettes: readonly Palette[] }) {
+export function ActivityScreen({
+  palettes,
+  refreshing = false,
+  onRefresh,
+}: {
+  palettes: readonly Palette[];
+  refreshing?: boolean;
+  onRefresh?: () => void;
+}) {
   const { t, preferences, markActivityRead } = usePreferences();
   const router = useRouter();
   const recap = useMemo(() => buildRecap(palettes), [palettes]);
@@ -26,7 +34,7 @@ export function ActivityScreen({ palettes }: { palettes: readonly Palette[] }) {
   );
 
   return (
-    <Screen tabBarInset>
+    <Screen onRefresh={onRefresh} refreshing={refreshing} tabBarInset>
       <Gutter style={styles.head}>
         <ScreenHeader
           title={t('activity.title')}

@@ -1,61 +1,27 @@
-import type { Palette } from '@chromawave/domain';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
-import { paletteRepository } from '@/infrastructure/dependencies';
-
-type State = {
-  palettes: readonly Palette[];
-  loading: boolean;
-  error: boolean;
-};
+import { useLibraryStore } from '@/store/libraryStore';
 
 /**
- * The library's data source. Kept deliberately small — a load, a refresh and a
- * save — because every screen that mutates a palette writes through the
- * repository and then refreshes, rather than holding its own copy.
+ * The library's palettes, from the shared store.
+ *
+ * Kept as a hook with the same shape it always had so call sites did not need to
+ * change — but the state now lives in one place, which is what makes a save on
+ * one screen visible on every other. See `libraryStore` for why.
  */
 export function usePalettes() {
-  const [state, setState] = useState<State>({ palettes: [], loading: true, error: false });
-
-  const refresh = useCallback(async () => {
-    try {
-      const palettes = await paletteRepository.list();
-      setState({ palettes, loading: false, error: false });
-    } catch {
-      setState({ palettes: [], loading: false, error: true });
-    }
-  }, []);
+  const palettes = useLibraryStore((state) => state.palettes);
+  const loading = useLibraryStore((state) => state.loading);
+  const refreshing = useLibraryStore((state) => state.refreshing);
+  const error = useLibraryStore((state) => state.error);
+  const load = useLibraryStore((state) => state.load);
+  const refresh = useLibraryStore((state) => state.refresh);
+  const save = useLibraryStore((state) => state.savePalette);
+  const remove = useLibraryStore((state) => state.removePalette);
 
   useEffect(() => {
-    let active = true;
-    paletteRepository
-      .list()
-      .then((palettes) => {
-        if (active) setState({ palettes, loading: false, error: false });
-      })
-      .catch(() => {
-        if (active) setState({ palettes: [], loading: false, error: true });
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+    void load();
+  }, [load]);
 
-  const save = useCallback(
-    async (palette: Palette) => {
-      await paletteRepository.save(palette);
-      await refresh();
-    },
-    [refresh],
-  );
-
-  const remove = useCallback(
-    async (id: string) => {
-      await paletteRepository.remove(id);
-      await refresh();
-    },
-    [refresh],
-  );
-
-  return { ...state, refresh, save, remove };
+  return { palettes, loading, refreshing, error, refresh, save, remove };
 }

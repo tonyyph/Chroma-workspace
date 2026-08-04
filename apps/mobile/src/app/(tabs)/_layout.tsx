@@ -1,6 +1,7 @@
 import { ui } from '@chromawave/design-tokens';
 import { Tabs, useRouter } from 'expo-router';
 
+import { usePreferences } from '@/providers/PreferencesProvider';
 import { TabBar, type TabKey } from '@/ui';
 
 /**
@@ -30,12 +31,15 @@ const tabForRoute: Record<string, TabKey> = {
  */
 export default function TabLayout() {
   const router = useRouter();
+  const { preferences } = usePreferences();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        sceneStyle: { backgroundColor: ui.bg.base },
+        // Transparent so the app-wide backdrop shows through the tabs too; the
+        // canvas behind the navigator is what supplies the ground.
+        sceneStyle: { backgroundColor: preferences.ambientBackdrop ? 'transparent' : ui.bg.base },
       }}
       tabBar={({ state, navigation }) => (
         <TabBar
