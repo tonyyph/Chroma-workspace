@@ -64,7 +64,7 @@ function AppNavigator() {
       <StatusBar style="light" />
       {/* Behind the whole navigator, so it survives every push and pop rather
           than restarting its loop on each screen. */}
-      <UnderScreenCanvas enabled={true} />
+      <UnderScreenCanvas enabled={preferences.ambientBackdrop} />
       <Stack
         screenOptions={{
           headerShown: false,

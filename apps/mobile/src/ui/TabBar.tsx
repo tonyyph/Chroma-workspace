@@ -1,4 +1,14 @@
-import { brandBands, round, size, space, ui, uiMotion, uiShadow } from '@chromawave/design-tokens';
+import {
+  brandBands,
+  elevation,
+  glass,
+  round,
+  size,
+  space,
+  ui,
+  uiMotion,
+  uiShadow,
+} from '@chromawave/design-tokens';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -6,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandMark } from '@/components/BrandMark';
 
+import { reportBackdropTouch } from './backdropMotion';
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
 
@@ -83,13 +94,22 @@ export function TabBar({
       />
       <View style={[styles.barShell, uiShadow.tabBar]}>
         <View style={styles.bar}>
-          <BlurView intensity={26} style={StyleSheet.absoluteFill} tint="dark" />
+          <BlurView intensity={glass.shell.intensity} style={StyleSheet.absoluteFill} tint="dark" />
+          {/* The shell catches light along its top edge like every other
+              raised surface, which is what stops it reading as a cut-out. */}
+          <View
+            pointerEvents="none"
+            style={[styles.shellHighlight, { backgroundColor: elevation.floating.highlightColor }]}
+          />
           <View style={styles.barInner}>
             {left.map((tab) => (
               <TabItem
                 active={active === tab.key}
                 key={tab.key}
-                onPress={() => onSelect(tab.key)}
+                onPress={() => {
+                  reportBackdropTouch(0.2, 0.88);
+                  onSelect(tab.key);
+                }}
                 tab={tab}
               />
             ))}
@@ -97,7 +117,10 @@ export function TabBar({
               accessibilityLabel="Capture a colour"
               accessibilityRole="button"
               hitSlop={6}
-              onPress={onCapture}
+              onPress={() => {
+                reportBackdropTouch(0.5, 0.9);
+                onCapture();
+              }}
               style={({ pressed }) => [
                 styles.capture,
                 uiShadow.mark,
@@ -110,7 +133,10 @@ export function TabBar({
               <TabItem
                 active={active === tab.key}
                 key={tab.key}
-                onPress={() => onSelect(tab.key)}
+                onPress={() => {
+                  reportBackdropTouch(0.8, 0.88);
+                  onSelect(tab.key);
+                }}
                 tab={tab}
               />
             ))}
@@ -172,6 +198,13 @@ const styles = StyleSheet.create({
     height: size.tabBar * 1.15,
     borderRadius: size.tabBar,
     backgroundColor: ui.tabBar,
+  },
+  shellHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: StyleSheet.hairlineWidth * 2,
   },
   bar: {
     flex: 1,

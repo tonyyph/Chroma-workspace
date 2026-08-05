@@ -1,4 +1,5 @@
-import { round, size, space, ui } from '@chromawave/design-tokens';
+import { elevation, glass, round, size, space, ui } from '@chromawave/design-tokens';
+import { BlurView } from 'expo-blur';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -33,6 +34,13 @@ export function Sheet({
         style,
       ]}
     >
+      {/* Sheets overlap content, so they blur harder than a card and carry the
+          floating elevation's highlight. */}
+      <BlurView intensity={glass.shell.intensity} style={StyleSheet.absoluteFill} tint="dark" />
+      <View
+        pointerEvents="none"
+        style={[styles.highlight, { backgroundColor: elevation.floating.highlightColor }]}
+      />
       {grabber ? <SheetGrabber /> : null}
       {children}
     </View>
@@ -42,7 +50,12 @@ export function Sheet({
 const styles = StyleSheet.create({
   sheet: {
     flex: 1,
-    backgroundColor: ui.bg.sheet,
+    overflow: 'hidden',
+    backgroundColor: glass.shell.tint,
+    shadowColor: elevation.floating.shadowColor,
+    shadowOffset: elevation.floating.shadowOffset,
+    shadowOpacity: elevation.floating.shadowOpacity,
+    shadowRadius: elevation.floating.shadowRadius,
     borderTopLeftRadius: round.sheet,
     borderTopRightRadius: round.sheet,
     borderTopWidth: 1,
@@ -50,6 +63,13 @@ const styles = StyleSheet.create({
     paddingTop: space.cardGap,
     paddingHorizontal: space.sectionGap,
     gap: space.md,
+  },
+  highlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: StyleSheet.hairlineWidth * 2,
   },
   grabber: {
     width: size.grabberWidth,

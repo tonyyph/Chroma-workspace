@@ -2,7 +2,8 @@ import { size, space, ui } from '@chromawave/design-tokens';
 import { filterPalettes, libraryFilters, type LibraryFilter } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { usePalettes } from '@/hooks/usePalettes';
@@ -22,6 +23,7 @@ import {
   Shimmer,
   Text,
 } from '@/ui';
+import { reportBackdropScroll } from '@/ui/backdropMotion';
 
 import { PaletteCard } from './PaletteCard';
 
@@ -35,6 +37,12 @@ export function LibraryScreen() {
   const visible = useMemo(() => filterPalettes(palettes, filter), [palettes, filter]);
   const { sets } = useSets();
   const insets = useSafeAreaInsets();
+
+  // The grid is the app's busiest scroll, so it is the one the backdrop most
+  // needs to move against.
+  const onScroll = useAnimatedScrollHandler((event) => {
+    reportBackdropScroll(event.contentOffset.y);
+  });
 
   const header = (
     <>
@@ -86,7 +94,7 @@ export function LibraryScreen() {
 
   return (
     <Screen scroll={false}>
-      <FlatList
+      <Animated.FlatList
         columnWrapperStyle={styles.row}
         contentContainerStyle={[
           styles.list,
@@ -116,6 +124,7 @@ export function LibraryScreen() {
           )
         }
         ListHeaderComponent={header}
+        onScroll={onScroll}
         refreshControl={
           <BandRefreshControl onRefresh={() => void refresh()} refreshing={refreshing} />
         }
@@ -124,6 +133,7 @@ export function LibraryScreen() {
         numColumns={2}
         removeClippedSubviews
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
         windowSize={7}
       />
     </Screen>
