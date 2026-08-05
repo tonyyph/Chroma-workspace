@@ -2,7 +2,7 @@ import { round, size, space, ui, uiMotion } from '@chromawave/design-tokens';
 import { readStability, type Color } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -25,6 +25,7 @@ import {
   Icon,
   LiveReadPulse,
   Meta,
+  Pressable,
   ScanSweep,
   Text,
   useCaptureSequence,

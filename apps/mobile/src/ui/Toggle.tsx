@@ -1,5 +1,6 @@
 import { size, ui } from '@chromawave/design-tokens';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Pressable } from './Pressable';
 
 /**
  * SYSTEM F toggle: 46×28 track, 22px knob inset 3. Deliberately not the

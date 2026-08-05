@@ -2,7 +2,7 @@ import { size, space, ui } from '@chromawave/design-tokens';
 import { filterPalettes, libraryFilters, type LibraryFilter } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -18,6 +18,7 @@ import {
   EmptyGlyph,
   Gutter,
   Icon,
+  Pressable,
   Screen,
   ScreenHeader,
   Shimmer,

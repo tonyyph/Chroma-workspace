@@ -3,13 +3,13 @@ import { makeColor, type Color, type ExtractionResult } from '@chromawave/domain
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { useImageSampler } from '@/hooks/useImageSampler';
-import { readPalette } from '@/lib/readPalette';
 import { hapticsService } from '@/infrastructure/dependencies';
+import { readPalette } from '@/lib/readPalette';
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Card, Chip, NavBar, Screen, Slider, Text } from '@/ui';
+import { Card, Chip, NavBar, Pressable, Screen, Slider, Text } from '@/ui';
 
 const MODES = ['AUTO', 'MANUAL', 'EDGES'] as const;
 const MAX_POINTS = 8;

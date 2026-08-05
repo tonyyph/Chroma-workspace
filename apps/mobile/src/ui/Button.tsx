@@ -1,5 +1,6 @@
 import { size, ui, uiMotion } from '@chromawave/design-tokens';
-import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { Pressable } from './Pressable';
 
 import { Text } from './Text';
 
@@ -82,7 +83,7 @@ export function Button({
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       disabled={disabled}
-      onPress={onPress}
+      onPress={onPress ?? null}
       style={({ pressed }) => [
         styles.base,
         shape,

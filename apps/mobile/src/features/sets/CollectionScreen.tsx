@@ -4,7 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { PalettePhoto } from '@/features/library/PalettePhoto';
 import { usePreferences } from '@/providers/PreferencesProvider';
@@ -17,6 +17,7 @@ import {
   Meta,
   NavBar,
   NoticeSheet,
+  Pressable,
   PromptSheet,
   Screen,
   SwatchStrip,

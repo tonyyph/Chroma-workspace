@@ -1,5 +1,6 @@
 import { space, ui, uiMotion } from '@chromawave/design-tokens';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Pressable } from './Pressable';
 
 import { Icon, type IconName } from './Icon';
 import { Meta, Text } from './Text';
@@ -33,7 +34,7 @@ export function NavBar({
             accessibilityLabel={leading}
             accessibilityRole="button"
             hitSlop={12}
-            onPress={onLeading}
+            onPress={onLeading ?? null}
             style={({ pressed }) => [
               styles.navLeadingRow,
               pressed && { opacity: uiMotion.listPress.opacity },
@@ -59,7 +60,7 @@ export function NavBar({
             accessibilityLabel={trailing}
             accessibilityRole="button"
             hitSlop={12}
-            onPress={onTrailing}
+            onPress={onTrailing ?? null}
             style={({ pressed }) => pressed && { opacity: uiMotion.listPress.opacity }}
           >
             <Text style={styles.navTrailing} tone="link">

@@ -4,13 +4,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandMark } from '@/components/BrandMark';
 import { analytics } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Button, Card, Icon, Text } from '@/ui';
+import { Button, Card, Icon, Pressable, Text } from '@/ui';
 
 type Plan = 'monthly' | 'yearly';
 

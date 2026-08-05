@@ -1,7 +1,7 @@
 import { space, tint, ui } from '@chromawave/design-tokens';
 import { hexDeltaE00, type Palette } from '@chromawave/domain';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { usePreferences } from '@/providers/PreferencesProvider';
 import {
@@ -12,6 +12,7 @@ import {
   Gutter,
   Icon,
   Meta,
+  Pressable,
   Screen,
   ScreenHeader,
   SwatchStrip,

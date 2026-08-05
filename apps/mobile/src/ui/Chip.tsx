@@ -1,5 +1,6 @@
 import { round, tint, ui, uiMotion } from '@chromawave/design-tokens';
-import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { Pressable } from './Pressable';
 
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';

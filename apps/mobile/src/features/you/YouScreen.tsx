@@ -3,12 +3,12 @@ import { exportTargetSchema, type ExportTarget } from '@chromawave/domain';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { unreadActivityCount } from '@/features/tools/activity';
 import { usePalettes } from '@/hooks/usePalettes';
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Card, CardGroup, Gutter, Icon, Meta, Screen, Text, Toggle } from '@/ui';
+import { Card, CardGroup, Gutter, Icon, Meta, Pressable, Screen, Text, Toggle } from '@/ui';
 
 const EXPORT_TARGETS = exportTargetSchema.options;
 

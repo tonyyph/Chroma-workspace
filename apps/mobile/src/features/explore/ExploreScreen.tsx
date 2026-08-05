@@ -2,7 +2,7 @@ import { round, space, ui } from '@chromawave/design-tokens';
 import * as Crypto from 'expo-crypto';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { trendingPalettes } from '@/data/seed';
 import { usePalettes } from '@/hooks/usePalettes';
@@ -15,6 +15,7 @@ import {
   Gutter,
   InlineError,
   Meta,
+  Pressable,
   Screen,
   SwatchStrip,
   Text,

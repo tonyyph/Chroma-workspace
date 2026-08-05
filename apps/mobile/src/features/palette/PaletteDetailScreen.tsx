@@ -4,7 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Crypto from 'expo-crypto';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, StyleSheet, View } from 'react-native';
 
 import { ShareSheet, type ShareOptions } from '@/features/capture/ShareSheet';
 import { ToolFallback } from '@/features/tools/ToolFallback';
@@ -23,6 +23,7 @@ import {
   Icon,
   InlineError,
   Meta,
+  Pressable,
   PromptSheet,
   Screen,
   Text,

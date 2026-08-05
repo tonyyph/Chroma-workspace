@@ -9,7 +9,6 @@ import {
 } from '@chromawave/design-tokens';
 import { BlurView } from 'expo-blur';
 import {
-  Pressable,
   StyleSheet,
   View,
   type StyleProp,
@@ -26,10 +25,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { usePreferences } from '@/providers/PreferencesProvider';
 
+import { Pressable } from './Pressable';
 import { reportBackdropScroll } from './backdropMotion';
 import { BandRefreshControl } from './Sequences';
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 /**
  * A card over the ground.
@@ -60,11 +58,12 @@ export function Card({
   glass?: boolean;
 }) {
   const depth = elevation[level];
+  const { outer: outerStyle, inner: innerStyle } = splitCardStyle(style);
   // The shadow and the clip cannot live on one view: iOS drops a shadow
   // entirely when `overflow: hidden` is set on the same node, and the clip is
   // what keeps the blur and the top highlight inside the corner radius. So the
   // outer view casts, the inner view clips.
-  const box = [styles.cardShadow, shadowOf(depth), style];
+  const box = [styles.cardShadow, shadowOf(depth), outerStyle];
 
   const inner = (
     <View
@@ -73,6 +72,7 @@ export function Card({
         padded && styles.cardPadded,
         { borderColor: depth.borderColor },
         useGlass ? styles.cardGlass : styles.cardSolid,
+        innerStyle,
       ]}
     >
       {useGlass ? (
@@ -110,6 +110,64 @@ function shadowOf(depth: (typeof elevation)[ElevationLevel]): ViewStyle {
   };
 }
 
+const OUTER_CARD_STYLE_KEYS = new Set<keyof ViewStyle>([
+  'alignSelf',
+  'bottom',
+  'end',
+  'flex',
+  'flexBasis',
+  'flexGrow',
+  'flexShrink',
+  'height',
+  'left',
+  'margin',
+  'marginBottom',
+  'marginEnd',
+  'marginHorizontal',
+  'marginLeft',
+  'marginRight',
+  'marginStart',
+  'marginTop',
+  'marginVertical',
+  'maxHeight',
+  'maxWidth',
+  'minHeight',
+  'minWidth',
+  'position',
+  'right',
+  'start',
+  'top',
+  'width',
+  'zIndex',
+]);
+
+function splitCardStyle(style: StyleProp<ViewStyle> | undefined): {
+  outer: ViewStyle | undefined;
+  inner: ViewStyle | undefined;
+} {
+  const flat = StyleSheet.flatten(style);
+  if (!flat) return { outer: undefined, inner: undefined };
+
+  const outer: ViewStyle = {};
+  const inner: ViewStyle = {};
+
+  const outerRecord = outer as Record<string, ViewStyle[keyof ViewStyle]>;
+  const innerRecord = inner as Record<string, ViewStyle[keyof ViewStyle]>;
+
+  for (const [key, value] of Object.entries(flat) as [keyof ViewStyle, ViewStyle[keyof ViewStyle]][]) {
+    if (OUTER_CARD_STYLE_KEYS.has(key)) {
+      outerRecord[key] = value;
+    } else {
+      innerRecord[key] = value;
+    }
+  }
+
+  return {
+    outer: Object.keys(outer).length ? outer : undefined,
+    inner: Object.keys(inner).length ? inner : undefined,
+  };
+}
+
 /**
  * The pressable form. Split out because it needs hooks, and `Card` renders a
  * plain view when there is no handler.
@@ -129,22 +187,24 @@ function PressableCard({
   const animated = useAnimatedStyle(() => ({
     transform: [{ scale: 1 - pressed.value * 0.022 }],
   }));
+  const pressableProps = props as ViewProps;
 
   return (
-    <AnimatedPressable
-      {...props}
-      accessibilityRole={props.accessibilityRole ?? 'button'}
-      onPress={onPress}
-      onPressIn={() => {
-        pressed.value = withSpring(1, PRESS_IN);
-      }}
-      onPressOut={() => {
-        pressed.value = withSpring(0, PRESS_OUT);
-      }}
-      style={[box, animated]}
-    >
-      {inner}
-    </AnimatedPressable>
+    <Animated.View style={[box, animated]}>
+      <Pressable
+        {...pressableProps}
+        accessibilityRole={props.accessibilityRole ?? 'button'}
+        onPress={onPress}
+        onPressIn={() => {
+          pressed.value = withSpring(1, PRESS_IN);
+        }}
+        onPressOut={() => {
+          pressed.value = withSpring(0, PRESS_OUT);
+        }}
+      >
+        {inner}
+      </Pressable>
+    </Animated.View>
   );
 }
 

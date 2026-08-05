@@ -17,6 +17,7 @@ export {
 export { BandRefreshControl, LaunchSequence, useCaptureSequence } from './Sequences';
 export { Field } from './Field';
 export { Icon, type IconName, type IconScale } from './Icon';
+export { Pressable, type PressableProps, type PressableStateCallbackType } from './Pressable';
 export {
   ActionSheet,
   ConfirmSheet,

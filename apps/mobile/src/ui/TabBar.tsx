@@ -11,13 +11,14 @@ import {
 } from '@chromawave/design-tokens';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandMark } from '@/components/BrandMark';
 
 import { reportBackdropTouch } from './backdropMotion';
 import { Icon, type IconName } from './Icon';
+import { Pressable } from './Pressable';
 import { Text } from './Text';
 
 export type TabKey = 'library' | 'explore' | 'sets' | 'you';

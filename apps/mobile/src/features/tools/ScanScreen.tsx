@@ -1,7 +1,7 @@
 import { round, space, ui } from '@chromawave/design-tokens';
 import { makeColor, type Color } from '@chromawave/domain';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Camera,
@@ -13,7 +13,7 @@ import {
 import { usePhotoRead } from '@/hooks/usePhotoRead';
 import { analytics, hapticsService } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Button, Card, Chip, Icon, LiveReadPulse, Text } from '@/ui';
+import { Button, Card, Chip, Icon, LiveReadPulse, Pressable, Text } from '@/ui';
 
 const MAX_PINS = 7;
 
