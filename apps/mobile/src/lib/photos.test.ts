@@ -7,6 +7,8 @@
  */
 
 /** An in-memory stand-in for the parts of `expo-file-system` this module uses. */
+import { deletePhoto, persistPhoto } from './photos';
+
 const mockFiles = new Set<string>();
 
 jest.mock('expo-file-system', () => {
@@ -39,8 +41,6 @@ jest.mock('expo-file-system', () => {
 
   return { Directory, File, Paths: { document: 'file:///documents', cache: 'file:///cache' } };
 });
-
-import { deletePhoto, persistPhoto } from './photos';
 
 const CACHED = 'file:///cache/capture-9182.jpg';
 const A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';

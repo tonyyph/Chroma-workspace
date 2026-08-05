@@ -4,7 +4,6 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-
 import { useImageSampler } from '@/hooks/useImageSampler';
 import { hapticsService } from '@/infrastructure/dependencies';
 import { readPalette } from '@/lib/readPalette';

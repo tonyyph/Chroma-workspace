@@ -2,7 +2,6 @@ import { makeColor, type Palette, type PaletteSet } from '@chromawave/domain';
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
-
 import { ResultScreen } from '@/features/capture/ResultScreen';
 import { ShareSheet } from '@/features/capture/ShareSheet';
 import { TuneScreen } from '@/features/capture/TuneScreen';
@@ -20,6 +19,7 @@ import { GradientScreen } from '@/features/tools/GradientScreen';
 import { ImportPickScreen } from '@/features/tools/ImportPickScreen';
 import { ScanScreen } from '@/features/tools/ScanScreen';
 import { WidgetsScreen } from '@/features/tools/WidgetsScreen';
+import { TrendingScreen } from '@/features/trending/TrendingScreen';
 import { YouScreen } from '@/features/you/YouScreen';
 import { PreferencesProvider } from '@/providers/PreferencesProvider';
 
@@ -36,6 +36,9 @@ jest.mock('expo-router', () => ({
     push: jest.fn(),
     replace: jest.fn(),
     back: jest.fn(),
+    // Screens reachable both by a push and by a deep link ask before going back,
+    // because a back with no history is a control that does nothing.
+    canGoBack: jest.fn(() => true),
     navigate: jest.fn(),
   }),
   useLocalSearchParams: () => ({}),
@@ -109,6 +112,7 @@ const second = palette({ id: '33333333-3333-4333-8333-333333333333', name: 'Late
 const cases: readonly [string, () => ReactElement][] = [
   ['Library', () => <LibraryScreen />],
   ['Explore', () => <ExploreScreen />],
+  ['Trending', () => <TrendingScreen />],
   ['You', () => <YouScreen />],
   ['Paywall', () => <PaywallScreen trigger="palette-limit" />],
   ['Palette detail', () => <PaletteDetailScreen />],

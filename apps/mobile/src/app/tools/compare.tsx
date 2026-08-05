@@ -1,7 +1,6 @@
 import { hexDeltaE00, makeColor, type Color, type Palette } from '@chromawave/domain';
 import * as Crypto from 'expo-crypto';
 import { useRouter } from 'expo-router';
-
 import { CompareScreen } from '@/features/tools/CompareScreen';
 import { ToolFallback } from '@/features/tools/ToolFallback';
 import { useComparePair } from '@/hooks/usePaletteParam';

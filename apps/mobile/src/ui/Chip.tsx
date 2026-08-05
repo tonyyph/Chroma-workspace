@@ -1,8 +1,7 @@
 import { round, tint, ui, uiMotion } from '@chromawave/design-tokens';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
-import { Pressable } from './Pressable';
-
 import { Icon, type IconName } from './Icon';
+import { Pressable } from './Pressable';
 import { Text } from './Text';
 
 export type ChipTone = 'default' | 'selected' | 'pro' | 'add' | 'info' | 'danger';

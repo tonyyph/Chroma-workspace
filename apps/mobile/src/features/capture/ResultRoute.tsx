@@ -1,14 +1,12 @@
 import { makeColor, type Palette } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-
 import { usePalettes } from '@/hooks/usePalettes';
 import { analytics, hapticsService, soundService } from '@/infrastructure/dependencies';
 import { persistPhoto } from '@/lib/photos';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { useCaptureStore } from '@/store/captureStore';
 import { Button, EmptyGlyph, Gutter, Screen, ScreenHeader, Text } from '@/ui';
-
 import { ResultScreen } from './ResultScreen';
 import { TuneScreen } from './TuneScreen';
 

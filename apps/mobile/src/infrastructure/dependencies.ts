@@ -1,5 +1,4 @@
 import { DevelopmentAnalytics } from '@chromawave/analytics';
-
 import { ExpoHapticsService } from './ExpoHapticsService';
 import { ExpoNotificationScheduler } from './ExpoNotificationScheduler';
 import { ExpoSoundService } from './ExpoSoundService';

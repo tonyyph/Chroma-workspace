@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createMMKV, type MMKV } from 'react-native-mmkv';
-
 import type { KeyValueStorage } from './KeyValueStorage';
 
 /**

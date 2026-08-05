@@ -11,12 +11,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCameraPermission } from 'react-native-vision-camera';
-
 import { BrandMark } from '@/components/BrandMark';
 import { analytics } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { Button, Card, InlineError, SwatchStrip, Text } from '@/ui';
-
 const welcomePhoto: number = require('../../../assets/brand/library/harbour-dusk.jpg');
 const steps = [1, 2, 3, 4, 5] as const;
 type Step = (typeof steps)[number];

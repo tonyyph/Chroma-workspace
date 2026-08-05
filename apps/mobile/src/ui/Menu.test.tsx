@@ -1,7 +1,6 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
-
 import { ConfirmSheet, PromptSheet } from './Menu';
 
 const METRICS: Metrics = {

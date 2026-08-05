@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-
 import { useLibraryStore } from '@/store/libraryStore';
 
 /** Collections for the Sets tab. Mirrors `usePalettes`, over the same store. */

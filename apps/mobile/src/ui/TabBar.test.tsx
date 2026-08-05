@@ -1,6 +1,5 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
-
 import { TabBar } from './TabBar';
 
 jest.mock('expo-blur', () => {

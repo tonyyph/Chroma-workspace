@@ -1,7 +1,6 @@
 import type { PaletteSet } from '@chromawave/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
-
 import { CollectionScreen } from '@/features/sets/CollectionScreen';
 import { ToolFallback } from '@/features/tools/ToolFallback';
 import { usePalettes } from '@/hooks/usePalettes';

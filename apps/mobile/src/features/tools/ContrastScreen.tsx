@@ -7,7 +7,6 @@ import {
 } from '@chromawave/domain';
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { Button, Card, Chip, Gutter, Icon, Meta, Screen, ScreenHeader, Text } from '@/ui';
 

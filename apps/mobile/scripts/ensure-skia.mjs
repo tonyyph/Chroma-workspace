@@ -1,7 +1,7 @@
+import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-import { spawnSync } from 'node:child_process';
 
 const require = createRequire(import.meta.url);
 const skiaRoot = dirname(require.resolve('@shopify/react-native-skia/package.json'));

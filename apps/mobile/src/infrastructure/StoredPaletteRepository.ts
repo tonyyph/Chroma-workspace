@@ -5,10 +5,8 @@ import {
   type Palette,
   type PaletteRepository,
 } from '@chromawave/domain';
-
 import { seedPalettes } from '@/data/seed';
 import { deletePhoto } from '@/lib/photos';
-
 import type { KeyValueStorage } from './KeyValueStorage';
 
 const STORAGE_KEY = '@chromawave/palettes:v1';

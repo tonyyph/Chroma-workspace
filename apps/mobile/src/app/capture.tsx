@@ -1,5 +1,4 @@
 import { useRouter } from 'expo-router';
-
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ViewfinderScreen } from '@/features/capture/ViewfinderScreen';
 

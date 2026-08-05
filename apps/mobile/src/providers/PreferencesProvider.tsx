@@ -18,7 +18,6 @@ import {
   useMemo,
   useState,
 } from 'react';
-
 import {
   analytics,
   hapticsService,

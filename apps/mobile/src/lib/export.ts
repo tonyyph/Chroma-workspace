@@ -10,7 +10,6 @@ import {
 } from '@shopify/react-native-skia';
 import { File, Paths } from 'expo-file-system';
 import { Share } from 'react-native';
-
 import { expand, type GradientKind, type Interpolation } from '@/ui/GradientCanvas';
 
 /**

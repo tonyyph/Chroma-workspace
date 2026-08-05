@@ -1,7 +1,6 @@
 import { size, ui, uiMotion } from '@chromawave/design-tokens';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { Pressable } from './Pressable';
-
 import { Text } from './Text';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'contrast' | 'ghost' | 'destructive';
@@ -62,14 +61,20 @@ export function Button({
 }: {
   label: string;
   variant?: ButtonVariant;
-  /** lg 56 · md 54 · sm 50 · xs 46 — the four heights used across the screens. */
-  size?: 'lg' | 'md' | 'sm' | 'xs';
+  /** lg 56 · md 54 · sm 50 · xs 46 · xxs 32 — the four heights used across the screens. */
+  size?: 'lg' | 'md' | 'sm' | 'xs' | 'xxs';
   disabled?: boolean;
   onPress?: () => void;
   style?: ViewStyle;
   accessibilityHint?: string;
 }) {
-  const heights = { lg: size.buttonLg, md: size.buttonMd, sm: size.button, xs: size.buttonSm };
+  const heights = {
+    lg: size.buttonLg,
+    md: size.buttonMd,
+    sm: size.button,
+    xs: size.buttonSm,
+    xxs: size.buttonXXS,
+  };
   const box = heights[height];
   const look = looks[variant];
 

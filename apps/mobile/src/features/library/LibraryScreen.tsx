@@ -1,43 +1,82 @@
 import { size, space, ui } from '@chromawave/design-tokens';
-import { filterPalettes, libraryFilters, type LibraryFilter } from '@chromawave/domain';
-import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import {
+  colorMoods,
+  libraryFilters,
+  queryPalettes,
+  visualStyles,
+  type ColorMood,
+  type Palette,
+  type VisualStyle,
+} from '@chromawave/domain';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import { TrendingCard } from '@/features/trending/TrendingCard';
+import { HOME_TRENDING_COUNT } from '@/features/trending/trendingRepository';
+import { useTrending } from '@/features/trending/useTrending';
+import { useTrendingSave } from '@/features/trending/useTrendingSave';
 import { usePalettes } from '@/hooks/usePalettes';
 import { useSets } from '@/hooks/useSets';
 import { analytics } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import {
-  Button,
   BandRefreshControl,
+  Button,
   CardSkeleton,
-  Chip,
   EmptyGlyph,
+  FilterRail,
   Gutter,
   Icon,
+  InlineError,
   Pressable,
   Screen,
   ScreenHeader,
+  SectionHead,
   Shimmer,
   Text,
 } from '@/ui';
 import { reportBackdropScroll } from '@/ui/backdropMotion';
-
+import { useDiscoveryFilters } from '../discovery/useDiscoveryFilters';
+import { HeroCarousel } from './HeroCarousel';
 import { PaletteCard } from './PaletteCard';
 
-/** C1 · LIBRARY — two-column grid of palette cards under a filter rail. */
+/**
+ * C1 · LIBRARY — the landing screen.
+ *
+ * Three bands of content, in the order someone opens the app wanting them:
+ *
+ *  1. a carousel of destinations, each one a thing to *do* right now;
+ *  2. what the rest of the app is saving, as a rail with its own screen behind it;
+ *  3. the user's own library, under a filter rail that can ask real questions of it.
+ *
+ * The grid stays a `FlatList` and everything above it is its header, rather than
+ * the whole screen being a `ScrollView` with a nested list. Two nested scrollers
+ * on the same axis break recycling — the grid would mount every card it has —
+ * and on a library of any size that is the difference between a screen that
+ * opens instantly and one that hitches.
+ */
 export function LibraryScreen() {
   const router = useRouter();
   const { palettes, loading, refreshing, refresh } = usePalettes();
-  const { t } = usePreferences();
-  const [filter, setFilter] = useState<LibraryFilter>('all');
-
-  const visible = useMemo(() => filterPalettes(palettes, filter), [palettes, filter]);
   const { sets } = useSets();
+  const { t } = usePreferences();
   const insets = useSafeAreaInsets();
+
+  const filters = useDiscoveryFilters();
+  const { apply, query } = filters;
+
+  // A deep link — the You tab's taste chips land here — arrives as params rather
+  // than as state, and has to be applied when it changes, not only on mount.
+  const { mood, style } = useLocalSearchParams<{ mood?: string; style?: string }>();
+  useEffect(() => {
+    const moods = colorMoods.filter((entry): entry is ColorMood => entry === mood);
+    const styles = visualStyles.filter((entry): entry is VisualStyle => entry === style);
+    if (moods.length || styles.length) apply({ moods, styles });
+  }, [apply, mood, style]);
+
+  const visible = useMemo(() => queryPalettes(palettes, query), [palettes, query]);
 
   // The grid is the app's busiest scroll, so it is the one the backdrop most
   // needs to move against.
@@ -45,9 +84,18 @@ export function LibraryScreen() {
     reportBackdropScroll(event.contentOffset.y);
   });
 
+  const renderCard = useCallback(
+    ({ item }: { item: (typeof visible)[number] }) => (
+      <View style={styles.column}>
+        <PaletteCard onPress={() => router.push(`/palette/${item.id}`)} palette={item} />
+      </View>
+    ),
+    [router],
+  );
+
   const header = (
     <>
-      <Gutter style={styles.header}>
+      <Gutter>
         <ScreenHeader
           meta={t('library.meta', { palettes: palettes.length, collections: sets.length })}
           title={t('library.title')}
@@ -64,33 +112,42 @@ export function LibraryScreen() {
         />
       </Gutter>
 
-      <ScrollView
-        contentContainerStyle={styles.filters}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-      >
-        {libraryFilters.map((key) => (
-          <Chip
-            key={key}
-            label={t(`library.filter.${key}`)}
-            onPress={() => {
-              setFilter(key);
-              analytics.track('library_filter_changed', { filter: key });
-            }}
-            tone={filter === key ? 'selected' : 'default'}
-          />
-        ))}
-      </ScrollView>
-    </>
-  );
-
-  const renderCard = useCallback(
-    ({ item }: { item: (typeof visible)[number] }) => (
-      <View style={styles.column}>
-        <PaletteCard onPress={() => router.push(`/palette/${item.id}`)} palette={item} />
+      <View style={styles.hero}>
+        <LandingHero recent={palettes[0] ?? null} />
       </View>
-    ),
-    [router],
+
+      <Gutter style={styles.libraryHead}>
+        <SectionHead
+          meta={
+            visible.length === palettes.length
+              ? undefined
+              : t('library.resultCount', { count: visible.length, total: palettes.length })
+          }
+          title={t('library.title')}
+        />
+      </Gutter>
+
+      <FilterRail
+        activeCount={filters.activeCount}
+        groups={filters.groups}
+        labels={filters.railLabels}
+        onReset={filters.reset}
+        primary={{
+          id: 'base',
+          label: t('library.title'),
+          options: libraryFilters.map((key) => ({
+            value: key,
+            label: t(`library.filter.${key}`),
+          })),
+          selected: [query.base],
+          onToggle: (value) => {
+            const next = libraryFilters.find((entry) => entry === value) ?? 'all';
+            filters.setBase(next);
+            analytics.track('library_filter_changed', { filter: next });
+          },
+        }}
+      />
+    </>
   );
 
   return (
@@ -120,7 +177,11 @@ export function LibraryScreen() {
             </Gutter>
           ) : (
             <Gutter>
-              <EmptyLibrary onCapture={() => router.push('/capture')} filtered={filter !== 'all'} />
+              <EmptyLibrary
+                filtered={filters.activeCount > 0}
+                onCapture={() => router.push('/capture')}
+                onReset={filters.reset}
+              />
             </Gutter>
           )
         }
@@ -141,8 +202,38 @@ export function LibraryScreen() {
   );
 }
 
+/**
+ * The carousel's featured slide needs the top trending entry, so the hero reads
+ * the feed itself rather than the screen threading it down. One page of one item
+ * — the rail below asks for its own six, and both are served from the same
+ * validated catalogue.
+ */
+function LandingHero({ recent }: { recent: Palette | null }) {
+  const feed = useTrending({
+    category: 'all',
+    moods: [],
+    styles: [],
+    search: '',
+    sort: 'popular',
+    pageSize: 1,
+  });
+
+  return <HeroCarousel featured={feed.items[0] ?? null} recent={recent} />;
+}
+
+/** Wide enough for a two-line title, narrow enough that the next tile peeks. */
+const RAIL_TILE = 168;
+
 /** FLOW E · "Nothing captured yet" — the mark with its wave missing. */
-function EmptyLibrary({ onCapture, filtered }: { onCapture: () => void; filtered: boolean }) {
+function EmptyLibrary({
+  onCapture,
+  onReset,
+  filtered,
+}: {
+  onCapture: () => void;
+  onReset: () => void;
+  filtered: boolean;
+}) {
   const { t } = usePreferences();
   return (
     <View style={styles.empty}>
@@ -153,13 +244,18 @@ function EmptyLibrary({ onCapture, filtered }: { onCapture: () => void; filtered
       <Text style={styles.emptyBody} tone="secondary" variant="body">
         {t(filtered ? 'library.noResults.body' : 'library.empty.body')}
       </Text>
-      {filtered ? null : <Button label={t('library.empty.action')} onPress={onCapture} size="xs" />}
+      {/* A filtered empty state offers the way out of the filter; an empty
+          library offers the only thing that can fill it. */}
+      {filtered ? (
+        <Button label={t('filter.reset')} onPress={onReset} size="xs" variant="secondary" />
+      ) : (
+        <Button label={t('library.empty.action')} onPress={onCapture} size="xs" />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {},
   searchButton: {
     width: 40,
     height: 40,
@@ -170,13 +266,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  filters: {
-    paddingHorizontal: space.gutter,
-    paddingVertical: space.md,
-    gap: space.xs,
+  hero: {
+    paddingTop: space.md,
+  },
+  libraryHead: {
+    paddingTop: space.sectionGap,
   },
   list: {
-    paddingTop: space.md,
+    paddingTop: space.cardGap,
   },
   row: {
     alignItems: 'flex-start',

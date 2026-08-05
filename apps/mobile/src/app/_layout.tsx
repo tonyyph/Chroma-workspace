@@ -16,7 +16,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PreferencesProvider, usePreferences } from '@/providers/PreferencesProvider';
 import { UnderScreenCanvas } from '@/ui';
@@ -86,6 +85,9 @@ function AppNavigator() {
         />
         <Stack.Screen name="capture/result" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="palette/[id]" />
+        {/* Pushed from the library's trending rail, so it slides in over the
+            tabs rather than replacing them the way a tab switch would. */}
+        <Stack.Screen name="trending" options={{ animation: 'slide_from_right' }} />
       </Stack>
     </>
   );

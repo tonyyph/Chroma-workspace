@@ -5,7 +5,6 @@ import {
   type PaletteSet,
   type SetRepository,
 } from '@chromawave/domain';
-
 import type { KeyValueStorage } from './KeyValueStorage';
 
 const STORAGE_KEY = '@chromawave/sets:v1';

@@ -5,7 +5,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-
 import { PalettePhoto } from '@/features/library/PalettePhoto';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import {

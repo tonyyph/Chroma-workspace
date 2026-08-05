@@ -3,10 +3,8 @@ import { shortAge, type Palette } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { Card, Chip, Gutter, Meta, Screen, ScreenHeader, SwatchStrip, Text } from '@/ui';
-
 import { unreadActivity } from './activity';
 
 /**

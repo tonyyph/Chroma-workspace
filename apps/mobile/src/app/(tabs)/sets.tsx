@@ -4,7 +4,6 @@ import * as Crypto from 'expo-crypto';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-
 import { usePalettes } from '@/hooks/usePalettes';
 import { useSets } from '@/hooks/useSets';
 import { analytics } from '@/infrastructure/dependencies';

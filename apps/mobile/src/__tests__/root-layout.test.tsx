@@ -1,5 +1,4 @@
 import { render, within } from '@testing-library/react-native';
-
 import RootLayout from '@/app/_layout';
 
 jest.mock('@expo-google-fonts/ibm-plex-mono', () => ({
@@ -40,6 +39,11 @@ jest.mock('react-native-gesture-handler', () => {
       children?: React.ReactNode;
       style?: unknown;
     }) => React.createElement(View, { style, testID: 'gesture-handler-root' }, children),
+    // `ui/Pressable` wraps React Native's Pressable in a gesture-handler native
+    // wrapper at module scope, and the layout reaches it through the error
+    // boundary's imports. A mock missing this throws at import time, before any
+    // assertion here runs.
+    createNativeWrapper: (Component: unknown) => Component,
   };
 });
 jest.mock('@/providers/PreferencesProvider', () => {

@@ -1,8 +1,7 @@
 import { space, ui, uiMotion } from '@chromawave/design-tokens';
 import { StyleSheet, View } from 'react-native';
-import { Pressable } from './Pressable';
-
 import { Icon, type IconName } from './Icon';
+import { Pressable } from './Pressable';
 import { Meta, Text } from './Text';
 
 /**
@@ -96,6 +95,53 @@ export function ScreenHeader({
   );
 }
 
+/**
+ * A section head inside a scrolling screen: a row title, an optional count, and
+ * an optional action on the right.
+ *
+ * The action is a label *and* a chevron rather than a bare word, because "SEE
+ * ALL" on its own reads as a caption until someone happens to tap it. It is only
+ * rendered when a handler exists — a section head that shows an action it cannot
+ * perform is the exact defect the dead-controls scan exists to catch.
+ */
+export function SectionHead({
+  title,
+  meta,
+  action,
+  onAction,
+}: {
+  title: string;
+  meta?: string | undefined;
+  action?: string | undefined;
+  onAction?: (() => void) | undefined;
+}) {
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionCopy}>
+        <Text variant="rowTitle">{title}</Text>
+        {meta ? <Meta style={styles.sectionMeta}>{meta}</Meta> : null}
+      </View>
+      {action && onAction ? (
+        <Pressable
+          accessibilityLabel={action}
+          accessibilityRole="button"
+          hitSlop={10}
+          onPress={onAction}
+          style={({ pressed }) => [
+            styles.sectionAction,
+            pressed && { opacity: uiMotion.listPress.opacity },
+          ]}
+        >
+          <Text tone="tertiary" variant="chip">
+            {action}
+          </Text>
+          <Icon color={ui.text.tertiary} name="forward" scale="inline" />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   nav: {
     flexDirection: 'row',
@@ -135,5 +181,23 @@ const styles = StyleSheet.create({
   headerMeta: {
     marginTop: 4,
     color: ui.text.tertiary,
+  },
+  section: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space.sm,
+  },
+  sectionCopy: {
+    flex: 1,
+    gap: 3,
+  },
+  sectionMeta: {
+    color: ui.text.quaternary,
+  },
+  sectionAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
 });

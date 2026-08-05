@@ -12,7 +12,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
-
 import { BandSweepCanvas } from './BandCanvas';
 import { SwatchStrip } from './Swatch';
 

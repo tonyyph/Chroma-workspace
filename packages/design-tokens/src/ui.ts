@@ -234,6 +234,7 @@ export const size = {
   tabBar: 66,
   statusBar: 54,
   /** Button heights measured across the screens. */
+  buttonXXS: 38,
   buttonSm: 46,
   button: 50,
   buttonMd: 54,

@@ -1,6 +1,5 @@
 import type { Color } from '@chromawave/domain';
 import { useCallback, useRef, useState } from 'react';
-
 import { readPalette, type ReadOutcome } from '@/lib/readPalette';
 
 /**

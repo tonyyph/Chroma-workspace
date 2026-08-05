@@ -37,10 +37,6 @@ export function Sheet({
       {/* Sheets overlap content, so they blur harder than a card and carry the
           floating elevation's highlight. */}
       <BlurView intensity={glass.shell.intensity} style={StyleSheet.absoluteFill} tint="dark" />
-      <View
-        pointerEvents="none"
-        style={[styles.highlight, { backgroundColor: elevation.floating.highlightColor }]}
-      />
       {grabber ? <SheetGrabber /> : null}
       {children}
     </View>

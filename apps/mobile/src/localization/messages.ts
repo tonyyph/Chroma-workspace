@@ -1,5 +1,4 @@
 import type { Language } from '@chromawave/domain';
-
 import { en, type MessageKey } from './en';
 import { vi } from './vi';
 

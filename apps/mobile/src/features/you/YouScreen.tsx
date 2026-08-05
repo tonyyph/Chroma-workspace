@@ -1,20 +1,75 @@
-import { round, space, ui } from '@chromawave/design-tokens';
-import { exportTargetSchema, type ExportTarget } from '@chromawave/domain';
+import { elevation, glass, round, space, tint, ui } from '@chromawave/design-tokens';
+import {
+  exportTargetSchema,
+  shortAge,
+  type ColorMood,
+  type ExportTarget,
+  type Palette,
+  type VisualStyle,
+} from '@chromawave/domain';
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
-
+import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { unreadActivityCount } from '@/features/tools/activity';
 import { usePalettes } from '@/hooks/usePalettes';
+import { useSets } from '@/hooks/useSets';
 import { usePreferences } from '@/providers/PreferencesProvider';
-import { Card, CardGroup, Gutter, Icon, Meta, Pressable, Screen, Text, Toggle } from '@/ui';
+import {
+  BandCanvas,
+  Card,
+  CardGroup,
+  Chip,
+  Gutter,
+  Icon,
+  Meta,
+  Pressable,
+  Screen,
+  SectionHead,
+  SwatchStrip,
+  Text,
+  Toggle,
+} from '@/ui';
+import {
+  byRecency,
+  capturedThisMonth,
+  moodTaste,
+  signatureColors,
+  styleTaste,
+  totalColors,
+} from './youInsights';
 
 const EXPORT_TARGETS = exportTargetSchema.options;
 
-/** D2 · PROFILE — identity block, stat tiles, then two grouped settings cards. */
+/**
+ * D2 · YOU — rebuilt as a portrait of a library rather than a settings list.
+ *
+ * **What changed and why.** The previous screen was an avatar, three equal stat
+ * tiles and two stacked groups of preference rows. Everything on it was the same
+ * size and the same shape, so it read as a form: nothing said what this person's
+ * colour actually looks like, and the only thing you could do from it was change
+ * a setting.
+ *
+ * The rebuild is organised by what is *theirs*, in descending order of how
+ * personal it is:
+ *
+ *  1. a signature drawn from their own dominant bands, full-bleed, with the
+ *     identity card floating over its lower edge;
+ *  2. an asymmetric stat mosaic — one number is the headline, the others are not
+ *     — where every tile is a way into the library rather than a read-out;
+ *  3. what they keep coming back to, derived from the palettes themselves and
+ *     tappable straight through to the library filtered by it;
+ *  4. their collections and their recent captures;
+ *  5. and only then the controls, which have not changed behaviour at all.
+ *
+ * Depth is doing the hierarchy: the hero is behind, the identity card is glass
+ * over it, the mosaic sits on the ground, and the control deck is a single
+ * grouped surface. Nothing is a card just because the thing above it was.
+ */
 export function YouScreen() {
   const { palettes } = usePalettes();
+  const { sets } = useSets();
   const router = useRouter();
   const {
     preferences,
@@ -28,11 +83,14 @@ export function YouScreen() {
     busyAction,
     t,
   } = usePreferences();
-  const pinned = palettes.filter((palette) => palette.isPinned).length;
+
+  const pinned = useMemo(() => palettes.filter((palette) => palette.isPinned).length, [palettes]);
+  const thisMonth = useMemo(() => capturedThisMonth(palettes), [palettes]);
   const unread = useMemo(
     () => unreadActivityCount(palettes, preferences.activityReadAt),
     [palettes, preferences.activityReadAt],
   );
+  const recent = useMemo(() => byRecency(palettes).slice(0, 3), [palettes]);
 
   /**
    * Both settings rows cycle rather than opening a picker: each has a handful of
@@ -45,30 +103,132 @@ export function YouScreen() {
     void setDefaultExport(next);
   };
 
+  const openLibrary = (params?: { mood?: ColorMood; style?: VisualStyle }) => {
+    router.push({ pathname: '/(tabs)', params: params ?? {} });
+  };
+
   return (
     <Screen tabBarInset>
-      <Gutter style={styles.identity}>
-        <LinearGradient
-          colors={['#7C5CFF', '#22D3EE']}
-          end={{ x: 1, y: 1 }}
-          start={{ x: 0, y: 0 }}
-          style={styles.avatar}
+      <SignatureHero palettes={palettes} />
+
+      <Gutter style={styles.mosaic}>
+        <StatTile
+          label={t('you.stat.palettes')}
+          onPress={() => openLibrary()}
+          size="hero"
+          value={String(palettes.length)}
         />
-        <View style={styles.identityCopy}>
-          <Text variant="section">{t('you.title')}</Text>
-          <Meta style={styles.identityMeta}>{t('you.meta')}</Meta>
+        <View style={styles.mosaicColumn}>
+          <StatTile
+            label={t('you.stat.pinned')}
+            onPress={() => openLibrary()}
+            value={String(pinned)}
+          />
+          <StatTile label={t('you.stat.colours')} value={String(totalColors(palettes))} />
         </View>
       </Gutter>
 
-      <Gutter style={styles.stats}>
-        <Stat label={t('you.stat.palettes')} value={String(palettes.length)} />
-        <Stat label={t('you.stat.pinned')} value={String(pinned)} />
-        <Stat
-          label={t('you.stat.colours')}
-          value={String(palettes.reduce((sum, p) => sum + p.colors.length, 0))}
-        />
+      <Gutter style={styles.thinRow}>
+        <MiniStat label={t('you.stat.thisMonth')} value={String(thisMonth)} />
+        <MiniStat label={t('you.stat.collections')} value={String(sets.length)} />
       </Gutter>
 
+      <TasteSection onPick={openLibrary} palettes={palettes} />
+
+      <Gutter style={styles.sectionHead}>
+        <SectionHead
+          action={sets.length ? t('you.seeAll') : undefined}
+          onAction={sets.length ? () => router.push('/sets') : undefined}
+          title={t('you.collections.title')}
+        />
+      </Gutter>
+      {sets.length ? (
+        <ScrollView
+          contentContainerStyle={styles.rail}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          {sets.map((set) => {
+            const members = set.paletteIds
+              .map((id) => palettes.find((palette) => palette.id === id))
+              .filter((palette): palette is Palette => palette !== undefined);
+            const strip = members.flatMap((palette) => palette.colors.slice(0, 2));
+            return (
+              <Card
+                accessibilityLabel={set.name}
+                key={set.id}
+                onPress={() => router.push(`/set/${set.id}`)}
+                style={styles.setCard}
+              >
+                {strip.length ? (
+                  <SwatchStrip colors={strip} height={40} radius={round.swatch} />
+                ) : (
+                  <View style={styles.setEmptyStrip} />
+                )}
+                <Text numberOfLines={1} variant="cardTitle">
+                  {set.name}
+                </Text>
+                <Meta style={styles.setMeta}>
+                  {t('you.collections.count', { count: set.paletteIds.length })}
+                </Meta>
+              </Card>
+            );
+          })}
+        </ScrollView>
+      ) : (
+        <Gutter style={styles.emptyBlock}>
+          <Text tone="secondary" variant="body">
+            {t('you.collections.empty')}
+          </Text>
+        </Gutter>
+      )}
+
+      <Gutter style={styles.sectionHead}>
+        <SectionHead
+          action={recent.length ? t('you.seeAll') : undefined}
+          onAction={recent.length ? () => openLibrary() : undefined}
+          title={t('you.recent.title')}
+        />
+      </Gutter>
+      <Gutter style={styles.recent}>
+        {recent.length ? (
+          recent.map((palette) => (
+            <Card
+              accessibilityLabel={palette.name}
+              key={palette.id}
+              onPress={() => router.push(`/palette/${palette.id}`)}
+              style={styles.recentRow}
+            >
+              <SwatchStrip
+                colors={palette.colors}
+                height={38}
+                radius={round.swatch}
+                style={styles.recentStrip}
+              />
+              <View style={styles.recentCopy}>
+                <Text numberOfLines={1} variant="cardTitle">
+                  {palette.name}
+                </Text>
+                <Meta style={styles.setMeta}>
+                  {t('library.card.meta', {
+                    count: palette.colors.length,
+                    age: shortAge(palette.capturedAt),
+                  })}
+                </Meta>
+              </View>
+              <Icon color={ui.text.tertiary} name="forward" scale="inline" />
+            </Card>
+          ))
+        ) : (
+          <Text tone="secondary" variant="body">
+            {t('you.recent.empty')}
+          </Text>
+        )}
+      </Gutter>
+
+      <Gutter style={styles.sectionHead}>
+        <SectionHead meta={t('you.controls.meta')} title={t('you.controls.title')} />
+      </Gutter>
       <Gutter style={styles.group}>
         <CardGroup>
           <Row
@@ -147,19 +307,25 @@ export function YouScreen() {
         </CardGroup>
       </Gutter>
 
+      <Gutter style={styles.sectionHead}>
+        <SectionHead title={t('you.more.title')} />
+      </Gutter>
       <Gutter style={styles.group}>
         <CardGroup>
           <Row
+            icon="activity"
             label={t('activity.title')}
             onPress={() => router.push('/tools/activity')}
             value={unread > 0 ? t('you.unread', { count: unread }) : t('you.open')}
           />
           <Row
+            icon="palette"
             label={t('paywall.title').replace('\n', ' ')}
             onPress={() => router.push('/paywall?trigger=palette-limit')}
             value={t('common.pro')}
           />
           <Row
+            icon="settings"
             label={t('onboarding.how.title').replace('\n', ' ')}
             onPress={() => router.push('/onboarding')}
             value={t('you.open')}
@@ -174,12 +340,204 @@ export function YouScreen() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+/**
+ * The hero: the user's own dominant bands, full-bleed, with the identity card
+ * floating over the join.
+ *
+ * Full-bleed and overlapping is the whole point — a signature inset into the
+ * gutter like everything else would be one more card. The card below overlaps it
+ * by its own corner radius so the two read as one object with a lit edge rather
+ * than as a picture with a caption.
+ */
+function SignatureHero({ palettes }: { palettes: readonly Palette[] }) {
+  const { t } = usePreferences();
+  const { width } = useWindowDimensions();
+  const signature = useMemo(() => signatureColors(palettes), [palettes]);
+  // An empty library still gets a hero — in the brand's own bands, and saying so.
+  const colors = signature.length ? signature : BRAND_FALLBACK;
+
   return (
-    <Card style={styles.stat}>
+    <View style={styles.hero}>
+      <View style={styles.heroArt}>
+        <BandCanvas colors={colors} height={HERO_HEIGHT} width={width} />
+        <LinearGradient
+          colors={['rgba(8,7,14,.15)', 'rgba(8,7,14,.9)']}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
+
+      <View style={styles.identity}>
+        <View style={styles.identityGlass}>
+          <BlurView intensity={glass.shell.intensity} style={StyleSheet.absoluteFill} tint="dark" />
+          <View style={styles.identityRow}>
+            <View accessibilityLabel={t('you.signature.label')} style={styles.avatar}>
+              {colors.slice(0, 3).map((hex, index) => (
+                <View key={`${index}:${hex}`} style={{ flex: 1, backgroundColor: hex }} />
+              ))}
+            </View>
+            <View style={styles.identityCopy}>
+              <Text variant="section">{t('you.title')}</Text>
+              <Meta style={styles.identityMeta}>{t('you.meta')}</Meta>
+            </View>
+          </View>
+          <Text style={styles.identityBody} tone="secondary" variant="body">
+            {signature.length ? t('you.signature.body') : t('you.signature.empty')}
+          </Text>
+          <View style={styles.signatureStrip}>
+            {colors.map((hex, index) => (
+              <View
+                key={`${index}:${hex}`}
+                style={[styles.signatureChip, { backgroundColor: hex }]}
+              />
+            ))}
+          </View>
+          <Meta style={styles.identityEyebrow}>{t('you.signature.eyebrow')}</Meta>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const HERO_HEIGHT = 210;
+/** The brand bands, for a library with nothing in it yet. */
+const BRAND_FALLBACK = ['#7C5CFF', '#22D3EE', '#FF7A5C'] as const;
+
+/**
+ * Taste, read off the library.
+ *
+ * Each chip is a real query — tapping one lands on the library with that filter
+ * already applied, which is the only reason a profile should show a preference
+ * at all. A chip that merely states a fact about you is decoration.
+ */
+function TasteSection({
+  palettes,
+  onPick,
+}: {
+  palettes: readonly Palette[];
+  onPick: (params: { mood?: ColorMood; style?: VisualStyle }) => void;
+}) {
+  const { t } = usePreferences();
+  const moods = useMemo(() => moodTaste(palettes).slice(0, 3), [palettes]);
+  const styleRanks = useMemo(() => styleTaste(palettes).slice(0, 3), [palettes]);
+  const leader = moods[0];
+
+  return (
+    <>
+      <Gutter style={styles.sectionHead}>
+        <SectionHead meta={t('you.taste.meta')} title={t('you.taste.title')} />
+      </Gutter>
+
+      <Gutter style={styles.taste}>
+        {leader ? (
+          <>
+            {/* The bar is drawn within the ranked set rather than against the
+                whole library: a palette counts towards every mood it matches, so
+                these shares deliberately do not sum to one. */}
+            <View style={styles.tasteBar}>
+              {moods.map((entry) => (
+                <View
+                  key={entry.value}
+                  style={{
+                    flex: entry.count,
+                    backgroundColor: MOOD_INK[entry.value],
+                  }}
+                />
+              ))}
+            </View>
+
+            <View style={styles.tasteChips}>
+              {moods.map((entry) => (
+                <Chip
+                  key={entry.value}
+                  label={`${t(`library.mood.${entry.value}`)} ${entry.count}`}
+                  onPress={() => onPick({ mood: entry.value })}
+                  tone={entry.value === leader.value ? 'info' : 'default'}
+                />
+              ))}
+              {styleRanks.map((entry) => (
+                <Chip
+                  key={entry.value}
+                  label={`${t(`library.style.${entry.value}`)} ${entry.count}`}
+                  onPress={() => onPick({ style: entry.value })}
+                />
+              ))}
+            </View>
+          </>
+        ) : (
+          <Text tone="secondary" variant="body">
+            {t('you.taste.empty')}
+          </Text>
+        )}
+      </Gutter>
+    </>
+  );
+}
+
+/**
+ * A colour per mood, so the taste bar is legible without reading its labels.
+ * They are the system's own accents rather than new values — warm is the warm
+ * accent, cool is info, vibrant is the signal, and so on.
+ */
+const MOOD_INK: Record<ColorMood, string> = {
+  warm: ui.accent.warm,
+  cool: ui.accent.info,
+  pastel: '#F1E7D6',
+  monochrome: 'rgba(237,234,227,.45)',
+  vibrant: ui.accent.signal,
+};
+
+/**
+ * A stat that goes somewhere. The hero size carries the number the screen is
+ * about; the others are deliberately smaller, because three identical tiles is
+ * what made the old screen a form.
+ */
+function StatTile({
+  label,
+  value,
+  size = 'default',
+  onPress,
+}: {
+  label: string;
+  value: string;
+  size?: 'hero' | 'default';
+  onPress?: () => void;
+}) {
+  const { t } = usePreferences();
+  const body = (
+    <View style={[styles.tile, size === 'hero' && styles.tileHero]}>
+      <Text style={size === 'hero' ? styles.tileHeroValue : undefined} variant="display">
+        {value}
+      </Text>
+      <Meta style={styles.tileLabel}>{label}</Meta>
+    </View>
+  );
+
+  if (!onPress) {
+    return <View style={size === 'hero' ? styles.tileHeroBox : styles.tileBox}>{body}</View>;
+  }
+  return (
+    <Pressable
+      accessibilityHint={t('you.stat.hint')}
+      accessibilityLabel={`${value} ${label}`}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [
+        size === 'hero' ? styles.tileHeroBox : styles.tileBox,
+        pressed && styles.tilePressed,
+      ]}
+    >
+      {body}
+    </Pressable>
+  );
+}
+
+/** A single line of number and label, for facts that do not need a tile. */
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.mini}>
       <Text variant="section">{value}</Text>
-      <Meta style={styles.statLabel}>{label}</Meta>
-    </Card>
+      <Meta style={styles.tileLabel}>{label}</Meta>
+    </View>
   );
 }
 
@@ -188,14 +546,17 @@ function Row({
   value,
   trailing,
   onPress,
+  icon,
 }: {
   label: string;
   value?: string;
   trailing?: React.ReactNode;
   onPress?: () => void;
+  icon?: React.ComponentProps<typeof Icon>['name'];
 }) {
   const body = (
     <View style={styles.row}>
+      {icon ? <Icon color={ui.text.tertiary} name={icon} scale="control" /> : null}
       <Text style={styles.rowLabel}>{label}</Text>
       {trailing ?? (
         <View style={styles.rowValue}>
@@ -220,47 +581,189 @@ function Row({
 }
 
 const styles = StyleSheet.create({
+  hero: {
+    marginBottom: space.md,
+  },
+  heroArt: {
+    height: HERO_HEIGHT,
+    backgroundColor: ui.bg.media,
+    overflow: 'hidden',
+  },
   identity: {
-    paddingTop: space.cardGap,
+    paddingHorizontal: space.gutter,
+    // The overlap is the layering: the card sits on the join rather than under it.
+    marginTop: -round.sheet * 2,
+  },
+  identityGlass: {
+    borderRadius: round.sheet,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: elevation.floating.borderColor,
+    backgroundColor: glass.shell.tint,
+    padding: space.md,
+    gap: space.sm,
+  },
+  identityRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space.cardGap,
+    gap: space.sm,
   },
   avatar: {
-    width: 64,
-    height: 64,
+    width: 52,
+    height: 52,
     borderRadius: round.media,
+    overflow: 'hidden',
   },
   identityCopy: {
-    gap: 4,
+    flex: 1,
+    gap: 3,
   },
   identityMeta: {
     color: ui.text.tertiary,
   },
-  stats: {
-    paddingTop: space.gutter,
+  identityBody: {
+    paddingTop: 2,
+  },
+  identityEyebrow: {
+    color: ui.text.quaternary,
+  },
+  signatureStrip: {
+    flexDirection: 'row',
+    gap: 5,
+  },
+  signatureChip: {
+    flex: 1,
+    height: 10,
+    borderRadius: 5,
+  },
+
+  mosaic: {
     flexDirection: 'row',
     gap: 10,
+    paddingTop: space.xs,
   },
-  stat: {
+  mosaicColumn: {
     flex: 1,
-    gap: 6,
+    gap: 10,
   },
-  statLabel: {
+  tileBox: {
+    flex: 1,
+    borderRadius: round.card,
+    borderWidth: 1,
+    borderColor: ui.border.hairline,
+    backgroundColor: ui.fill.card,
+    overflow: 'hidden',
+  },
+  tileHeroBox: {
+    flex: 1.15,
+    borderRadius: round.card,
+    borderWidth: 1,
+    borderColor: tint.pro.borderColor,
+    backgroundColor: tint.pro.backgroundColor,
+    overflow: 'hidden',
+  },
+  tilePressed: {
+    opacity: 0.75,
+  },
+  tile: {
+    padding: space.cardGap,
+    gap: 4,
+  },
+  tileHero: {
+    paddingVertical: space.md + 6,
+    justifyContent: 'flex-end',
+    flex: 1,
+  },
+  tileHeroValue: {
+    color: ui.action.link,
+  },
+  tileLabel: {
     fontSize: 9,
     letterSpacing: 1,
   },
+  mini: {
+    flex: 1,
+    gap: 2,
+  },
+  thinRow: {
+    flexDirection: 'row',
+    gap: space.md,
+    paddingTop: space.sm,
+  },
+
+  sectionHead: {
+    paddingTop: space.sectionGap,
+  },
+  taste: {
+    paddingTop: space.sm,
+    gap: space.sm,
+  },
+  tasteBar: {
+    flexDirection: 'row',
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+    backgroundColor: ui.fill.track,
+  },
+  tasteChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+
+  rail: {
+    paddingHorizontal: space.gutter,
+    paddingTop: space.sm,
+    gap: 10,
+  },
+  setCard: {
+    width: 152,
+    gap: 6,
+  },
+  setEmptyStrip: {
+    height: 40,
+    borderRadius: round.swatch,
+    backgroundColor: ui.fill.track,
+  },
+  setMeta: {
+    fontSize: 9,
+    letterSpacing: 1,
+  },
+  emptyBlock: {
+    paddingTop: space.sm,
+  },
+
+  recent: {
+    paddingTop: space.sm,
+    gap: 8,
+  },
+  recentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+  },
+  recentStrip: {
+    width: 60,
+  },
+  recentCopy: {
+    flex: 1,
+    gap: 3,
+  },
+
   group: {
-    paddingTop: space.gutter,
+    paddingTop: space.sm,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: space.md,
+    gap: space.sm,
     minHeight: 24,
   },
   rowLabel: {
+    flex: 1,
     fontSize: 14,
   },
   rowValue: {
@@ -274,6 +777,6 @@ const styles = StyleSheet.create({
     gap: space.xs,
   },
   footer: {
-    paddingTop: space.md,
+    paddingTop: space.gutter,
   },
 });

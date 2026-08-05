@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-
 import Entry from '@/app/index';
 
 let mockOnboardingCompleted = false;

@@ -12,7 +12,6 @@ import {
   usePhotoOutput,
   type CameraRef,
 } from 'react-native-vision-camera';
-
 import { BrandMark } from '@/components/BrandMark';
 import { usePhotoRead } from '@/hooks/usePhotoRead';
 import { hapticsService, soundService } from '@/infrastructure/dependencies';

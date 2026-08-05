@@ -2,7 +2,6 @@ import { round, space, ui } from '@chromawave/design-tokens';
 import { contrastRatio, safeForegroundFor, type Palette } from '@chromawave/domain';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { Button, Card, Chip, Gutter, Screen, ScreenHeader, Text } from '@/ui';
 

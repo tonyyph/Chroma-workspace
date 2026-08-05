@@ -3,7 +3,6 @@ import { readStability, type Color, type Palette } from '@chromawave/domain';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { Button, ButtonRow, Card, ColorRow, Icon, Meta, Sheet, Text } from '@/ui';
 

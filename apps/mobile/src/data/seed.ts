@@ -127,42 +127,12 @@ export function seedPalettes(): Palette[] {
   ];
 }
 
-/** FLOW C2 · trending rows. Saves and handles are fixture values. */
-export const trendingPalettes = [
-  {
-    id: 'chlorine-haze',
-    name: 'Chlorine haze',
-    author: 'mira',
-    saves: 2100,
-    colors: weighted([
-      ['#22D3EE', 2, 'dominant'],
-      ['#0F6E7C', 1, 'support'],
-      ['#F1E7D6', 1, 'signal'],
-    ]),
-  },
-  {
-    id: 'late-brick',
-    name: 'Late brick',
-    author: 'dao',
-    saves: 1800,
-    colors: weighted([
-      ['#FFC24A', 2, 'dominant'],
-      ['#C4623B', 1, 'support'],
-      ['#31241F', 1, 'signal'],
-    ]),
-  },
-  {
-    id: 'night-transit',
-    name: 'Night transit',
-    author: 'sol',
-    saves: 1200,
-    colors: weighted([
-      ['#7C5CFF', 2, 'dominant'],
-      ['#161327', 1, 'support'],
-      ['#FF7A5C', 1, 'signal'],
-    ]),
-  },
-] as const;
+/**
+ * The trending feed used to live here as a third fixture list, which put two
+ * catalogues of palettes in one file with no relationship between them. It is
+ * now `@/data/trending`, read through `trendingRepository` — see that file for
+ * why the feed is validated rather than imported directly.
+ */
 
 /** B1 · the live read strip, before a capture is committed. */
 export const liveReadSample = ['#7C5CFF', '#4A3AA8', '#22D3EE', '#FF7A5C', '#F1E7D6'] as const;

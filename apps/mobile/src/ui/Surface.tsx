@@ -8,13 +8,7 @@ import {
   type ElevationLevel,
 } from '@chromawave/design-tokens';
 import { BlurView } from 'expo-blur';
-import {
-  StyleSheet,
-  View,
-  type StyleProp,
-  type ViewProps,
-  type ViewStyle,
-} from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 import Animated, {
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -22,11 +16,9 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 import { usePreferences } from '@/providers/PreferencesProvider';
-
-import { Pressable } from './Pressable';
 import { reportBackdropScroll } from './backdropMotion';
+import { Pressable } from './Pressable';
 import { BandRefreshControl } from './Sequences';
 
 /**
@@ -78,13 +70,6 @@ export function Card({
       {useGlass ? (
         <BlurView intensity={glass.card.intensity} style={StyleSheet.absoluteFill} tint="dark" />
       ) : null}
-      {/* The lit top edge. A separate absolutely-positioned hairline rather than
-          a border, because a border applies to all four sides and the effect
-          depends on it being only the one facing the light. */}
-      <View
-        pointerEvents="none"
-        style={[styles.topHighlight, { backgroundColor: depth.highlightColor }]}
-      />
       {children}
     </View>
   );
@@ -154,7 +139,10 @@ function splitCardStyle(style: StyleProp<ViewStyle> | undefined): {
   const outerRecord = outer as Record<string, ViewStyle[keyof ViewStyle]>;
   const innerRecord = inner as Record<string, ViewStyle[keyof ViewStyle]>;
 
-  for (const [key, value] of Object.entries(flat) as [keyof ViewStyle, ViewStyle[keyof ViewStyle]][]) {
+  for (const [key, value] of Object.entries(flat) as [
+    keyof ViewStyle,
+    ViewStyle[keyof ViewStyle],
+  ][]) {
     if (OUTER_CARD_STYLE_KEYS.has(key)) {
       outerRecord[key] = value;
     } else {
@@ -241,10 +229,6 @@ export function CardGroup({
         {useGlass ? (
           <BlurView intensity={glass.card.intensity} style={StyleSheet.absoluteFill} tint="dark" />
         ) : null}
-        <View
-          pointerEvents="none"
-          style={[styles.topHighlight, { backgroundColor: depth.highlightColor }]}
-        />
         {rows.map((row, index) => (
           <View
             key={index}

@@ -1,6 +1,5 @@
 import { brandBands, ui } from '@chromawave/design-tokens';
 import Svg, { Path } from 'react-native-svg';
-
 import { sine, squircle } from './BandField';
 
 /**

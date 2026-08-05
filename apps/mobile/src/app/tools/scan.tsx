@@ -1,5 +1,4 @@
 import { useRouter } from 'expo-router';
-
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ScanScreen } from '@/features/tools/ScanScreen';
 import { useCaptureStore } from '@/store/captureStore';

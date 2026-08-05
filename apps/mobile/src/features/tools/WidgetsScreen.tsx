@@ -3,7 +3,6 @@ import type { Palette } from '@chromawave/domain';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 import { BrandMark } from '@/components/BrandMark';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { Meta, NavBar, SwatchStrip, Text } from '@/ui';

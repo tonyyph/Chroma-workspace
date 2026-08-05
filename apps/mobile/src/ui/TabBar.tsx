@@ -1,6 +1,5 @@
 import {
   brandBands,
-  elevation,
   glass,
   round,
   size,
@@ -13,9 +12,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 import { BrandMark } from '@/components/BrandMark';
-
 import { reportBackdropTouch } from './backdropMotion';
 import { Icon, type IconName } from './Icon';
 import { Pressable } from './Pressable';
@@ -88,7 +85,7 @@ export function TabBar({
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: insets.bottom }]}>
       <LinearGradient
-        colors={['rgba(8,7,14,0)', 'rgba(8,7,14,.94)']}
+        colors={['rgba(8,7,14,0)', 'rgba(18, 17, 25, 0.94)']}
         locations={[0, 0.4]}
         pointerEvents="none"
         style={StyleSheet.absoluteFill}
@@ -96,12 +93,6 @@ export function TabBar({
       <View style={[styles.barShell, uiShadow.tabBar]}>
         <View style={styles.bar}>
           <BlurView intensity={glass.shell.intensity} style={StyleSheet.absoluteFill} tint="dark" />
-          {/* The shell catches light along its top edge like every other
-              raised surface, which is what stops it reading as a cut-out. */}
-          <View
-            pointerEvents="none"
-            style={[styles.shellHighlight, { backgroundColor: elevation.floating.highlightColor }]}
-          />
           <View style={styles.barInner}>
             {left.map((tab) => (
               <TabItem

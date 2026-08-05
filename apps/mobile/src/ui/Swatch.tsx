@@ -1,7 +1,6 @@
 import { size, space } from '@chromawave/design-tokens';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { Pressable } from './Pressable';
-
 import { Text } from './Text';
 
 export type SwatchEntry = {
@@ -41,8 +40,14 @@ export function SwatchStrip({
         style,
       ]}
     >
-      {colors.map((color) => (
-        <View key={color.hex} style={{ flex: color.weight, backgroundColor: color.hex }} />
+      {colors.map((color, index) => (
+        // Keyed by position as well as value: a strip built by merging several
+        // palettes — a set's combined bands — legitimately repeats a hex, and
+        // keying on the hex alone collapsed those repeats into one band.
+        <View
+          key={`${index}:${color.hex}`}
+          style={{ flex: color.weight, backgroundColor: color.hex }}
+        />
       ))}
     </View>
   );

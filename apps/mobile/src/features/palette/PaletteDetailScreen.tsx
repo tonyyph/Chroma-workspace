@@ -5,7 +5,6 @@ import * as Crypto from 'expo-crypto';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
-
 import { ShareSheet, type ShareOptions } from '@/features/capture/ShareSheet';
 import { ToolFallback } from '@/features/tools/ToolFallback';
 import { usePalettes } from '@/hooks/usePalettes';

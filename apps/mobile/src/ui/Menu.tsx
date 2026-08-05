@@ -11,7 +11,6 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 import { Button } from './Button';
 import { Pressable } from './Pressable';
 import { SheetGrabber } from './Sheet';
@@ -285,10 +284,9 @@ const styles = StyleSheet.create({
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: ui.scrim.strong },
   sheet: {
     maxHeight: '88%',
-    backgroundColor: ui.bg.sheet,
+    backgroundColor: ui.bg.media,
     borderTopLeftRadius: round.sheet,
     borderTopRightRadius: round.sheet,
-    borderTopWidth: 1,
     borderTopColor: ui.border.control,
     paddingTop: space.sm,
     paddingHorizontal: space.sectionGap,

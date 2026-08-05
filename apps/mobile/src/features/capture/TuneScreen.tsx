@@ -2,7 +2,6 @@ import { brandBands, brandColors, round, space, tint, ui } from '@chromawave/des
 import { contrastRatio, makeColor, type ColorRole, type Palette } from '@chromawave/domain';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-
 import { hapticsService } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { BandCanvas, Card, Chip, Meta, NavBar, Screen, Slider, Text } from '@/ui';

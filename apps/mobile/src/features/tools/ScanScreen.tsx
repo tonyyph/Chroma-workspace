@@ -9,7 +9,6 @@ import {
   useCameraPermission,
   usePhotoOutput,
 } from 'react-native-vision-camera';
-
 import { usePhotoRead } from '@/hooks/usePhotoRead';
 import { analytics, hapticsService } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers/PreferencesProvider';

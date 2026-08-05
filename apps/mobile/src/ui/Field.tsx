@@ -1,7 +1,6 @@
 import { round, size, space, typeExtra, ui } from '@chromawave/design-tokens';
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
-
 import { Icon } from './Icon';
 
 /**

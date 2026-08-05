@@ -2,7 +2,9 @@ export { BandCanvas, BandSweepCanvas, ScanSweep, bandPath } from './BandCanvas';
 export { BandField, sine, squircle } from './BandField';
 export { GradientCanvas, type GradientKind, type Interpolation } from './GradientCanvas';
 export { Button, ButtonRow, type ButtonVariant } from './Button';
+export { Carousel, type CarouselProps } from './Carousel';
 export { Chip, type ChipTone } from './Chip';
+export { FilterRail, type FilterGroup, type FilterOption } from './FilterRail';
 export { EmptyGlyph, type EmptyGlyphKind } from './EmptyGlyph';
 export { CardSkeleton, InlineError, Toast } from './Feedback';
 export {
@@ -34,4 +36,4 @@ export { TabBar, type TabKey } from './TabBar';
 export { Meta, Text, type TextTone, type TextVariant } from './Text';
 export { Toggle } from './Toggle';
 export { UnderScreenCanvas } from './UnderScreenCanvas';
-export { NavBar, ScreenHeader } from './Nav';
+export { NavBar, ScreenHeader, SectionHead } from './Nav';

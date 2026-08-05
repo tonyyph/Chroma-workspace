@@ -2,7 +2,6 @@ import type { Palette } from '@chromawave/domain';
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import type { ImageStyle, StyleProp } from 'react-native';
-
 const harbourPhoto: number = require('../../../assets/brand/library/harbour-dusk.jpg');
 
 const FALLBACK_PHOTOS: readonly number[] = [

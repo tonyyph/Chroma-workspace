@@ -1,5 +1,4 @@
 import { useRouter } from 'expo-router';
-
 import { ApplyThemeScreen } from '@/features/tools/ApplyThemeScreen';
 import { ToolFallback } from '@/features/tools/ToolFallback';
 import { usePaletteParam } from '@/hooks/usePaletteParam';

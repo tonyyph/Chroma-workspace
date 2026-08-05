@@ -42,13 +42,23 @@ const BUDGETS: Record<string, number> = {
 const CHIP_KEYS = messageKeys.filter(
   (key) =>
     key.startsWith('library.filter.') ||
+    // The discovery axes are chips on two screens apiece, in the same rail as
+    // the library filters, so they live under the same width budget.
+    key.startsWith('library.mood.') ||
+    key.startsWith('library.style.') ||
+    key.startsWith('trending.category.') ||
+    key.startsWith('trending.sort.') ||
     key.startsWith('tune.preset.') ||
     key.startsWith('import.mode.') ||
     key.startsWith('capture.mode.') ||
     key === 'collection.mergeAll' ||
     key === 'collection.exportSet' ||
     key === 'collection.invite' ||
-    key === 'explore.save' ||
+    key === 'trending.save' ||
+    key === 'trending.saved' ||
+    key === 'filter.toggle' ||
+    key === 'filter.active' ||
+    key === 'filter.reset' ||
     key === 'common.pro' ||
     key === 'tune.contrast.pass' ||
     key === 'tune.contrast.fail',
@@ -70,7 +80,11 @@ const BUTTON_KEYS = messageKeys.filter(
     key === 'compare.addThird' ||
     key === 'compare.merge' ||
     key === 'theme.export' ||
-    key === 'export.copyToClipboard',
+    key === 'export.copyToClipboard' ||
+    // Carousel calls to action, and the trending feed's own buttons.
+    (key.startsWith('hero.') && key.endsWith('.cta')) ||
+    key === 'trending.retry' ||
+    key === 'trending.loadMore',
 );
 
 describe('catalogue integrity', () => {

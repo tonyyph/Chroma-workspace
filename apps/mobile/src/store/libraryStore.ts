@@ -1,6 +1,5 @@
-import type { Palette, PaletteSet } from '@chromawave/domain';
+import { dedupeById, type Palette, type PaletteSet } from '@chromawave/domain';
 import { create } from 'zustand';
-
 import { paletteRepository, setRepository } from '@/infrastructure/dependencies';
 
 /**
@@ -42,9 +41,22 @@ type LibraryState = {
  */
 const MIN_SPINNER_MS = 450;
 
+/**
+ * Both collections, deduplicated on the way in.
+ *
+ * This is the only door into the store, which makes it the only place identity
+ * has to be enforced. Storage is a key-value blob written by several call sites
+ * — a save, an import, a seed on first launch — and a write that lands twice, or
+ * a seed that runs against a library that already has it, produces two records
+ * with one id. Every screen then renders the card twice, and the second copy has
+ * a duplicate React key, so its press handler goes to the first.
+ *
+ * Filtering it out in a renderer would hide exactly one symptom of that; doing
+ * it here means every subscriber, every filter and every count sees one library.
+ */
 async function readAll() {
   const [palettes, sets] = await Promise.all([paletteRepository.list(), setRepository.list()]);
-  return { palettes, sets };
+  return { palettes: dedupeById(palettes), sets: dedupeById(sets) };
 }
 
 export const useLibraryStore = create<LibraryState>((set, get) => ({

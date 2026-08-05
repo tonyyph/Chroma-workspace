@@ -208,20 +208,34 @@ export function readStability(deltaE: number): 'stable' | 'drifting' | 'unstable
   return 'unstable';
 }
 
-/** FLOW C filters. `all` is the default chip on the library. */
-export const libraryFilters = ['all', 'recent', 'pinned', 'warm'] as const;
+/**
+ * FLOW C filters — the *library* axis: where a palette the user already owns
+ * sits in their own collection. `all` is the default chip.
+ *
+ * Temperature used to be a fourth chip here. It is a property of the colour, not
+ * of the user's relationship to it, so it moved to the colour-mood axis in
+ * `discovery` alongside pastel, monochrome and vibrant — where it can be
+ * combined with a style rather than replacing the whole selection.
+ */
+export const libraryFilters = ['all', 'recent', 'pinned'] as const;
 export type LibraryFilter = (typeof libraryFilters)[number];
 
 /**
  * Warmth is decided on the dominant colour's OKLCh hue: reds through yellows
- * read warm, cyans through violets read cool. Read from the stored `oklch`
- * rather than recomputed, since `makeColor` guarantees it is current.
+ * read warm, cyans through violets read cool.
+ */
+export function isWarmHue(hue: number): boolean {
+  return hue < 110 || hue >= 330;
+}
+
+/**
+ * Read from the stored `oklch` rather than recomputed, since `makeColor`
+ * guarantees it is current.
  */
 export function isWarm(palette: Palette): boolean {
   const dominant = colorForRole(palette, 'dominant') ?? palette.colors[0];
   if (!dominant) return false;
-  const hue = dominant.oklch.hue;
-  return hue < 110 || hue >= 330;
+  return isWarmHue(dominant.oklch.hue);
 }
 
 export function filterPalettes(
@@ -233,8 +247,6 @@ export function filterPalettes(
       return [...palettes].sort((a, b) => b.capturedAt.localeCompare(a.capturedAt)).slice(0, 12);
     case 'pinned':
       return palettes.filter((palette) => palette.isPinned);
-    case 'warm':
-      return palettes.filter(isWarm);
     default:
       return palettes;
   }

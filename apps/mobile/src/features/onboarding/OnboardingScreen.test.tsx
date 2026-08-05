@@ -1,6 +1,5 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
-
 import { OnboardingScreen } from './OnboardingScreen';
 
 const mockReplace = jest.fn();

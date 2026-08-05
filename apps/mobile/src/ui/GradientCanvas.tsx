@@ -12,7 +12,6 @@ import {
   vec,
 } from '@shopify/react-native-skia';
 import { useMemo } from 'react';
-
 /** ASSET SYSTEM · G — "grain-128.png · tile · 4%". */
 const GRAIN = require('../../assets/brand/textures/grain-128.png');
 

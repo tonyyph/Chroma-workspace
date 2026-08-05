@@ -1,13 +1,5 @@
 import { brandBands, ui } from '@chromawave/design-tokens';
-import {
-  Canvas,
-  Fill,
-  Group,
-  Image as SkiaImage,
-  Shader,
-  Skia,
-  useImage,
-} from '@shopify/react-native-skia';
+import { Canvas, Fill, Shader, Skia } from '@shopify/react-native-skia';
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import {
@@ -19,7 +11,6 @@ import {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-
 import { HARMONICS } from './backdropField';
 import { backdropScroll, backdropTouchX, backdropTouchY } from './backdropMotion';
 

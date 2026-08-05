@@ -1,7 +1,6 @@
 import { space } from '@chromawave/design-tokens';
 import { useRouter } from 'expo-router';
 import { StyleSheet } from 'react-native';
-
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { Button, EmptyGlyph, Gutter, Meta, Screen, ScreenHeader, Text } from '@/ui';
 

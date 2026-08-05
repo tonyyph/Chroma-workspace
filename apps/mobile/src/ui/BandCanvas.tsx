@@ -19,7 +19,6 @@ import {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-
 import { sine } from './BandField';
 
 /**

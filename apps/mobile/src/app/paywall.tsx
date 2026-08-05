@@ -1,6 +1,5 @@
 import type { PaywallTrigger } from '@chromawave/analytics';
 import { useLocalSearchParams } from 'expo-router';
-
 import { PaywallScreen } from '@/features/paywall/PaywallScreen';
 
 const TRIGGERS: readonly PaywallTrigger[] = [

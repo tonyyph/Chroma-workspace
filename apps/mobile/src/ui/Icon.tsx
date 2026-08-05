@@ -30,6 +30,17 @@ const GLYPHS = {
   explore: 'compass',
   sets: 'layers',
   profile: 'user',
+  /** The filter disclosure, and the chevron that closes what it opened. */
+  filter: 'sliders',
+  collapse: 'chevron-up',
+  expand: 'chevron-down',
+  trending: 'trending-up',
+  capture: 'camera',
+  pinned: 'bookmark',
+  activity: 'bell',
+  settings: 'settings',
+  retry: 'refresh-cw',
+  palette: 'droplet',
 } as const satisfies Record<string, React.ComponentProps<typeof Feather>['name']>;
 
 export type IconName = keyof typeof GLYPHS;

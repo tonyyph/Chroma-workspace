@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { LEGACY_KEYS, MmkvStorage } from './MmkvStorage';
 
 jest.mock('@react-native-async-storage/async-storage', () => {

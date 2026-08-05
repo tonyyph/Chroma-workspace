@@ -1,6 +1,5 @@
 import { ui } from '@chromawave/design-tokens';
 import { Tabs, useRouter } from 'expo-router';
-
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { TabBar, type TabKey } from '@/ui';
 
