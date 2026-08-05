@@ -11,7 +11,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { unreadActivityCount } from '@/features/tools/activity';
 import { usePalettes } from '@/hooks/usePalettes';
 import { useSets } from '@/hooks/useSets';
@@ -60,7 +60,7 @@ const EXPORT_TARGETS = exportTargetSchema.options;
  *     — where every tile is a way into the library rather than a read-out;
  *  3. what they keep coming back to, derived from the palettes themselves and
  *     tappable straight through to the library filtered by it;
- *  4. their collections and their recent captures;
+ *  4. their recent captures;
  *  5. and only then the controls, which have not changed behaviour at all.
  *
  * Depth is doing the hierarchy: the hero is behind, the identity card is glass
@@ -108,7 +108,7 @@ export function YouScreen() {
   };
 
   return (
-    <Screen tabBarInset>
+    <Screen tabBarInset topInset={false}>
       <SignatureHero palettes={palettes} />
 
       <Gutter style={styles.mosaic}>
@@ -134,54 +134,6 @@ export function YouScreen() {
       </Gutter>
 
       <TasteSection onPick={openLibrary} palettes={palettes} />
-
-      <Gutter style={styles.sectionHead}>
-        <SectionHead
-          action={sets.length ? t('you.seeAll') : undefined}
-          onAction={sets.length ? () => router.push('/sets') : undefined}
-          title={t('you.collections.title')}
-        />
-      </Gutter>
-      {sets.length ? (
-        <ScrollView
-          contentContainerStyle={styles.rail}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        >
-          {sets.map((set) => {
-            const members = set.paletteIds
-              .map((id) => palettes.find((palette) => palette.id === id))
-              .filter((palette): palette is Palette => palette !== undefined);
-            const strip = members.flatMap((palette) => palette.colors.slice(0, 2));
-            return (
-              <Card
-                accessibilityLabel={set.name}
-                key={set.id}
-                onPress={() => router.push(`/set/${set.id}`)}
-                style={styles.setCard}
-              >
-                {strip.length ? (
-                  <SwatchStrip colors={strip} height={40} radius={round.swatch} />
-                ) : (
-                  <View style={styles.setEmptyStrip} />
-                )}
-                <Text numberOfLines={1} variant="cardTitle">
-                  {set.name}
-                </Text>
-                <Meta style={styles.setMeta}>
-                  {t('you.collections.count', { count: set.paletteIds.length })}
-                </Meta>
-              </Card>
-            );
-          })}
-        </ScrollView>
-      ) : (
-        <Gutter style={styles.emptyBlock}>
-          <Text tone="secondary" variant="body">
-            {t('you.collections.empty')}
-          </Text>
-        </Gutter>
-      )}
 
       <Gutter style={styles.sectionHead}>
         <SectionHead
@@ -711,26 +663,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
 
-  rail: {
-    paddingHorizontal: space.gutter,
-    paddingTop: space.sm,
-    gap: 10,
-  },
-  setCard: {
-    width: 152,
-    gap: 6,
-  },
-  setEmptyStrip: {
-    height: 40,
-    borderRadius: round.swatch,
-    backgroundColor: ui.fill.track,
-  },
   setMeta: {
     fontSize: 9,
     letterSpacing: 1,
-  },
-  emptyBlock: {
-    paddingTop: space.sm,
   },
 
   recent: {

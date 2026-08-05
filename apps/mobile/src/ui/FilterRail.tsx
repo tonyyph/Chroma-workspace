@@ -163,6 +163,7 @@ const styles = StyleSheet.create({
   },
   panel: {
     marginHorizontal: space.gutter,
+    marginBottom: space.gutter,
     padding: space.cardGap,
     borderRadius: round.card,
     borderWidth: 1,

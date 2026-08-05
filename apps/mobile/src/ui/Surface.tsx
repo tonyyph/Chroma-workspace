@@ -246,6 +246,7 @@ export function CardGroup({
 export function Screen({
   children,
   scroll = true,
+  topInset = true,
   /** Extra bottom padding so content clears the floating tab bar. */
   tabBarInset = false,
   /**
@@ -259,6 +260,7 @@ export function Screen({
 }: {
   children: React.ReactNode;
   scroll?: boolean;
+  topInset?: boolean;
   tabBarInset?: boolean;
   refreshing?: boolean;
   onRefresh?: (() => void) | undefined;
@@ -267,6 +269,7 @@ export function Screen({
   const insets = useSafeAreaInsets();
   const { preferences } = usePreferences();
   const paddingBottom = tabBarInset ? size.tabBar + space.sectionGap * 2 : space.xl;
+  const paddingTop = topInset ? insets.top : 0;
   // The backdrop lives behind the navigator and supplies the ground itself, so
   // a screen that painted its own would hide it completely.
   const ground = preferences.ambientBackdrop ? styles.transparent : styles.ground;
@@ -279,11 +282,11 @@ export function Screen({
 
   if (!scroll) {
     return (
-      <View style={[styles.screen, ground, { paddingTop: insets.top }, style]}>{children}</View>
+      <View style={[styles.screen, ground, { paddingTop }, style]}>{children}</View>
     );
   }
   return (
-    <View style={[styles.screen, ground, { paddingTop: insets.top }]}>
+    <View style={[styles.screen, ground, { paddingTop }]}>
       <Animated.ScrollView
         contentContainerStyle={[{ paddingBottom: paddingBottom + insets.bottom }, style]}
         onScroll={onScroll}
