@@ -1,4 +1,3 @@
-import { themeModes, themePalettes, type ThemePalette } from '@chromawave/design-tokens';
 import {
   defaultUserPreferences,
   type ColorSpacePreference,
@@ -6,7 +5,6 @@ import {
   type Language,
   type NotificationPermission,
   type ReminderTime,
-  type ThemeId,
   type UserPreferences,
 } from '@chromawave/domain';
 import {
@@ -32,7 +30,6 @@ type PreferenceError = 'load' | 'save' | 'notification' | null;
 type PreferenceAction =
   | 'haptics'
   | 'language'
-  | 'theme'
   | 'notifications'
   | 'reminder'
   | 'colorSpace'
@@ -43,10 +40,15 @@ type PreferenceAction =
   | 'activity'
   | null;
 
+/**
+ * `colors` and `mode` used to sit here, carrying one of six theme palettes and
+ * whether it was light or dark. No screen ever read either: every primitive
+ * takes its colour from the `ui` tokens directly, and what the app does look
+ * like now comes from the palette in view rather than from a preset. They are
+ * gone along with the preference that fed them.
+ */
 type PreferencesContextValue = {
   preferences: UserPreferences;
-  colors: ThemePalette;
-  mode: 'light' | 'dark';
   hydrated: boolean;
   busyAction: PreferenceAction;
   error: PreferenceError;
@@ -54,7 +56,6 @@ type PreferencesContextValue = {
   t: (key: MessageKey, parameters?: Readonly<Record<string, string | number>>) => string;
   setHapticsEnabled: (enabled: boolean) => Promise<void>;
   setLanguage: (language: Language) => Promise<void>;
-  setTheme: (theme: ThemeId) => Promise<void>;
   setNotificationsEnabled: (enabled: boolean) => Promise<void>;
   setReminderTime: (time: ReminderTime) => Promise<void>;
   setColorSpace: (space: ColorSpacePreference) => Promise<void>;
@@ -76,8 +77,6 @@ const noop = async () => {};
 
 const defaultContextValue: PreferencesContextValue = {
   preferences: defaultUserPreferences,
-  colors: themePalettes[defaultUserPreferences.theme],
-  mode: themeModes[defaultUserPreferences.theme],
   hydrated: false,
   busyAction: null,
   error: null,
@@ -85,7 +84,6 @@ const defaultContextValue: PreferencesContextValue = {
   t: (key, parameters) => translate(defaultUserPreferences.language, key, parameters),
   setHapticsEnabled: noop,
   setLanguage: noop,
-  setTheme: noop,
   setNotificationsEnabled: noop,
   setReminderTime: noop,
   setColorSpace: noop,
@@ -222,16 +220,6 @@ export function PreferencesProvider({
       analytics.track('settings_language_changed', { language });
     },
     [preferences, save, scheduleFor],
-  );
-
-  const setTheme = useCallback(
-    async (theme: ThemeId) => {
-      const didSave = await save({ ...preferences, theme }, 'theme');
-      if (!didSave) return;
-      if (preferences.hapticsEnabled) await hapticsService.selection();
-      analytics.track('settings_theme_changed', { theme });
-    },
-    [preferences, save],
   );
 
   const setNotificationsEnabled = useCallback(
@@ -376,8 +364,6 @@ export function PreferencesProvider({
   const value = useMemo<PreferencesContextValue>(
     () => ({
       preferences,
-      colors: themePalettes[preferences.theme],
-      mode: themeModes[preferences.theme],
       hydrated,
       busyAction,
       error,
@@ -385,7 +371,6 @@ export function PreferencesProvider({
       t: (key, parameters) => translate(preferences.language, key, parameters),
       setHapticsEnabled,
       setLanguage,
-      setTheme,
       setNotificationsEnabled,
       setReminderTime,
       setColorSpace,
@@ -416,7 +401,6 @@ export function PreferencesProvider({
       setLanguage,
       setNotificationsEnabled,
       setReminderTime,
-      setTheme,
     ],
   );
 

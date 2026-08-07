@@ -4,7 +4,6 @@ import type {
   LibraryFilter,
   PaletteSource,
   ReminderTime,
-  ThemeId,
 } from '@chromawave/domain';
 
 /**
@@ -32,7 +31,6 @@ export type AnalyticsEventMap = {
   library_filter_changed: { filter: LibraryFilter };
   settings_haptics_changed: { enabled: boolean };
   settings_language_changed: { language: Language };
-  settings_theme_changed: { theme: ThemeId };
   /** `iconApplied` is false when the home screen swap was refused or unsupported. */
   settings_notifications_changed: {
     enabled: boolean;

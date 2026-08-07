@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  defaultUserPreferences,
-  reminderTimeSchema,
-  themeIdSchema,
-  userPreferencesSchema,
-} from './preferences';
+import { defaultUserPreferences, reminderTimeSchema, userPreferencesSchema } from './preferences';
 
 describe('UserPreferences', () => {
   it('defines a private, quiet default experience', () => {
@@ -16,7 +11,6 @@ describe('UserPreferences', () => {
       notificationIdentifier: null,
       reminderTime: '20:00',
       language: 'en',
-      theme: 'obsidian',
       colorSpace: 'srgb',
       soundEnabled: false,
       ambientBackdrop: true,
@@ -38,7 +32,6 @@ describe('UserPreferences', () => {
       notificationIdentifier: 'daily-reminder',
       reminderTime: '18:00',
       language: 'vi',
-      theme: 'moss',
     };
 
     const parsed = userPreferencesSchema.parse(storedBeforeTheSettingsRows);
@@ -50,12 +43,10 @@ describe('UserPreferences', () => {
     expect(parsed.onboardingCompleted).toBe(true);
     expect(parsed.activityReadAt).toBeNull();
     // The choices that were on disk survive rather than reverting to defaults.
-    expect(parsed.theme).toBe('moss');
     expect(parsed.hapticsEnabled).toBe(false);
   });
 
-  it('rejects unsupported themes, times, and partial persisted data', () => {
-    expect(themeIdSchema.safeParse('neon').success).toBe(false);
+  it('rejects unsupported times and partial persisted data', () => {
     expect(reminderTimeSchema.safeParse('25:00').success).toBe(false);
     expect(userPreferencesSchema.safeParse({ language: 'vi' }).success).toBe(false);
   });

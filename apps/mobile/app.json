@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/brand/ios/AppIcon.appiconset/icon-primary-1024.png",
     "scheme": "chromawave",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "ios": {
       "icon": {
         "light": "./assets/brand/ios/AppIcon.appiconset/icon-primary-1024.png",

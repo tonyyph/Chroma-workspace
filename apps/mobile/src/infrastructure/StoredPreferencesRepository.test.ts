@@ -29,7 +29,6 @@ describe('StoredPreferencesRepository', () => {
     const vietnameseIvory: UserPreferences = {
       ...defaultUserPreferences,
       language: 'vi',
-      theme: 'ivory',
       hapticsEnabled: false,
     };
     await repository.save(vietnameseIvory);
@@ -39,7 +38,7 @@ describe('StoredPreferencesRepository', () => {
 
   it('surfaces invalid persisted input without silently overwriting it', async () => {
     const storage = new PreferenceStorage();
-    await storage.setItem(PREFERENCES_STORAGE_KEY, '{"theme":"neon"}');
+    await storage.setItem(PREFERENCES_STORAGE_KEY, '{"language":"martian"}');
     const repository = new StoredPreferencesRepository(storage);
 
     await expect(repository.get()).rejects.toMatchObject<Partial<DomainError>>({

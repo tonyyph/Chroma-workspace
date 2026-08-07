@@ -6,14 +6,6 @@ import { z } from 'zod';
 import { colorSpaceSchema } from './palette';
 
 export const languageSchema = z.enum(['en', 'vi']);
-export const themeIdSchema = z.enum([
-  'obsidian',
-  'ivory',
-  'oxblood',
-  'cobalt',
-  'moss',
-  'aubergine',
-]);
 export const reminderTimeSchema = z.enum(['18:00', '20:00', '21:30']);
 
 /** Which target G7 opens on, so the format someone always uses is one tap away. */
@@ -26,7 +18,6 @@ export const userPreferencesSchema = z.object({
   notificationIdentifier: z.string().min(1).nullable(),
   reminderTime: reminderTimeSchema,
   language: languageSchema,
-  theme: themeIdSchema,
   // The three below arrived after v1 shipped. They carry defaults so a stored
   // record written before they existed still parses instead of being rejected
   // as invalid and throwing the user back to factory preferences.
@@ -62,7 +53,6 @@ export const defaultUserPreferences = userPreferencesSchema.parse({
   notificationIdentifier: null,
   reminderTime: '20:00',
   language: 'en',
-  theme: 'obsidian',
   colorSpace: 'srgb',
   soundEnabled: false,
   ambientBackdrop: true,
@@ -73,7 +63,6 @@ export const defaultUserPreferences = userPreferencesSchema.parse({
 
 export type Language = z.infer<typeof languageSchema>;
 export type ReminderTime = z.infer<typeof reminderTimeSchema>;
-export type ThemeId = z.infer<typeof themeIdSchema>;
 export type ColorSpacePreference = z.infer<typeof colorSpaceSchema>;
 export type ExportTarget = z.infer<typeof exportTargetSchema>;
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
