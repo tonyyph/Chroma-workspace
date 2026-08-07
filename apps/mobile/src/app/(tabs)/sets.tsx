@@ -1,28 +1,24 @@
-import { space } from '@chromawave/design-tokens';
-import { makeColor } from '@chromawave/domain';
+import { elevation, space, ui } from '@chromawave/design-tokens';
+import { paletteGaps, type PaletteSet } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { usePalettes } from '@/hooks/usePalettes';
 import { useSets } from '@/hooks/useSets';
 import { usePreferences } from '@/providers/PreferencesProvider';
-import {
-  Button,
-  Card,
-  EmptyGlyph,
-  Gutter,
-  Meta,
-  Screen,
-  ScreenHeader,
-  SwatchStrip,
-  Text,
-} from '@/ui';
+import { Button, Card, EmptyGlyph, Gutter, Meta, Screen, ScreenHeader, Text } from '@/ui';
 
-/** C3 entry · the list of collections. */
+/**
+ * C3 entry · the list of projects.
+ *
+ * Each row leads with the set's merged system rather than a 72pt strip of the
+ * first few colours it happens to hold, because the system is the thing the set
+ * produces and the strip was only ever evidence that it contained something. The
+ * open-gap count is the row's real signal: it is what makes one set worth
+ * opening today and another one finished.
+ */
 export default function SetsScreen() {
   const router = useRouter();
   const { t } = usePreferences();
   const { sets, refreshing, refresh } = useSets();
-  const { palettes } = usePalettes();
 
   // Nothing is written from here: the draft screen owns naming and saving, so a
   // set only ever reaches the list once someone has named it.
@@ -46,30 +42,9 @@ export default function SetsScreen() {
       ) : (
         <>
           <Gutter style={styles.rows}>
-            {sets.map((set) => {
-              const members = set.paletteIds
-                .map((id) => palettes.find((palette) => palette.id === id))
-                .filter(Boolean);
-              const strip = members.flatMap((palette) => palette!.colors.slice(0, 2));
-              return (
-                <Card key={set.id} onPress={() => router.push(`/set/${set.id}`)} style={styles.row}>
-                  <View style={styles.rowCopy}>
-                    <Text variant="cardTitle">{set.name}</Text>
-                    <Meta style={styles.rowMeta}>
-                      {t('collection.meta.private', { count: set.paletteIds.length })}
-                    </Meta>
-                  </View>
-                  {strip.length ? (
-                    <SwatchStrip
-                      colors={strip.length ? strip : [makeColor('#7C5CFF', 1)]}
-                      height={26}
-                      radius={8}
-                      style={styles.rowStrip}
-                    />
-                  ) : null}
-                </Card>
-              );
-            })}
+            {sets.map((set) => (
+              <ProjectRow key={set.id} onPress={() => router.push(`/set/${set.id}`)} set={set} />
+            ))}
           </Gutter>
           <Gutter style={styles.action}>
             <Button label={t('sets.create')} onPress={createSet} variant="secondary" />
@@ -80,14 +55,59 @@ export default function SetsScreen() {
   );
 }
 
+function ProjectRow({ set, onPress }: { set: PaletteSet; onPress: () => void }) {
+  const { t } = usePreferences();
+  const system = set.merged ?? [];
+  const gaps = paletteGaps(system);
+
+  return (
+    <Card accessibilityLabel={set.name} onPress={onPress} padded={false} style={styles.row}>
+      {/* The merged system at its true proportions, as the row's own ground. */}
+      {system.length ? (
+        <View accessibilityLabel={system.map((color) => color.hex).join(', ')} style={styles.band}>
+          {system.map((color) => (
+            <View key={color.hex} style={{ flex: color.weight, backgroundColor: color.hex }} />
+          ))}
+        </View>
+      ) : (
+        <View style={[styles.band, styles.bandEmpty]} />
+      )}
+
+      <View style={styles.rowCopy}>
+        <View style={styles.rowTitle}>
+          <Text style={styles.name} variant="cardTitle">
+            {set.name}
+          </Text>
+          {system.length ? (
+            <Meta tone={gaps.length ? 'tertiary' : 'info'}>
+              {gaps.length ? t('sets.openGaps', { count: gaps.length }) : t('sets.complete')}
+            </Meta>
+          ) : null}
+        </View>
+        <Meta style={styles.rowMeta}>
+          {t('collection.meta.private', { count: set.paletteIds.length })}
+        </Meta>
+      </View>
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
   head: { paddingTop: space.cardGap },
   body: { alignItems: 'center', gap: space.md, paddingTop: space.xl },
   copy: { textAlign: 'center' },
-  rows: { paddingTop: space.md, gap: 10 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  rowCopy: { flex: 1, gap: 3 },
+  rows: { paddingTop: space.md, gap: space.cardGap },
+  row: { overflow: 'hidden' },
+  band: {
+    flexDirection: 'row',
+    height: 76,
+    borderBottomWidth: 1,
+    borderBottomColor: elevation.raised.borderColor,
+  },
+  bandEmpty: { backgroundColor: ui.bg.media },
+  rowCopy: { padding: space.cardGap, gap: 3 },
+  rowTitle: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  name: { flex: 1 },
   rowMeta: { fontSize: 9, letterSpacing: 1 },
-  rowStrip: { width: 72 },
   action: { paddingTop: space.gutter },
 });

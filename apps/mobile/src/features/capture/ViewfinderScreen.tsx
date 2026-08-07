@@ -60,7 +60,7 @@ const RATIOS = [
  * and the extractor runs on that, so the strip below shows the actual colours in
  * front of the lens. The 620ms scan sweep is the Skia layer the kit specifies.
  */
-export function ViewfinderScreen() {
+export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -127,9 +127,10 @@ export function ViewfinderScreen() {
       deltaE: outcome.result.deltaE,
       confidence: outcome.result.confidence,
       source: 'photo',
+      setId,
     });
     router.push('/capture/result');
-  }, [begin, capturing, latest, readDone, router, sequenceDone]);
+  }, [begin, capturing, latest, readDone, router, sequenceDone, setId]);
 
   const shoot = useCallback(async () => {
     void hapticsService.fire('shutterPress');

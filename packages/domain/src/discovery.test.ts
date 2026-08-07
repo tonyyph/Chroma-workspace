@@ -6,11 +6,16 @@ import {
   colorSignature,
   dedupeById,
   emptyQuery,
+  gapKinds,
+  gapThresholds,
   matchesMood,
   matchesStyle,
   moodsOf,
+  moodThresholds,
   ownedSignatureIndex,
+  paletteGaps,
   queryPalettes,
+  styleThresholds,
   stylesOf,
   toggleIn,
 } from './discovery';
@@ -265,5 +270,84 @@ describe('deduplication', () => {
     const later = palette('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
     const owned = ownedSignatureIndex([{ id: 'feed', colors: base.colors }], [base, later]);
     expect(owned.get('feed')).toBe(base.id);
+  });
+});
+
+describe('paletteGaps', () => {
+  const kinds = (colors: Parameters<typeof paletteGaps>[0]) =>
+    paletteGaps(colors).map((gap) => gap.kind);
+
+  it('reports nothing for no colours rather than three gaps', () => {
+    expect(paletteGaps([])).toEqual([]);
+  });
+
+  it('finds no gap in a system that has range, an accent and a legal pairing', () => {
+    // Near-black to near-white carries its own contrast; the cyan is the accent.
+    expect(
+      kinds([
+        makeColor('#0C0B18', 0.5, 'dominant'),
+        makeColor('#EDEAE3', 0.3, 'support'),
+        makeColor('#22D3EE', 0.2, 'signal'),
+      ]),
+    ).toEqual([]);
+  });
+
+  it('reports a missing signal when nothing is saturated enough to be an accent', () => {
+    const greys = [
+      makeColor('#1A1A1A', 0.4, 'dominant'),
+      makeColor('#8A8A8A', 0.3, 'support'),
+      makeColor('#F0F0F0', 0.3, 'signal'),
+    ];
+    expect(kinds(greys)).toContain('missing-signal');
+    // …but greys spanning black to white are not short of range or pairings.
+    expect(kinds(greys)).not.toContain('narrow-lightness');
+    expect(kinds(greys)).not.toContain('no-safe-pairing');
+  });
+
+  it('uses peak chroma, so one accent among muted colours is not a missing signal', () => {
+    expect(
+      kinds([
+        makeColor('#1A1A1A', 0.4, 'dominant'),
+        makeColor('#8A8A8A', 0.3, 'support'),
+        makeColor('#FF3B00', 0.3, 'signal'),
+      ]),
+    ).not.toContain('missing-signal');
+  });
+
+  it('reports narrow lightness when every colour sits at the same level', () => {
+    expect(
+      kinds([
+        makeColor('#7C5CFF', 0.4, 'dominant'),
+        makeColor('#5C7CFF', 0.3, 'support'),
+        makeColor('#5CFF7C', 0.3, 'signal'),
+      ]),
+    ).toContain('narrow-lightness');
+  });
+
+  it('reports no safe pairing when no two members clear AA', () => {
+    const gaps = paletteGaps([
+      makeColor('#7C5CFF', 0.5, 'dominant'),
+      makeColor('#8F73FF', 0.5, 'support'),
+    ]);
+    expect(gaps.map((gap) => gap.kind)).toContain('no-safe-pairing');
+    expect(gaps.find((gap) => gap.kind === 'no-safe-pairing')?.threshold).toBe(
+      gapThresholds.contrastAA,
+    );
+  });
+
+  it('treats a single colour as having no pairing at all', () => {
+    const gaps = paletteGaps([makeColor('#7C5CFF', 1, 'dominant')]);
+    expect(gaps.map((gap) => gap.kind)).toContain('no-safe-pairing');
+    expect(gaps.find((gap) => gap.kind === 'no-safe-pairing')?.measured).toBe(1);
+  });
+
+  it('reports gaps in a stable order so the screen does not reshuffle', () => {
+    const gaps = kinds([makeColor('#7C5CFF', 1, 'dominant')]);
+    expect(gaps).toEqual(gapKinds.filter((kind) => gaps.includes(kind)));
+  });
+
+  it('borrows its thresholds from the vocabulary the filters already use', () => {
+    expect(gapThresholds.signalChroma).toBe(moodThresholds.vibrantChroma);
+    expect(gapThresholds.lightnessRange).toBe(styleThresholds.editorialLightnessRange);
   });
 });

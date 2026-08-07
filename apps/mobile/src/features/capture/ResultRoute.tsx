@@ -2,6 +2,7 @@ import { makeColor, type Palette } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { usePalettes } from '@/hooks/usePalettes';
+import { useSets } from '@/hooks/useSets';
 import { analytics, hapticsService, soundService } from '@/infrastructure/dependencies';
 import { persistPhoto } from '@/lib/photos';
 import { usePreferences } from '@/providers/PreferencesProvider';
@@ -18,8 +19,10 @@ import { TuneScreen } from './TuneScreen';
 export default function ResultRoute() {
   const router = useRouter();
   const { save } = usePalettes();
+  const { sets, save: saveSet } = useSets();
   const { t } = usePreferences();
   const pending = useCaptureStore((state) => state.pending);
+  const setId = useCaptureStore((state) => state.pending?.setId ?? null);
   const retune = useCaptureStore((state) => state.retune);
   const discard = useCaptureStore((state) => state.discard);
   const toPalette = useCaptureStore((state) => state.toPalette);
@@ -43,13 +46,37 @@ export default function ResultRoute() {
       // whose photos have quietly vanished.
       const palette = { ...draft, photoUri: persistPhoto(draft.photoUri, draft.id) };
       await save(palette);
+
+      /**
+       * A capture started from a project belongs to it. Membership is written
+       * here rather than left for the user to do afterwards, because the whole
+       * point of the gap line is that answering it closes the gap — a palette
+       * that silently missed its set would leave the same sentence on screen.
+       */
+      const target = setId ? (sets.find((entry) => entry.id === setId) ?? null) : null;
+      if (target && !target.paletteIds.includes(palette.id)) {
+        try {
+          await saveSet({
+            ...target,
+            paletteIds: [...target.paletteIds, palette.id],
+            updatedAt: new Date().toISOString(),
+          });
+        } catch {
+          // The palette is saved and carries the set id on its own record, so
+          // nothing was lost — only the set's list missed this write.
+        }
+      }
+
       void hapticsService.fire('paletteSaved');
       void soundService.play('save');
       analytics.track('palette_saved', { tuned: palette.tuned, source: palette.source });
       discard();
-      router.replace(`/palette/${palette.id}`);
+      // Back to the project when there is one: the merged band re-proportioning
+      // to include this capture is the result of the action, and landing on the
+      // palette detail instead would hide it.
+      router.replace(target ? `/set/${target.id}` : `/palette/${palette.id}`);
     },
-    [toPalette, save, discard, router],
+    [toPalette, save, sets, saveSet, setId, discard, router],
   );
 
   if (!pending || !draft) {

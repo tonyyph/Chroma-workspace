@@ -21,11 +21,22 @@ type PendingCapture = {
   deltaE: number;
   confidence: number;
   source: PaletteSource;
+  /**
+   * The project this capture was started from, when it was started from one.
+   *
+   * A capture opened from a set's gap line exists *because* of that set, so the
+   * id rides along with the pending capture and the save writes membership
+   * without the user having to add the palette to the set afterwards.
+   */
+  setId: string | null;
 };
+
+/** Every capture path but the scoped one leaves `setId` off entirely. */
+type BeginInput = Omit<PendingCapture, 'setId'> & { setId?: string | null };
 
 type CaptureState = {
   pending: PendingCapture | null;
-  begin: (capture: PendingCapture) => void;
+  begin: (capture: BeginInput) => void;
   /** Replaces the colours after a tune, keeping the frame and the read metrics. */
   retune: (colors: readonly Color[]) => void;
   discard: () => void;
@@ -36,7 +47,7 @@ type CaptureState = {
 export const useCaptureStore = create<CaptureState>((set, get) => ({
   pending: null,
 
-  begin: (capture) => set({ pending: capture }),
+  begin: (capture) => set({ pending: { ...capture, setId: capture.setId ?? null } }),
 
   retune: (colors) =>
     set((state) => (state.pending ? { pending: { ...state.pending, colors } } : state)),
@@ -67,7 +78,9 @@ export const useCaptureStore = create<CaptureState>((set, get) => ({
       confidence: Math.min(1, Math.max(0, pending.confidence)),
       space: 'srgb' as const,
       tuned: false,
-      setIds: [],
+      // The set's own `paletteIds` stays authoritative for membership; this is
+      // the palette's record of which project it was captured for.
+      setIds: pending.setId ? [pending.setId] : [],
       isPinned: false,
     };
 

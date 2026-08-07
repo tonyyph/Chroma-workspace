@@ -33,14 +33,16 @@ export default function SetRoute() {
 
   return (
     <CollectionScreen
-      isPro={false}
       onBack={router.back}
+      // The capture is scoped to this set, so saving it writes membership and
+      // comes back here rather than stranding the user on a palette detail.
+      onCaptureForGap={() => router.push(`/capture?setId=${set.id}`)}
       onDelete={() => {
         void removeSet(set.id)
           .then(() => router.back())
           .catch(() => undefined);
       }}
-      onMerge={() => router.push('/paywall?trigger=merge-set')}
+      onOpenPalette={(paletteId) => router.push(`/palette/${paletteId}`)}
       onRemovePalette={(paletteId) => {
         void update({ ...set, paletteIds: set.paletteIds.filter((entry) => entry !== paletteId) });
       }}

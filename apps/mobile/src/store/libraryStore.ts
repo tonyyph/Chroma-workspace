@@ -1,4 +1,4 @@
-import { dedupeById, type Palette, type PaletteSet } from '@chromawave/domain';
+import { dedupeById, mergePalettes, type Palette, type PaletteSet } from '@chromawave/domain';
 import { create } from 'zustand';
 import { paletteRepository, setRepository } from '@/infrastructure/dependencies';
 
@@ -63,6 +63,49 @@ async function readAll() {
   return { palettes: dedupeById(palettes), sets: dedupeById(sets) };
 }
 
+/**
+ * A set's merged system, recomputed from whatever it currently holds.
+ *
+ * Stored rather than derived at render time because the Sets tab draws a band
+ * for every set it lists, and merging is a ΔE00 comparison of every colour
+ * against every colour — work that has no business happening inside a list row
+ * on every scroll. It is written on the two events that can invalidate it, which
+ * is far rarer than it is read.
+ */
+function withMerged(paletteSet: PaletteSet, palettes: readonly Palette[]): PaletteSet {
+  const members = palettes.filter((palette) => paletteSet.paletteIds.includes(palette.id));
+  return { ...paletteSet, merged: members.length ? mergePalettes(members) : null };
+}
+
+/** Rewrites every set holding `paletteId`, optionally dropping it from them. */
+async function rewriteSets(
+  sets: readonly PaletteSet[],
+  paletteId: string,
+  palettes: readonly Palette[],
+  options: { drop?: boolean } = {},
+): Promise<void> {
+  const affected = sets.filter((entry) => entry.paletteIds.includes(paletteId));
+  if (affected.length === 0) return;
+
+  const updatedAt = new Date().toISOString();
+  await Promise.all(
+    affected.map((entry) =>
+      setRepository.save(
+        withMerged(
+          options.drop
+            ? {
+                ...entry,
+                paletteIds: entry.paletteIds.filter((id) => id !== paletteId),
+                updatedAt,
+              }
+            : entry,
+          palettes,
+        ),
+      ),
+    ),
+  );
+}
+
 export const useLibraryStore = create<LibraryState>((set, get) => ({
   palettes: [],
   sets: [],
@@ -121,16 +164,23 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
 
   savePalette: async (palette) => {
     await paletteRepository.save(palette);
+    // Retuning a palette changes the colours every set holding it was merged
+    // from, so their systems are rewritten with it.
+    await rewriteSets(get().sets, palette.id, await paletteRepository.list());
     set(await readAll());
   },
 
   removePalette: async (id) => {
     await paletteRepository.remove(id);
+    // A set that held it still lists its id and still carries a merged system
+    // computed with its colours in. Both have to go, or the set keeps showing a
+    // band from a palette that no longer exists.
+    await rewriteSets(get().sets, id, await paletteRepository.list(), { drop: true });
     set(await readAll());
   },
 
   saveSet: async (paletteSet) => {
-    await setRepository.save(paletteSet);
+    await setRepository.save(withMerged(paletteSet, get().palettes));
     set(await readAll());
   },
 

@@ -1,13 +1,20 @@
-import { round, space, ui } from '@chromawave/design-tokens';
-import type { Palette, PaletteSet } from '@chromawave/domain';
+import { elevation, round, space, ui } from '@chromawave/design-tokens';
+import {
+  contrastRatio,
+  paletteGaps,
+  type Color,
+  type Palette,
+  type PaletteSet,
+} from '@chromawave/domain';
 import * as Clipboard from 'expo-clipboard';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import { PalettePhoto } from '@/features/library/PalettePhoto';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import {
+  Button,
   Card,
   Chip,
   ConfirmSheet,
@@ -19,32 +26,47 @@ import {
   Pressable,
   PromptSheet,
   Screen,
-  SwatchStrip,
   Text,
 } from '@/ui';
 
 /**
- * C3 · COLLECTION · "shared set, merge is the Pro hook".
+ * C3 · COLLECTION — the set as a working system rather than a folder.
  *
- * `members` beyond the owner and the "ADDED BY" attribution come from the set's
- * own record. In a local-first build the owner is the only member, so the
- * attribution reads "ADDED BY YOU" until a sync backend exists.
+ * **What changed and why.** This screen used to be a list of rows with a locked
+ * "MERGED SET · PRO" teaser stapled to the bottom. Everything on it described
+ * what the set *contained*; nothing said what the set could be *used for*, and
+ * the one thing that would have — the merged palette — was a picture of a
+ * feature rather than the feature.
+ *
+ * A set of twenty captures of the same kitchen is not twenty palettes. It is one
+ * palette measured twenty times. So the merged system is computed on every
+ * membership change (`libraryStore`) and leads the screen:
+ *
+ *  1. the system itself, full width, at the proportions the merge actually
+ *     produced — not a strip of equal chips;
+ *  2. what it can and cannot do, as real rendered pairings rather than a matrix
+ *     of numbers, because "these two can hold text" is a thing to be shown;
+ *  3. the one gap worth answering, with the one action that answers it;
+ *  4. and only then the members, which are the raw material, not the product.
+ *
+ * The merge is no longer a Pro teaser. Selling a locked picture of a palette the
+ * app could compute for free was the weakest thing on this screen.
  */
 export function CollectionScreen({
   set,
   palettes,
-  isPro,
   onBack,
-  onMerge,
+  onCaptureForGap,
+  onOpenPalette,
   onRename,
   onRemovePalette,
   onDelete,
 }: {
   set: PaletteSet;
   palettes: readonly Palette[];
-  isPro: boolean;
   onBack: () => void;
-  onMerge: () => void;
+  onCaptureForGap: () => void;
+  onOpenPalette: (paletteId: string) => void;
   onRename: (name: string) => void;
   onRemovePalette: (paletteId: string) => void;
   onDelete: () => void;
@@ -55,6 +77,14 @@ export function CollectionScreen({
   const [renaming, setRenaming] = useState(false);
   const [inviteNoticeOpen, setInviteNoticeOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  // Memoised because the `?? []` fallback is a fresh array on every render, and
+  // an unstable identity here would re-run the gap analysis — and re-render the
+  // pairings — on every keystroke in the rename sheet.
+  const system = useMemo(() => set.merged ?? [], [set.merged]);
+  // Only the first gap is shown. Three sentences of criticism about someone's
+  // own work reads as a scolding; one reads as a next step.
+  const gap = useMemo(() => paletteGaps(system)[0] ?? null, [system]);
 
   /**
    * Exporting a set is the palettes it holds, as one CSS block namespaced per
@@ -103,27 +133,100 @@ export function CollectionScreen({
         </Meta>
       </Gutter>
 
-      {editing ? (
-        <Gutter style={styles.actions}>
-          <Chip fill label={t('collection.rename')} onPress={() => setRenaming(true)} />
-          <Chip
-            fill
-            label={t('collection.deleteSet')}
-            onPress={() => setDeleteConfirmOpen(true)}
-            tone="danger"
-          />
+      {/* The system, at the proportions the merge produced. Adding a member
+          re-weights these bands, and the layout transition is what makes that
+          legible as a consequence of the capture rather than a new screen. */}
+      <Gutter style={styles.systemWrap}>
+        <Text style={styles.eyebrow} tone="tertiary" variant="eyebrow">
+          {t('collection.system')}
+        </Text>
+        {system.length ? (
+          <>
+            <Animated.View
+              accessibilityLabel={system.map((color) => color.hex).join(', ')}
+              layout={LinearTransition.duration(320)}
+              style={styles.system}
+            >
+              {system.map((color) => (
+                <Animated.View
+                  key={color.hex}
+                  layout={LinearTransition.duration(320)}
+                  style={{ flex: color.weight, backgroundColor: color.hex }}
+                />
+              ))}
+            </Animated.View>
+            <Meta style={styles.systemMeta}>
+              {t('collection.system.meta', { count: palettes.length })}
+            </Meta>
+          </>
+        ) : (
+          <Card style={styles.systemEmpty}>
+            <Text tone="secondary" variant="body">
+              {t('collection.system.empty')}
+            </Text>
+          </Card>
+        )}
+      </Gutter>
+
+      {/* One sentence, one action. A gap the user disagrees with is worse than
+          no gap at all, so only the three measurable ones are ever raised. */}
+      {system.length ? (
+        <Gutter style={styles.gapWrap}>
+          {gap ? (
+            <Card style={styles.gap}>
+              <Text style={styles.gapCopy} tone="secondary" variant="body">
+                {t(`collection.gap.${gap.kind}`)}
+              </Text>
+              <Button
+                label={t('collection.gap.action')}
+                onPress={onCaptureForGap}
+                size="xs"
+                variant="secondary"
+              />
+            </Card>
+          ) : (
+            <Meta tone="info">{t('collection.gap.none')}</Meta>
+          )}
         </Gutter>
-      ) : (
-        <Gutter style={styles.actions}>
-          <Chip fill label={t('collection.mergeAll')} onPress={onMerge} tone="pro" />
-          <Chip fill label={t('collection.exportSet')} onPress={exportSet} />
-          <Chip fill label={t('collection.invite')} onPress={invite} />
-        </Gutter>
-      )}
+      ) : null}
+
+      {system.length > 1 ? <Pairings colors={system} /> : null}
+
+      <Gutter style={styles.actions}>
+        {editing ? (
+          <>
+            <Chip fill label={t('collection.rename')} onPress={() => setRenaming(true)} />
+            <Chip
+              fill
+              label={t('collection.deleteSet')}
+              onPress={() => setDeleteConfirmOpen(true)}
+              tone="danger"
+            />
+          </>
+        ) : (
+          <>
+            <Chip fill label={t('collection.exportSet')} onPress={exportSet} />
+            <Chip fill label={t('collection.invite')} onPress={invite} />
+          </>
+        )}
+      </Gutter>
+
+      <Gutter style={styles.membersHead}>
+        <Text tone="tertiary" variant="eyebrow">
+          {t('collection.members')}
+        </Text>
+      </Gutter>
 
       <Gutter style={styles.rows}>
         {palettes.map((palette) => (
-          <Card key={palette.id} style={styles.row}>
+          <Card
+            accessibilityLabel={palette.name}
+            key={palette.id}
+            // While editing, the row's job is the remove button beside it — a
+            // tap that navigated away mid-edit would be a trap.
+            {...(editing ? {} : { onPress: () => onOpenPalette(palette.id) })}
+            style={styles.row}
+          >
             <PalettePhoto palette={palette} style={styles.rowThumb} />
             <View style={styles.rowCopy}>
               <Text variant="cardTitle">{palette.name}</Text>
@@ -139,39 +242,9 @@ export function CollectionScreen({
               >
                 <Icon color={ui.status.dangerText} name="remove" scale="inline" />
               </Pressable>
-            ) : (
-              <SwatchStrip
-                colors={palette.colors.slice(0, 3)}
-                height={26}
-                radius={8}
-                style={styles.rowStrip}
-              />
-            )}
+            ) : null}
           </Card>
         ))}
-      </Gutter>
-
-      {/* The merged strip is the Pro hook — shown locked rather than hidden. */}
-      <Gutter style={styles.mergedWrap}>
-        <LinearGradient
-          colors={['rgba(124,92,255,.16)', 'rgba(34,211,238,.05)']}
-          end={{ x: 1, y: 1 }}
-          start={{ x: 0, y: 0 }}
-          style={styles.merged}
-        >
-          <Text style={styles.mergedLabel} variant="eyebrow">
-            {t(isPro ? 'collection.merged' : 'collection.mergedLocked')}
-          </Text>
-          {set.merged?.length ? (
-            <SwatchStrip colors={set.merged} height={52} radius={12} />
-          ) : (
-            <View style={styles.mergedEmpty}>
-              <Text tone="secondary" variant="body">
-                {t(isPro ? 'collection.mergedBody' : 'collection.mergedLockedBody')}
-              </Text>
-            </View>
-          )}
-        </LinearGradient>
       </Gutter>
 
       <PromptSheet
@@ -204,15 +277,115 @@ export function CollectionScreen({
   );
 }
 
+/** WCAG 2.2 AA for normal text — the bar the contrast tool reports against. */
+const AA = 4.5;
+
+/**
+ * What the system can actually do, shown rather than tabulated.
+ *
+ * A 5×5 matrix of ratios is 25 cells of arithmetic on a phone, and it answers a
+ * question nobody asks. The question people have is "can I put text on this
+ * one" — so each row *is* the pairing, rendered: the colour as ground, its
+ * strongest partner as the type standing on it, and the ratio as the evidence.
+ * A row that fails still renders, because seeing why it fails is the point.
+ */
+function Pairings({ colors }: { colors: readonly Color[] }) {
+  const { t } = usePreferences();
+
+  const rows = useMemo(
+    () =>
+      colors.map((background) => {
+        let best = colors[0]!;
+        let ratio = 0;
+        for (const candidate of colors) {
+          if (candidate.hex === background.hex) continue;
+          const value = contrastRatio(candidate.hex, background.hex);
+          if (value > ratio) {
+            ratio = value;
+            best = candidate;
+          }
+        }
+        return { background, foreground: best, ratio: Math.round(ratio * 10) / 10 };
+      }),
+    [colors],
+  );
+
+  return (
+    <>
+      <Gutter style={styles.membersHead}>
+        <Text tone="tertiary" variant="eyebrow">
+          {t('collection.pairings')}
+        </Text>
+      </Gutter>
+      <Gutter style={styles.pairings}>
+        {rows.map((row) => (
+          <View
+            accessibilityLabel={t('collection.pairingLabel', {
+              hex: row.foreground.hex,
+              background: row.background.hex,
+              ratio: row.ratio,
+            })}
+            key={row.background.hex}
+            style={[styles.pairing, { backgroundColor: row.background.hex }]}
+          >
+            <Text style={[styles.pairingSample, { color: row.foreground.hex }]} variant="section">
+              {t('collection.pairingSample')}
+            </Text>
+            <View style={styles.pairingMeta}>
+              {/* The verdict is the ratio and the tone of the pill, never colour
+                  alone — the swatch behind it is arbitrary by definition. */}
+              <View style={[styles.ratio, row.ratio >= AA ? styles.ratioPass : styles.ratioFail]}>
+                <Text style={styles.ratioText} variant="chip">
+                  {t('collection.pairingRatio', { ratio: row.ratio })}
+                </Text>
+              </View>
+            </View>
+          </View>
+        ))}
+      </Gutter>
+    </>
+  );
+}
+
 const styles = StyleSheet.create({
   head: { paddingTop: space.md, gap: space.xs },
-  actions: { paddingTop: space.md + 2, flexDirection: 'row', gap: space.xs },
-  rows: { paddingTop: space.md + 2, gap: 10 },
+  eyebrow: { paddingBottom: space.xs },
+  systemWrap: { paddingTop: space.sectionGap },
+  system: {
+    flexDirection: 'row',
+    height: 132,
+    borderRadius: round.media,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: elevation.raised.borderColor,
+  },
+  systemMeta: { paddingTop: space.xs, color: ui.text.tertiary },
+  systemEmpty: { gap: space.xs },
+  gapWrap: { paddingTop: space.cardGap },
+  gap: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  gapCopy: { flex: 1 },
+  actions: { paddingTop: space.sectionGap, flexDirection: 'row', gap: space.xs },
+  membersHead: { paddingTop: space.sectionGap },
+  pairings: { paddingTop: space.xs, gap: 6 },
+  pairing: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
+    borderRadius: round.control,
+  },
+  pairingSample: { letterSpacing: 0 },
+  pairingMeta: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  ratio: { borderRadius: round.full, paddingHorizontal: 9, paddingVertical: 4 },
+  ratioPass: { backgroundColor: ui.scrim.strong },
+  ratioFail: { backgroundColor: ui.scrim.strong, borderWidth: 1, borderColor: ui.status.danger },
+  ratioText: { color: ui.text.primary },
+  rows: { paddingTop: space.xs, gap: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.sm },
   rowThumb: { width: 44, height: 44, borderRadius: round.control, backgroundColor: ui.bg.media },
   rowCopy: { flex: 1, gap: 3 },
   rowMeta: { fontSize: 9, letterSpacing: 1 },
-  rowStrip: { width: 60 },
   remove: {
     width: 32,
     height: 32,
@@ -221,14 +394,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(255,107,90,.16)',
   },
-  mergedWrap: { paddingTop: space.sectionGap },
-  merged: {
-    borderRadius: round.card,
-    borderWidth: 1,
-    borderColor: 'rgba(124,92,255,.3)',
-    padding: space.md,
-    gap: space.xs,
-  },
-  mergedLabel: { color: '#B79CFF' },
-  mergedEmpty: { paddingVertical: space.xs },
 });

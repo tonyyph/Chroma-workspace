@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { hexToRgb, rgbToHex, rgbToOklch } from './color';
+import { hexDeltaE00, hexToRgb, rgbToHex, rgbToOklch } from './color';
 
 /**
  * The palette — the entity this product is built around.
@@ -251,6 +251,66 @@ export function filterPalettes(
       return palettes;
   }
 }
+
+/* ------------------------------------------------------------------- merge */
+
+/** Colours closer than this count as the same colour. ΔE00 5 is "close, but
+ * a designer would still pick one of the two" — twice the just-noticeable
+ * difference `readStability` treats as stable. */
+export const SAME_COLOUR_DELTA_E = 5;
+
+/** The strip is a system, not an inventory. Five is what `Color`'s roles cover. */
+export const MERGED_COLOR_LIMIT = 5;
+
+/**
+ * The colours a group of palettes have in common, as one weighted system.
+ *
+ * This is what a `Set` is *for*: twenty captures of the same kitchen are not
+ * twenty palettes, they are one palette measured twenty times. ΔE00 decides what
+ * is genuinely distinct — the same measure the compare matrix reports — and
+ * everything that survives is renormalised, because dropping colours leaves the
+ * weights summing to less than one.
+ *
+ * **Near-duplicates accumulate rather than being discarded.** A colour present in
+ * every member is the set's real dominant even when no single capture gave it a
+ * large share, so a match adds its weight to the colour already kept instead of
+ * being dropped. The two-palette version this replaces kept whichever colour it
+ * saw *first* and threw the other away, which meant the merge depended on the
+ * order the palettes happened to be in.
+ */
+export function mergePalettes(palettes: readonly Palette[]): Color[] {
+  const kept: { hex: string; weight: number }[] = [];
+
+  for (const palette of palettes) {
+    for (const color of palette.colors) {
+      const existing = kept.find(
+        (entry) => hexDeltaE00(entry.hex, color.hex) < SAME_COLOUR_DELTA_E,
+      );
+      if (existing) {
+        existing.weight += color.weight;
+        continue;
+      }
+      kept.push({ hex: color.hex, weight: color.weight });
+    }
+  }
+
+  const top = kept.sort((a, b) => b.weight - a.weight).slice(0, MERGED_COLOR_LIMIT);
+  const total = top.reduce((sum, entry) => sum + entry.weight, 0) || 1;
+  const roles = ['dominant', 'support', 'signal'] as const;
+  const merged = top.map((entry, index) =>
+    makeColor(entry.hex, round3(entry.weight / total), roles[index] ?? 'extra'),
+  );
+
+  // Rounding leaves a remainder; push it onto the dominant so weights sum to one.
+  const drift = 1 - merged.reduce((sum, color) => sum + color.weight, 0);
+  const dominant = merged[0];
+  if (dominant) {
+    merged[0] = { ...dominant, weight: round3(dominant.weight + drift) };
+  }
+  return merged;
+}
+
+const round3 = (value: number) => Math.round(value * 1000) / 1000;
 
 /** "5 COLOURS · 2D" — the compact age used on library cards. */
 export function shortAge(iso: string, now: Date = new Date()): string {

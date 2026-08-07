@@ -138,10 +138,10 @@ const cases: readonly [string, () => ReactElement][] = [
     'Collection',
     () => (
       <CollectionScreen
-        isPro={false}
         onBack={jest.fn()}
+        onCaptureForGap={jest.fn()}
         onDelete={jest.fn()}
-        onMerge={jest.fn()}
+        onOpenPalette={jest.fn()}
         onRemovePalette={jest.fn()}
         onRename={jest.fn()}
         palettes={[palette()]}

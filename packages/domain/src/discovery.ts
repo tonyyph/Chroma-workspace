@@ -1,3 +1,4 @@
+import { contrastRatio } from './color';
 import { filterPalettes, isWarmHue, type Color, type LibraryFilter, type Palette } from './palette';
 
 /**
@@ -217,6 +218,101 @@ function inHueBand(hue: number, band: { from: number; to: number }): boolean {
 export function stylesOf(colors: readonly Color[]): readonly VisualStyle[] {
   return visualStyles.filter((style) => matchesStyle(colors, style));
 }
+
+/* --------------------------------------------------------------------- gaps */
+
+/**
+ * What a set of colours cannot yet do.
+ *
+ * A merged set is a working system, and a system is judged by what it can be
+ * *used* for rather than by how it looks. These are the three failures that stop
+ * one being usable, and each is measurable — no taste is being asserted:
+ *
+ *  · nothing saturated enough to act as an accent;
+ *  · not enough range between lightest and darkest to carry its own contrast;
+ *  · no pair of members that can legally sit on top of each other as text.
+ *
+ * Deliberately only three. A longer list would need thresholds that cannot be
+ * defended from the metrics, and a gap the user disagrees with is worse than no
+ * gap at all — it is the app being wrong about their work.
+ */
+export const gapKinds = ['missing-signal', 'narrow-lightness', 'no-safe-pairing'] as const;
+export type GapKind = (typeof gapKinds)[number];
+
+export type Gap = Readonly<{
+  kind: GapKind;
+  /** Where the set stands now, so the copy can name the number. */
+  measured: number;
+  /** What it has to reach to close. */
+  threshold: number;
+}>;
+
+/**
+ * Borrowed rather than invented. A set has no signal colour when nothing in it
+ * would count as `vibrant`, and no range when it falls short of the paper-and-ink
+ * jump `editorial` is defined by — so the gaps speak the vocabulary the filter
+ * rail already taught the user, instead of introducing a second set of numbers
+ * that mean almost but not quite the same thing.
+ */
+export const gapThresholds = {
+  signalChroma: moodThresholds.vibrantChroma,
+  lightnessRange: styleThresholds.editorialLightnessRange,
+  /** WCAG 2.2 AA for normal text — the same bar the contrast tool reports. */
+  contrastAA: 4.5,
+} as const;
+
+export function paletteGaps(colors: readonly Color[]): readonly Gap[] {
+  if (colors.length === 0) return [];
+  const gaps: Gap[] = [];
+
+  // Peak, not mean: one strong accent among five muted colours is a signal, and
+  // averaging would report the set as having none.
+  const peakChroma = Math.max(...colors.map((color) => color.oklch.chroma));
+  if (peakChroma < gapThresholds.signalChroma) {
+    gaps.push({
+      kind: 'missing-signal',
+      measured: round2(peakChroma),
+      threshold: gapThresholds.signalChroma,
+    });
+  }
+
+  const { lightnessRange } = colorMetrics(colors);
+  if (lightnessRange < gapThresholds.lightnessRange) {
+    gaps.push({
+      kind: 'narrow-lightness',
+      measured: round2(lightnessRange),
+      threshold: gapThresholds.lightnessRange,
+    });
+  }
+
+  const best = bestPairContrast(colors);
+  if (best < gapThresholds.contrastAA) {
+    gaps.push({
+      kind: 'no-safe-pairing',
+      measured: round2(best),
+      threshold: gapThresholds.contrastAA,
+    });
+  }
+
+  return gaps;
+}
+
+/**
+ * The strongest contrast any two members can make together. A single colour has
+ * no pair, so it reports 1 — the ratio of a colour with itself — and correctly
+ * registers as a gap.
+ */
+function bestPairContrast(colors: readonly Color[]): number {
+  let best = 1;
+  for (let first = 0; first < colors.length; first += 1) {
+    for (let second = first + 1; second < colors.length; second += 1) {
+      best = Math.max(best, contrastRatio(colors[first]!.hex, colors[second]!.hex));
+    }
+  }
+  return best;
+}
+
+const round2 = (value: number) => Math.round(value * 100) / 100;
 
 /* -------------------------------------------------------------------- query */
 

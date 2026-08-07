@@ -51,7 +51,6 @@ const CHIP_KEYS = messageKeys.filter(
     key.startsWith('tune.preset.') ||
     key.startsWith('import.mode.') ||
     key.startsWith('capture.mode.') ||
-    key === 'collection.mergeAll' ||
     key === 'collection.exportSet' ||
     key === 'collection.invite' ||
     key === 'trending.save' ||
@@ -79,6 +78,8 @@ const BUTTON_KEYS = messageKeys.filter(
     key === 'share.share' ||
     key === 'compare.addThird' ||
     key === 'compare.merge' ||
+    // The one action on a set's gap line, in a row beside the sentence it answers.
+    key === 'collection.gap.action' ||
     key === 'theme.export' ||
     key === 'export.copyToClipboard' ||
     // Carousel calls to action, and the trending feed's own buttons.
