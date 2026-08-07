@@ -1,18 +1,25 @@
 import { brandBands, ui } from '@chromawave/design-tokens';
 import { Canvas, Fill, Shader, Skia } from '@shopify/react-native-skia';
-import { useEffect, useMemo } from 'react';
+import { memo, useEffect } from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import {
   Easing,
   cancelAnimation,
-  useDerivedValue,
+  useFrameCallback,
   useReducedMotion,
-  useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 import { HARMONICS } from './backdropField';
-import { backdropScroll, backdropTouchX, backdropTouchY } from './backdropMotion';
+import {
+  backdropCycle,
+  backdropResolution,
+  backdropScroll,
+  backdropShift,
+  backdropTouchX,
+  backdropTouchY,
+  backdropUniforms,
+} from './backdropMotion';
 
 /**
  * How long one full cycle takes.
@@ -136,73 +143,123 @@ const BAND_C = triplet(brandBands[2] ?? '#FF7A5C');
 const GROUND = triplet(ui.bg.base);
 
 /**
- * The living field behind every screen.
+ * Compiled once, at module load.
  *
- * Every animated input is a uniform fed from a Reanimated shared value, so the
- * field runs entirely on the UI thread: this component renders once and then
- * stays still while the GPU does the work. Nothing here re-renders per frame.
+ * Compiling SkSL is not free and it happens on the JS thread. Per screen — which
+ * is where a `useMemo` inside the component puts it — that lands on the frame a
+ * push starts, which is the one frame in the app that cannot afford it.
+ */
+const EFFECT = Skia.RuntimeEffect.Make(FIELD);
+
+/**
+ * Advances the field. Mounted once, at the root, and renders nothing.
+ *
+ * The clock is deliberately separated from the drawing: every screen paints its
+ * own copy of the field so that it is opaque enough to cover the screen behind
+ * it during a push, and copies that each ran their own clock would drift apart
+ * and show the seam exactly when both are on screen at once.
  *
  * Two guards switch the motion off — the OS reduce-motion setting and the
- * user's own preference. The field still draws when stopped, so the ground
- * keeps its depth; it simply holds a frame.
+ * user's own preference (which unmounts this entirely). The field still draws
+ * when stopped, so the ground keeps its depth; it simply holds a frame.
  */
-export function UnderScreenCanvas({ enabled = true }: { enabled?: boolean }) {
-  const { width, height } = useWindowDimensions();
+export function BackdropDriver() {
   const reduced = useReducedMotion();
-  const cycle = useSharedValue(0);
-  /** Scroll, chased towards the reported value so the field never snaps. */
-  const damped = useSharedValue(0);
+  const { width, height } = useWindowDimensions();
 
-  const effect = useMemo(() => Skia.RuntimeEffect.Make(FIELD), []);
-  const animate = enabled && !reduced;
-
-  useEffect(() => {
-    if (!animate) {
-      cancelAnimation(cycle);
-      // Held where the masses are spread, so the still frame is a composition
-      // rather than whatever the cycle happens to start on.
-      cycle.value = 0.22;
-      return;
-    }
-    // Linear and non-reversing. Easing would make the field accelerate and
-    // brake once a lap; reversing would run the whole composition backwards.
-    // Neither is wanted — the wrap is seamless, so plain repetition is smooth.
-    cycle.value = withRepeat(
-      withTiming(1, { duration: CYCLE_MS, easing: Easing.linear }),
-      -1,
-      false,
-    );
-    return () => cancelAnimation(cycle);
-  }, [animate, cycle]);
-
-  const uniforms = useDerivedValue(() => {
+  /**
+   * The whole per-frame cost of the backdrop, for every screen at once: chase
+   * the scroll, then build the one uniforms object they all read.
+   */
+  const frame = useFrameCallback(() => {
+    'worklet';
     // Chase rather than track: the lag is what separates the backdrop's plane
     // from the content's.
-    damped.value += (backdropScroll.value - damped.value) * 0.06;
-    return {
-      resolution: [width, height],
-      cycle: cycle.value,
-      scroll: damped.value,
+    backdropShift.value += (backdropScroll.value - backdropShift.value) * 0.06;
+    backdropUniforms.value = {
+      resolution: backdropResolution.value,
+      cycle: backdropCycle.value,
+      scroll: backdropShift.value,
       focus: [backdropTouchX.value, backdropTouchY.value],
       bandA: BAND_A,
       bandB: BAND_B,
       bandC: BAND_C,
       ground: GROUND,
     };
+  }, false);
+
+  useEffect(() => {
+    backdropResolution.value = [width, height];
   }, [width, height]);
 
-  if (!enabled || !effect) return null;
+  useEffect(() => {
+    if (reduced) {
+      // Everything stops: parallax is motion too, and a frame callback left
+      // running holds the UI thread awake for a field that is deliberately
+      // standing still. The one frame it holds is written directly, since
+      // nothing will rebuild the uniforms afterwards.
+      frame.setActive(false);
+      cancelAnimation(backdropCycle);
+      backdropShift.value = 0;
+      // Held where the masses are spread, so the still frame is a composition
+      // rather than whatever the cycle happens to start on.
+      backdropCycle.value = 0.22;
+      backdropUniforms.value = {
+        resolution: [width, height],
+        cycle: 0.22,
+        scroll: 0,
+        focus: [0.5, 0.42],
+        bandA: BAND_A,
+        bandB: BAND_B,
+        bandC: BAND_C,
+        ground: GROUND,
+      };
+      return;
+    }
+    frame.setActive(true);
+    // Linear and non-reversing. Easing would make the field accelerate and
+    // brake once a lap; reversing would run the whole composition backwards.
+    // Neither is wanted — the wrap is seamless, so plain repetition is smooth.
+    backdropCycle.value = withRepeat(
+      withTiming(1, { duration: CYCLE_MS, easing: Easing.linear }),
+      -1,
+      false,
+    );
+    return () => {
+      frame.setActive(false);
+      cancelAnimation(backdropCycle);
+    };
+  }, [frame, reduced, width, height]);
 
+  return null;
+}
+
+/**
+ * The living field, drawn behind one screen.
+ *
+ * Every animated input is a uniform read from a shared value written by
+ * `BackdropDriver`, so the field runs entirely on the UI thread: this component
+ * renders once and then stays still while the GPU does the work. Nothing here
+ * re-renders per frame, and two instances on screen during a transition are
+ * frame-identical, so the push reads as content moving over one continuous
+ * ground.
+ */
+export const UnderScreenCanvas = memo(function UnderScreenCanvas() {
+  if (!EFFECT) return null;
+
+  // `opaque`: the shader returns alpha 1 across the whole surface, so there is
+  // nothing behind it to blend with. Saying so lets the compositor skip the
+  // blend on a full-screen layer that every screen now carries.
   return (
-    <Canvas pointerEvents="none" style={[StyleSheet.absoluteFill, styles.canvas]}>
+    <Canvas opaque pointerEvents="none" style={[StyleSheet.absoluteFill, styles.canvas]}>
       <Fill>
-        <Shader source={effect} uniforms={uniforms} />
+        <Shader source={EFFECT} uniforms={backdropUniforms} />
       </Fill>
       {/* The real 128px tile. Grain over a smooth field is what stops a wide
           colour ramp banding on an OLED panel. */}
     </Canvas>
   );
-}
+});
 
 const styles = StyleSheet.create({
   canvas: { backgroundColor: ui.bg.base },

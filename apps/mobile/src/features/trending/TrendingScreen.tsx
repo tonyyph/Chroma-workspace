@@ -117,6 +117,7 @@ export function TrendingScreen() {
       <ScrollView
         contentContainerStyle={styles.categories}
         horizontal
+        keyboardShouldPersistTaps="handled"
         showsHorizontalScrollIndicator={false}
       >
         {categoryOptions.map((option) => (
@@ -170,6 +171,8 @@ export function TrendingScreen() {
           { paddingBottom: space.sectionGap * 2 + insets.bottom },
         ]}
         data={feed.status === 'ready' ? feed.items : EMPTY}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.row}>

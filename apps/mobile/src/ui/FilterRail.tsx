@@ -65,6 +65,7 @@ export function FilterRail({
       <ScrollView
         contentContainerStyle={styles.rail}
         horizontal
+        keyboardShouldPersistTaps="handled"
         showsHorizontalScrollIndicator={false}
       >
         {primary?.options.map((option) => (

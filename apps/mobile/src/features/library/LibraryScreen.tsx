@@ -159,6 +159,11 @@ export function LibraryScreen() {
           { paddingBottom: size.tabBar + space.sectionGap * 2 + insets.bottom },
         ]}
         data={loading ? [] : visible}
+        // The search field lives in this list's header, so without these the
+        // filter chips and every card below it need a tap to close the keyboard
+        // before they take one of their own.
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         keyExtractor={(item) => item.id}
         renderItem={renderCard}
         ListEmptyComponent={

@@ -85,7 +85,12 @@ export function ExportScreen({
       </View>
 
       <View style={styles.codeWrap}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.code}>
+        <ScrollView
+          horizontal
+          keyboardShouldPersistTaps="handled"
+          showsHorizontalScrollIndicator={false}
+          style={styles.code}
+        >
           <Text selectable style={styles.codeText} variant="mono">
             {code}
           </Text>

@@ -18,7 +18,7 @@ import { useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PreferencesProvider, usePreferences } from '@/providers/PreferencesProvider';
-import { UnderScreenCanvas } from '@/ui';
+import { BackdropDriver } from '@/ui';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -61,23 +61,32 @@ function AppNavigator() {
   return (
     <>
       <StatusBar style="light" />
-      {/* Behind the whole navigator, so it survives every push and pop rather
-          than restarting its loop on each screen. */}
-      <UnderScreenCanvas enabled={preferences.ambientBackdrop} />
+      {/* The field's clock, not the field itself: each screen draws its own copy
+          from these values, so it survives every push and pop rather than
+          restarting its loop on each screen. */}
+      {preferences.ambientBackdrop ? <BackdropDriver /> : null}
       <Stack
         screenOptions={{
           headerShown: false,
-          // Transparent, or each screen would paint an opaque ground over the
-          // backdrop and there would be nothing to see.
-          contentStyle: {
-            backgroundColor: preferences.ambientBackdrop ? 'transparent' : ui.bg.base,
-          },
-          animation: 'fade',
+          // Opaque. A transparent stack lets the outgoing screen show through
+          // the incoming one for the whole transition — the backdrop is painted
+          // inside each screen instead, so nothing here needs to see past it.
+          contentStyle: { backgroundColor: ui.bg.base },
+          // The platform push: the new screen covers the old one, and iOS keeps
+          // its interactive back-swipe, which a fade throws away.
+          animation: 'default',
+          // A covered screen renders nothing until it is on show again. Without
+          // this, everything below the top of the stack keeps re-rendering
+          // through the transition, competing with it for the same frames.
+          freezeOnBlur: true,
         }}
       >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="onboarding" />
+        {/* A redirect, and the roots it redirects to — nothing is being pushed
+            over anything, so these cross-fade rather than slide in from a side
+            the user never navigated from. */}
+        <Stack.Screen name="index" options={{ animation: 'fade' }} />
+        <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+        <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
         <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
         <Stack.Screen
           name="capture"

@@ -20,6 +20,7 @@ import { usePreferences } from '@/providers/PreferencesProvider';
 import { reportBackdropScroll } from './backdropMotion';
 import { Pressable } from './Pressable';
 import { BandRefreshControl } from './Sequences';
+import { UnderScreenCanvas } from './UnderScreenCanvas';
 
 /**
  * A card over the ground.
@@ -270,9 +271,6 @@ export function Screen({
   const { preferences } = usePreferences();
   const paddingBottom = tabBarInset ? size.tabBar + space.sectionGap * 2 : space.xl;
   const paddingTop = topInset ? insets.top : 0;
-  // The backdrop lives behind the navigator and supplies the ground itself, so
-  // a screen that painted its own would hide it completely.
-  const ground = preferences.ambientBackdrop ? styles.transparent : styles.ground;
 
   // Feeds the backdrop. Runs on the UI thread, so the field parallaxes with the
   // finger rather than a frame or two behind it.
@@ -280,15 +278,27 @@ export function Screen({
     reportBackdropScroll(event.contentOffset.y);
   });
 
-  if (!scroll) {
-    return (
-      <View style={[styles.screen, ground, { paddingTop }, style]}>{children}</View>
-    );
-  }
-  return (
-    <View style={[styles.screen, ground, { paddingTop }]}>
+  /**
+   * Every screen owns its ground, and it is always opaque.
+   *
+   * A screen that let a shared backdrop show through from behind the navigator
+   * is see-through during a push: the outgoing screen stays visible underneath
+   * for the whole transition and the two read as one double-exposed frame. The
+   * field is drawn here instead, from clock values shared by every instance, so
+   * each screen is both opaque and showing the same continuous ground.
+   */
+  const content = !scroll ? (
+    <View style={[styles.screen, { paddingTop }, style]}>{children}</View>
+  ) : (
+    <View style={[styles.screen, { paddingTop }]}>
       <Animated.ScrollView
         contentContainerStyle={[{ paddingBottom: paddingBottom + insets.bottom }, style]}
+        // A scroll view eats the tap that dismisses the keyboard by default, so
+        // every control on a screen with a field open takes two taps: one to
+        // close the keyboard, one to actually press it. `handled` gives the tap
+        // to the control and lets the control decide.
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         onScroll={onScroll}
         refreshControl={
           onRefresh ? (
@@ -300,6 +310,13 @@ export function Screen({
       >
         {children}
       </Animated.ScrollView>
+    </View>
+  );
+
+  return (
+    <View style={[styles.screen, styles.ground]}>
+      {preferences.ambientBackdrop ? <UnderScreenCanvas /> : null}
+      {content}
     </View>
   );
 }
@@ -314,7 +331,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   ground: { backgroundColor: ui.bg.base },
-  transparent: { backgroundColor: 'transparent' },
   gutter: {
     paddingHorizontal: space.gutter,
   },

@@ -1,4 +1,4 @@
-import { elevation, glass, round, space, tint, ui } from '@chromawave/design-tokens';
+import { elevation, glass, round, space, ui } from '@chromawave/design-tokens';
 import {
   exportTargetSchema,
   shortAge,
@@ -14,7 +14,6 @@ import { useMemo } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { unreadActivityCount } from '@/features/tools/activity';
 import { usePalettes } from '@/hooks/usePalettes';
-import { useSets } from '@/hooks/useSets';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import {
   BandCanvas,
@@ -56,8 +55,7 @@ const EXPORT_TARGETS = exportTargetSchema.options;
  *
  *  1. a signature drawn from their own dominant bands, full-bleed, with the
  *     identity card floating over its lower edge;
- *  2. an asymmetric stat mosaic — one number is the headline, the others are not
- *     — where every tile is a way into the library rather than a read-out;
+ *  2. a compact stat rail that reads in one glance without taking a whole fold;
  *  3. what they keep coming back to, derived from the palettes themselves and
  *     tappable straight through to the library filtered by it;
  *  4. their recent captures;
@@ -69,7 +67,6 @@ const EXPORT_TARGETS = exportTargetSchema.options;
  */
 export function YouScreen() {
   const { palettes } = usePalettes();
-  const { sets } = useSets();
   const router = useRouter();
   const {
     preferences,
@@ -85,6 +82,7 @@ export function YouScreen() {
   } = usePreferences();
 
   const pinned = useMemo(() => palettes.filter((palette) => palette.isPinned).length, [palettes]);
+  const colours = useMemo(() => totalColors(palettes), [palettes]);
   const thisMonth = useMemo(() => capturedThisMonth(palettes), [palettes]);
   const unread = useMemo(
     () => unreadActivityCount(palettes, preferences.activityReadAt),
@@ -111,27 +109,13 @@ export function YouScreen() {
     <Screen tabBarInset topInset={false}>
       <SignatureHero palettes={palettes} />
 
-      <Gutter style={styles.mosaic}>
-        <StatTile
-          label={t('you.stat.palettes')}
-          onPress={() => openLibrary()}
-          size="hero"
-          value={String(palettes.length)}
-        />
-        <View style={styles.mosaicColumn}>
-          <StatTile
-            label={t('you.stat.pinned')}
-            onPress={() => openLibrary()}
-            value={String(pinned)}
-          />
-          <StatTile label={t('you.stat.colours')} value={String(totalColors(palettes))} />
-        </View>
-      </Gutter>
-
-      <Gutter style={styles.thinRow}>
-        <MiniStat label={t('you.stat.thisMonth')} value={String(thisMonth)} />
-        <MiniStat label={t('you.stat.collections')} value={String(sets.length)} />
-      </Gutter>
+      <StatsRail
+        colours={colours}
+        onOpenLibrary={openLibrary}
+        palettes={palettes.length}
+        pinned={pinned}
+        thisMonth={thisMonth}
+      />
 
       <TasteSection onPick={openLibrary} palettes={palettes} />
 
@@ -350,9 +334,51 @@ function SignatureHero({ palettes }: { palettes: readonly Palette[] }) {
   );
 }
 
-const HERO_HEIGHT = 210;
+const HERO_HEIGHT = 184;
 /** The brand bands, for a library with nothing in it yet. */
 const BRAND_FALLBACK = ['#7C5CFF', '#22D3EE', '#FF7A5C'] as const;
+
+function StatsRail({
+  palettes,
+  pinned,
+  colours,
+  thisMonth,
+  onOpenLibrary,
+}: {
+  palettes: number;
+  pinned: number;
+  colours: number;
+  thisMonth: number;
+  onOpenLibrary: (params?: { mood?: ColorMood; style?: VisualStyle }) => void;
+}) {
+  const { t } = usePreferences();
+
+  return (
+    <Gutter style={styles.statsSection}>
+      <View style={styles.statsRail}>
+        <CompactStat
+          accent
+          label={t('you.stat.palettes')}
+          onPress={() => onOpenLibrary()}
+          value={String(palettes)}
+        />
+        <CompactStat
+          divided
+          label={t('you.stat.pinned')}
+          onPress={() => onOpenLibrary()}
+          value={String(pinned)}
+        />
+        <CompactStat divided label={t('you.stat.colours')} value={String(colours)} />
+        <CompactStat
+          divided
+          label={t('you.stat.thisMonth')}
+          onPress={() => onOpenLibrary()}
+          value={String(thisMonth)}
+        />
+      </View>
+    </Gutter>
+  );
+}
 
 /**
  * Taste, read off the library.
@@ -438,34 +464,41 @@ const MOOD_INK: Record<ColorMood, string> = {
   vibrant: ui.accent.signal,
 };
 
-/**
- * A stat that goes somewhere. The hero size carries the number the screen is
- * about; the others are deliberately smaller, because three identical tiles is
- * what made the old screen a form.
- */
-function StatTile({
+function CompactStat({
   label,
   value,
-  size = 'default',
   onPress,
+  accent = false,
+  divided = false,
 }: {
   label: string;
   value: string;
-  size?: 'hero' | 'default';
   onPress?: () => void;
+  accent?: boolean;
+  divided?: boolean;
 }) {
   const { t } = usePreferences();
   const body = (
-    <View style={[styles.tile, size === 'hero' && styles.tileHero]}>
-      <Text style={size === 'hero' ? styles.tileHeroValue : undefined} variant="display">
+    <>
+      <Text
+        style={[styles.compactStatValue, accent && styles.compactStatValueAccent]}
+        variant="section"
+      >
         {value}
       </Text>
-      <Meta style={styles.tileLabel}>{label}</Meta>
-    </View>
+      <Meta
+        adjustsFontSizeToFit
+        minimumFontScale={0.78}
+        numberOfLines={1}
+        style={styles.compactStatLabel}
+      >
+        {label}
+      </Meta>
+    </>
   );
 
   if (!onPress) {
-    return <View style={size === 'hero' ? styles.tileHeroBox : styles.tileBox}>{body}</View>;
+    return <View style={[styles.compactStat, divided && styles.compactStatDivided]}>{body}</View>;
   }
   return (
     <Pressable
@@ -474,22 +507,13 @@ function StatTile({
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [
-        size === 'hero' ? styles.tileHeroBox : styles.tileBox,
+        styles.compactStat,
+        divided && styles.compactStatDivided,
         pressed && styles.tilePressed,
       ]}
     >
       {body}
     </Pressable>
-  );
-}
-
-/** A single line of number and label, for facts that do not need a tile. */
-function MiniStat({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.mini}>
-      <Text variant="section">{value}</Text>
-      <Meta style={styles.tileLabel}>{label}</Meta>
-    </View>
   );
 }
 
@@ -534,7 +558,7 @@ function Row({
 
 const styles = StyleSheet.create({
   hero: {
-    marginBottom: space.md,
+    marginBottom: space.sm,
   },
   heroArt: {
     height: HERO_HEIGHT,
@@ -544,7 +568,7 @@ const styles = StyleSheet.create({
   identity: {
     paddingHorizontal: space.gutter,
     // The overlap is the layering: the card sits on the join rather than under it.
-    marginTop: -round.sheet * 2,
+    marginTop: -round.sheet * 1.55,
   },
   identityGlass: {
     borderRadius: round.sheet,
@@ -552,95 +576,83 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: elevation.floating.borderColor,
     backgroundColor: glass.shell.tint,
-    padding: space.md,
-    gap: space.sm,
+    padding: space.sm + 2,
+    gap: space.xs + 2,
   },
   identityRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space.sm,
+    gap: space.xs + 4,
   },
   avatar: {
-    width: 52,
-    height: 52,
+    width: 46,
+    height: 46,
     borderRadius: round.media,
     overflow: 'hidden',
   },
   identityCopy: {
     flex: 1,
-    gap: 3,
+    gap: 2,
   },
   identityMeta: {
     color: ui.text.tertiary,
   },
   identityBody: {
-    paddingTop: 2,
+    paddingTop: 1,
   },
   identityEyebrow: {
     color: ui.text.quaternary,
   },
   signatureStrip: {
     flexDirection: 'row',
-    gap: 5,
+    gap: 4,
   },
   signatureChip: {
     flex: 1,
-    height: 10,
-    borderRadius: 5,
+    height: 8,
+    borderRadius: 4,
   },
 
-  mosaic: {
-    flexDirection: 'row',
-    gap: 10,
+  statsSection: {
     paddingTop: space.xs,
-  },
-  mosaicColumn: {
-    flex: 1,
-    gap: 10,
-  },
-  tileBox: {
-    flex: 1,
     borderRadius: round.card,
-    borderWidth: 1,
+  },
+  statsRail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: round.control,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: ui.border.hairline,
-    backgroundColor: ui.fill.card,
-    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,.018)',
   },
-  tileHeroBox: {
-    flex: 1.15,
-    borderRadius: round.card,
-    borderWidth: 1,
-    borderColor: tint.pro.borderColor,
-    backgroundColor: tint.pro.backgroundColor,
-    overflow: 'hidden',
+  compactStat: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: space.xxs,
+    paddingVertical: space.xs,
+    gap: 2,
+  },
+  compactStatDivided: {
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    borderColor: ui.border.hairline,
+  },
+  compactStatValue: {
+    color: ui.text.primary,
+  },
+  compactStatValueAccent: {
+    color: ui.action.link,
+  },
+  compactStatLabel: {
+    color: ui.text.tertiary,
+    fontSize: 8.5,
+    letterSpacing: 0.8,
+    textAlign: 'center',
   },
   tilePressed: {
     opacity: 0.75,
-  },
-  tile: {
-    padding: space.cardGap,
-    gap: 4,
-  },
-  tileHero: {
-    paddingVertical: space.md + 6,
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
-  tileHeroValue: {
-    color: ui.action.link,
-  },
-  tileLabel: {
-    fontSize: 9,
-    letterSpacing: 1,
-  },
-  mini: {
-    flex: 1,
-    gap: 2,
-  },
-  thinRow: {
-    flexDirection: 'row',
-    gap: space.md,
-    paddingTop: space.sm,
   },
 
   sectionHead: {

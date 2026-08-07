@@ -152,6 +152,7 @@ export function Carousel<Item>({
         contentContainerStyle={{ paddingHorizontal: peek, gap }}
         decelerationRate="fast"
         horizontal
+        keyboardShouldPersistTaps="handled"
         onMomentumScrollEnd={onMomentumEnd}
         onScroll={onScroll}
         onScrollBeginDrag={() => setAutoPlay(false)}
