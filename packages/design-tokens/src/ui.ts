@@ -130,6 +130,24 @@ export const fontFamily = {
  * Title −2.5% of 28 = −0.7, Section −2% of 20 = −0.4, Meta +14% of 10 = 1.4.
  */
 export const type = {
+  /**
+   * Hero 46/44 · Bold −4%
+   *
+   * The scale used to top out at 32, which meant every screen opened at roughly
+   * the same volume and nothing on any of them was allowed to be the subject.
+   * A screen gets one of these or none — its job is to make everything below it
+   * recede, and two would make neither of them work.
+   *
+   * Line height is under the size on purpose: at this weight a two-line title
+   * wants tighter leading than a one-line one would, and every string that
+   * reaches it is two or three words.
+   */
+  hero: {
+    fontFamily: fontFamily.bold,
+    fontSize: 46,
+    lineHeight: 44,
+    letterSpacing: -1.84,
+  },
   /** Display 32/34 · SemiBold −3% */
   display: {
     fontFamily: fontFamily.semibold,

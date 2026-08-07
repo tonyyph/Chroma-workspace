@@ -1,11 +1,13 @@
-import { round, space, ui } from '@chromawave/design-tokens';
-import { shortAge, type Palette } from '@chromawave/domain';
+import { round, space, tint, ui } from '@chromawave/design-tokens';
+import { readableOn, roledColors, shortAge, type Palette } from '@chromawave/domain';
 import * as Clipboard from 'expo-clipboard';
 import * as Crypto from 'expo-crypto';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import { ShareSheet, type ShareOptions } from '@/features/capture/ShareSheet';
+import { PalettePhoto } from '@/features/library/PalettePhoto';
 import { ToolFallback } from '@/features/tools/ToolFallback';
 import { useChromaticSurface, usePalettes } from '@/hooks';
 import { persistPhoto, renderShareCard, shareFile } from '@/lib';
@@ -13,7 +15,7 @@ import { useEntitlement, usePreferences } from '@/providers';
 import {
   ActionSheet,
   Button,
-  Card,
+  CardGroup,
   Chip,
   ColorRow,
   ConfirmSheet,
@@ -148,6 +150,19 @@ export function PaletteDetailScreen() {
     );
   }
 
+  /**
+   * The name is written on the palette, so it has to be legible against it —
+   * and the band it lands on is whatever the user photographed. `readableOn`
+   * moves lightness only, so the title keeps the palette's own hue and still
+   * clears AA against the darkest band the scrim leaves showing.
+   */
+  const titleInk = readableOn(
+    roledColors(palette)[0]?.hex ?? ui.text.primary,
+    palette.colors[0]?.hex ?? ui.bg.base,
+    3,
+  );
+  const heroLabel = palette.colors.map((swatch) => swatch.hex).join(', ');
+
   const meta = [
     t('palette.saved', { age: shortAge(palette.capturedAt) }),
     palette.location,
@@ -209,19 +224,35 @@ export function PaletteDetailScreen() {
         </Gutter>
       ) : null}
 
-      {/* The hero is the palette at its true proportions — the composition, not a grid. */}
-      <Gutter>
-        <View accessibilityLabel={palette.colors.map((s) => s.hex).join(', ')} style={styles.hero}>
+      {/* THE SUBJECT.
+          Full-bleed and edge to edge rather than a rounded card inset in a
+          gutter: this palette is what the screen is about, and a 180pt tile
+          floating in the middle of the ground made it one item among seven.
+          The name sits *on* it, in a colour derived from the palette itself and
+          held to AA against the band behind it, so the title and its subject
+          are one object instead of a caption under a picture. */}
+      <View accessibilityLabel={heroLabel} style={styles.hero}>
+        {palette.photoUri ? (
+          <PalettePhoto palette={palette} style={StyleSheet.absoluteFill} />
+        ) : null}
+        <View style={styles.heroBands}>
           {palette.colors.map((swatch) => (
             <View key={swatch.hex} style={{ flex: swatch.weight, backgroundColor: swatch.hex }} />
           ))}
         </View>
-      </Gutter>
-
-      <Gutter style={styles.title}>
-        <Text variant="title">{palette.name}</Text>
-        <Meta style={styles.meta}>{meta}</Meta>
-      </Gutter>
+        <LinearGradient
+          colors={['rgba(8,7,14,0)', 'rgba(8,7,14,.35)', 'rgba(8,7,14,.88)']}
+          locations={[0, 0.45, 1]}
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.heroCopy}>
+          <Text numberOfLines={3} style={{ color: titleInk }} variant="hero">
+            {palette.name}
+          </Text>
+          <Meta style={styles.heroMeta}>{meta}</Meta>
+        </View>
+      </View>
 
       {/* A tag is a search term: tapping one runs it against the library rather
           than opening an editor, which is what people reach for a tag to do. */}
@@ -237,67 +268,65 @@ export function PaletteDetailScreen() {
         <Chip icon="add" label={t('palette.addTag')} onPress={() => setPrompt('tag')} tone="add" />
       </Gutter>
 
+      {/* THE SPEC.
+          Bare rows on the ground, not a card: this is a reference table, and
+          wrapping it in a raised surface made it compete with the hero for the
+          same job. */}
       <Gutter style={styles.list}>
-        <Card padded={false} style={styles.listCard}>
-          {palette.colors.map((swatch, index) => (
-            <View
-              key={swatch.hex}
-              style={[styles.listRow, index < palette.colors.length - 1 && styles.listDivider]}
-            >
-              <ColorRow color={swatch} dense />
-            </View>
-          ))}
-        </Card>
+        {palette.colors.map((swatch, index) => (
+          <View
+            key={`${index}:${swatch.hex}`}
+            style={[styles.listRow, index < palette.colors.length - 1 && styles.listDivider]}
+          >
+            <ColorRow color={swatch} dense />
+          </View>
+        ))}
       </Gutter>
 
-      {/* The G-series tools all operate on one palette, so this is their entry. */}
-      <Gutter style={styles.tools}>
+      {/* THE WORKBENCH.
+          Four tools that transform this palette, as a grouped list rather than a
+          2x2 grid of chips. The grid gave eight destinations identical weight
+          and no order; a list has a reading direction, room for the name to
+          breathe, and a shape the eye already knows how to scan. */}
+      <Gutter style={styles.sectionHead}>
         <Text tone="tertiary" variant="eyebrow">
           {t('palette.tools')}
         </Text>
-        <View style={styles.toolRow}>
-          <Chip
-            fill
-            label={t('contrast.title')}
-            onPress={() => router.push(`/tools/contrast?id=${palette.id}`)}
-          />
-          <Chip
-            fill
-            label={t('theme.title')}
-            onPress={() => router.push(`/tools/theme?id=${palette.id}`)}
-          />
-        </View>
-        <View style={styles.toolRow}>
-          <Chip
-            fill
-            label={t('gradient.title')}
-            onPress={() => router.push(`/tools/gradient?id=${palette.id}`)}
-          />
-          <Chip
-            fill
-            label={t('compare.title')}
-            onPress={() => router.push(`/tools/compare?id=${palette.id}`)}
-          />
-        </View>
+      </Gutter>
+      <Gutter>
+        <CardGroup>
+          {TOOLS.map((tool) => (
+            <ToolRow
+              key={tool.route}
+              label={t(tool.labelKey)}
+              onPress={() => router.push(`/tools/${tool.route}?id=${palette.id}`)}
+            />
+          ))}
+        </CardGroup>
       </Gutter>
 
-      <Gutter style={styles.exports}>
-        <Chip
-          fill
-          label={t('export.title')}
-          onPress={() => router.push(`/tools/export?id=${palette.id}`)}
-        />
-        <Chip
-          fill
-          label={t('palette.widgets')}
-          onPress={() => router.push(`/tools/widgets?id=${palette.id}`)}
-        />
-        <Chip
-          fill
-          label={t('common.proJson')}
-          onPress={() => router.push('/paywall?trigger=json-export')}
-          tone="pro"
-        />
+      {/* And the three that take it out of the app. */}
+      <Gutter style={styles.sectionHead}>
+        <Text tone="tertiary" variant="eyebrow">
+          {t('export.title')}
+        </Text>
+      </Gutter>
+      <Gutter>
+        <CardGroup>
+          <ToolRow
+            label={t('export.title')}
+            onPress={() => router.push(`/tools/export?id=${palette.id}`)}
+          />
+          <ToolRow
+            label={t('palette.widgets')}
+            onPress={() => router.push(`/tools/widgets?id=${palette.id}`)}
+          />
+          <ToolRow
+            label={t('common.proJson')}
+            locked
+            onPress={() => router.push('/paywall?trigger=json-export')}
+          />
+        </CardGroup>
       </Gutter>
 
       {/* C4. The sheet is where the format and the card options live, so Share
@@ -366,6 +395,49 @@ export function PaletteDetailScreen() {
   );
 }
 
+/**
+ * The four tools that transform a palette, in the order someone reaches for
+ * them: check it, see it used, make a surface of it, measure it against another.
+ */
+const TOOLS = [
+  { route: 'contrast', labelKey: 'contrast.title' },
+  { route: 'theme', labelKey: 'theme.title' },
+  { route: 'gradient', labelKey: 'gradient.title' },
+  { route: 'compare', labelKey: 'compare.title' },
+] as const;
+
+/** One row of a grouped list: name, an optional Pro mark, and a chevron. */
+function ToolRow({
+  label,
+  onPress,
+  locked = false,
+}: {
+  label: string;
+  onPress: () => void;
+  locked?: boolean;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={styles.toolRow}
+    >
+      <Text style={styles.toolLabel} variant="rowTitle">
+        {label}
+      </Text>
+      {locked ? (
+        <View style={[styles.pro, tint.pro]}>
+          <Text style={{ color: tint.pro.color }} variant="chip">
+            PRO
+          </Text>
+        </View>
+      ) : null}
+      <Icon color={ui.text.tertiary} name="forward" scale="inline" />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   head: {
     paddingTop: space.md,
@@ -374,7 +446,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: space.sm,
-    paddingBottom: space.cardGap,
+    paddingBottom: space.sm,
   },
   navButton: {
     flexDirection: 'row',
@@ -384,52 +456,30 @@ const styles = StyleSheet.create({
   error: {
     paddingBottom: space.cardGap,
   },
+  /** Edge to edge and tall: the subject, not a thumbnail of it. */
   hero: {
-    flexDirection: 'row',
-    height: 180,
-    borderRadius: round.media - 2,
-    overflow: 'hidden',
+    height: 380,
+    backgroundColor: ui.bg.media,
+    justifyContent: 'flex-end',
   },
-  title: {
-    paddingTop: space.md + 2,
-    gap: 4,
-  },
-  meta: {
-    color: ui.text.tertiary,
-  },
+  /** Behind the scrim and over the photo — the palette as the ground it came from. */
+  heroBands: { ...StyleSheet.absoluteFillObject, flexDirection: 'row', opacity: 0.94 },
+  heroCopy: { paddingHorizontal: space.gutter, paddingBottom: space.gutter, gap: space.xs },
+  heroMeta: { color: 'rgba(237,234,227,.72)' },
   tags: {
     paddingTop: space.md,
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: space.xs,
   },
-  list: {
-    paddingTop: space.md + 2,
-  },
-  listCard: {
-    overflow: 'hidden',
-  },
-  listRow: {
-    paddingHorizontal: space.cardGap,
-    paddingVertical: 13,
-  },
-  listDivider: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(237,234,227,.07)',
-  },
-  tools: {
-    paddingTop: space.gutter,
-    gap: space.xs,
-  },
-  toolRow: {
-    flexDirection: 'row',
-    gap: space.xs,
-  },
-  exports: {
-    paddingTop: space.cardGap,
-    flexDirection: 'row',
-    gap: space.xs,
-  },
+  /** A reference table on the ground, not a raised card competing with the hero. */
+  list: { paddingTop: space.sectionGap },
+  listRow: { paddingVertical: 13 },
+  listDivider: { borderBottomWidth: 1, borderBottomColor: ui.border.hairline },
+  sectionHead: { paddingTop: space.sectionGap, paddingBottom: space.xs },
+  toolRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  toolLabel: { flex: 1 },
+  pro: { borderWidth: 1, borderRadius: round.chip, paddingHorizontal: 8, paddingVertical: 4 },
   shareBackdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: ui.scrim.strong,

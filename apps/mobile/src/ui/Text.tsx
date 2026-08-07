@@ -2,6 +2,7 @@ import { type, typeExtra, ui } from '@chromawave/design-tokens';
 import { Text as RNText, type TextProps, type TextStyle } from 'react-native';
 
 const variants = {
+  hero: type.hero,
   display: type.display,
   title: type.title,
   section: type.section,
