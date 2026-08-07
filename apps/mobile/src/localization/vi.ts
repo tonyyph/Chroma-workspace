@@ -136,6 +136,7 @@ export const vi: Record<MessageKey, string> = {
   'library.empty.title': 'Chưa chụp gì cả',
   'library.empty.body': 'Hướng vào thứ gì có màu. Chỉ mất khoảng hai giây.',
   'library.empty.action': 'Mở camera',
+  'library.empty.examples': 'Xem ví dụ',
   'library.noResults.title': 'Không có kết quả',
   'library.noResults.body': 'Bộ lọc này chưa có gì. Thử bộ lọc khác, hoặc chụp mới.',
   'library.card.meta': '{count} màu · {age}',

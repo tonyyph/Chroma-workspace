@@ -133,6 +133,7 @@ export const en = {
   'library.empty.title': 'Nothing captured yet',
   'library.empty.body': 'Point at something with colour in it. It takes about two seconds.',
   'library.empty.action': 'Open camera',
+  'library.empty.examples': 'See examples',
   'library.noResults.title': 'No matches',
   'library.noResults.body': 'Nothing in this filter yet. Try another, or capture something new.',
   'library.card.meta': '{count} colours · {age}',

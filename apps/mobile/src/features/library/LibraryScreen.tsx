@@ -9,10 +9,11 @@ import {
   type VisualStyle,
 } from '@chromawave/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { seedPalettes } from '@/data/seed';
 import { useTrending } from '@/features/trending/useTrending';
 import { usePalettes } from '@/hooks/usePalettes';
 import { useSets } from '@/hooks/useSets';
@@ -55,10 +56,28 @@ import { PaletteCard } from './PaletteCard';
  */
 export function LibraryScreen() {
   const router = useRouter();
-  const { palettes, loading, refreshing, refresh } = usePalettes();
+  const { palettes, loading, refreshing, refresh, save } = usePalettes();
   const { sets } = useSets();
   const { t } = usePreferences();
   const insets = useSafeAreaInsets();
+  const [addingExamples, setAddingExamples] = useState(false);
+
+  /**
+   * The examples, on request. They are written through the ordinary save path
+   * rather than straight into storage, so they are real palettes the user can
+   * rename, tag and delete exactly like their own — which is the only honest
+   * way to show someone what a saved palette is.
+   */
+  const addExamples = useCallback(async () => {
+    setAddingExamples(true);
+    try {
+      for (const palette of seedPalettes()) await save(palette);
+    } catch {
+      // Nothing to say here that the still-empty grid does not already say.
+    } finally {
+      setAddingExamples(false);
+    }
+  }, [save]);
 
   const filters = useDiscoveryFilters();
   const { apply, query } = filters;
@@ -186,7 +205,9 @@ export function LibraryScreen() {
           ) : (
             <Gutter>
               <EmptyLibrary
+                addingExamples={addingExamples}
                 filtered={filters.activeCount > 0}
+                onAddExamples={() => void addExamples()}
                 onCapture={() => router.push('/capture')}
                 onReset={filters.reset}
               />
@@ -238,10 +259,14 @@ const LandingHero = memo(function LandingHero({ recent }: { recent: Palette | nu
 function EmptyLibrary({
   onCapture,
   onReset,
+  onAddExamples,
+  addingExamples,
   filtered,
 }: {
   onCapture: () => void;
   onReset: () => void;
+  onAddExamples: () => void;
+  addingExamples: boolean;
   filtered: boolean;
 }) {
   const { t } = usePreferences();
@@ -259,7 +284,19 @@ function EmptyLibrary({
       {filtered ? (
         <Button label={t('filter.reset')} onPress={onReset} size="xs" variant="secondary" />
       ) : (
-        <Button label={t('library.empty.action')} onPress={onCapture} size="xs" />
+        <>
+          <Button label={t('library.empty.action')} onPress={onCapture} size="xs" />
+          {/* Secondary, and secondary on purpose: the examples are worth having
+              to see what a saved palette looks like, but a library that fills
+              itself with someone else's work is what this replaced. */}
+          <Button
+            disabled={addingExamples}
+            label={t(addingExamples ? 'common.working' : 'library.empty.examples')}
+            onPress={onAddExamples}
+            size="xs"
+            variant="ghost"
+          />
+        </>
       )}
     </View>
   );

@@ -5,21 +5,28 @@ import {
   type Palette,
   type PaletteRepository,
 } from '@chromawave/domain';
-import { seedPalettes } from '@/data/seed';
 import { deletePhoto } from '@/lib/photos';
 import type { KeyValueStorage } from './KeyValueStorage';
 
 const STORAGE_KEY = '@chromawave/palettes:v1';
-const SEEDED_KEY = '@chromawave/palettes:seeded:v1';
 
 export class StoredPaletteRepository implements PaletteRepository {
   // Storage is injected rather than defaulted so the backing store is visible
   // at the wiring site — see `dependencies.ts`.
   constructor(private readonly storage: KeyValueStorage) {}
 
+  /**
+   * An untouched library is empty, not pre-filled.
+   *
+   * Four example palettes used to be written here on first launch, so someone
+   * who had just installed the app opened it to a grid of work that was not
+   * theirs — and their own first capture arrived as the fifth card in someone
+   * else's collection. The examples are still available, but as something the
+   * empty state offers rather than something the store assumes.
+   */
   async list(): Promise<readonly Palette[]> {
     const raw = await this.storage.getItem(STORAGE_KEY);
-    if (raw === null) return this.seed();
+    if (raw === null) return [];
     try {
       return paletteListSchema
         .parse(JSON.parse(raw))
@@ -53,17 +60,5 @@ export class StoredPaletteRepository implements PaletteRepository {
       STORAGE_KEY,
       JSON.stringify(all.filter((palette) => palette.id !== id)),
     );
-  }
-
-  /**
-   * Seeds the library once, then records that it happened. Without the marker a
-   * user who deletes every palette would find them all back on next launch.
-   */
-  private async seed(): Promise<readonly Palette[]> {
-    if ((await this.storage.getItem(SEEDED_KEY)) !== null) return [];
-    const seeded = paletteListSchema.parse(seedPalettes());
-    await this.storage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-    await this.storage.setItem(SEEDED_KEY, 'true');
-    return seeded;
   }
 }
