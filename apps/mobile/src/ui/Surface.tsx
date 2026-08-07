@@ -8,6 +8,8 @@ import {
   type ElevationLevel,
 } from '@chromawave/design-tokens';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 import Animated, {
   useAnimatedScrollHandler,
@@ -16,7 +18,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import { reportBackdropScroll } from './backdropMotion';
 import { Pressable } from './Pressable';
 import { BandRefreshControl } from './Sequences';
@@ -257,6 +259,20 @@ export function Screen({
    */
   refreshing,
   onRefresh,
+  /**
+   * The screen's one committing action, pinned to the bottom of the device.
+   *
+   * A primary action laid out after the content sits wherever the content
+   * happens to end — which on a short screen is the middle of the display with
+   * a field of empty ground beneath it, and on a long one is somewhere the user
+   * has to go looking for. Pinned, it is always in the same place and always
+   * within thumb reach.
+   *
+   * Only for the action that *finishes* the screen. A contextual button inside
+   * a card belongs with the thing it acts on, and moving it to the bottom would
+   * separate it from its subject.
+   */
+  action,
   style,
 }: {
   children: React.ReactNode;
@@ -265,10 +281,18 @@ export function Screen({
   tabBarInset?: boolean;
   refreshing?: boolean;
   onRefresh?: (() => void) | undefined;
+  action?: React.ReactNode;
   style?: ViewStyle;
 }) {
   const insets = useSafeAreaInsets();
   const { preferences } = usePreferences();
+  /**
+   * Measured rather than assumed. The action is a slot, so its height depends on
+   * what is in it — and a Vietnamese label that wraps to two lines makes the bar
+   * taller than any constant would have predicted, hiding the content it was
+   * supposed to clear.
+   */
+  const [actionHeight, setActionHeight] = useState(0);
   const paddingBottom = tabBarInset ? size.tabBar + space.sectionGap * 2 : space.xl;
   const paddingTop = topInset ? insets.top : 0;
 
@@ -292,7 +316,10 @@ export function Screen({
   ) : (
     <View style={[styles.screen, { paddingTop }]}>
       <Animated.ScrollView
-        contentContainerStyle={[{ paddingBottom: paddingBottom + insets.bottom }, style]}
+        contentContainerStyle={[
+          { paddingBottom: paddingBottom + insets.bottom + actionHeight },
+          style,
+        ]}
         // A scroll view eats the tap that dismisses the keyboard by default, so
         // every control on a screen with a field open takes two taps: one to
         // close the keyboard, one to actually press it. `handled` gives the tap
@@ -317,6 +344,31 @@ export function Screen({
     <View style={[styles.screen, styles.ground]}>
       {preferences.ambientBackdrop ? <UnderScreenCanvas /> : null}
       {content}
+      {action ? (
+        <View
+          onLayout={(event) => setActionHeight(event.nativeEvent.layout.height)}
+          // `box-none` so the transparent top of the fade does not swallow taps
+          // meant for the content scrolling underneath it.
+          pointerEvents="box-none"
+          style={[
+            styles.action,
+            {
+              paddingBottom: insets.bottom + space.md + (tabBarInset ? size.tabBar : 0),
+            },
+          ]}
+        >
+          {/* The same fade the tab bar uses, so content passing behind either
+              one dims identically rather than the app having two idioms for
+              the same job. */}
+          <LinearGradient
+            colors={['rgba(8,7,14,0)', 'rgba(18, 17, 25, 0.94)']}
+            locations={[0, 0.4]}
+            pointerEvents="none"
+            style={StyleSheet.absoluteFill}
+          />
+          {action}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -333,6 +385,16 @@ const styles = StyleSheet.create({
   ground: { backgroundColor: ui.bg.base },
   gutter: {
     paddingHorizontal: space.gutter,
+  },
+  action: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: space.gutter,
+    // Generous, because this padding is the fade: the gradient is drawn across
+    // the whole bar and reaches full opacity 40% down it.
+    paddingTop: space.lg,
   },
   /** Casts the shadow. Must not clip, or iOS drops the shadow. */
   cardShadow: {

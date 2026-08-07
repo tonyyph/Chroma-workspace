@@ -2,7 +2,7 @@ import { round, space, ui } from '@chromawave/design-tokens';
 import { contrastRatio, safeForegroundFor, type Palette } from '@chromawave/domain';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import { Button, Card, Chip, Gutter, Screen, ScreenHeader, Text } from '@/ui';
 
 const SURFACES = ['APP UI', 'WEB', 'POSTER', 'SLIDE'] as const;
@@ -38,7 +38,7 @@ export function ApplyThemeScreen({
   const readable = contrastRatio(roles.onSurface, roles.surface) >= 4.5;
 
   return (
-    <Screen>
+    <Screen action={<Button label={t('theme.export')} onPress={onExport} />}>
       <Gutter style={styles.head}>
         <ScreenHeader meta={t('theme.meta', { name: palette.name })} title={t('theme.title')} />
       </Gutter>
@@ -88,10 +88,6 @@ export function ApplyThemeScreen({
             </Text>
           )}
         </Card>
-      </Gutter>
-
-      <Gutter style={styles.action}>
-        <Button label={t('theme.export')} onPress={onExport} />
       </Gutter>
     </Screen>
   );
@@ -300,5 +296,4 @@ const styles = StyleSheet.create({
   mappingWrap: { paddingTop: space.md + 2 },
   mapping: { gap: 10 },
   mappingRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  action: { paddingTop: space.gutter },
 });

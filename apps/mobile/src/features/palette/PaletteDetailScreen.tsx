@@ -7,10 +7,9 @@ import { useCallback, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import { ShareSheet, type ShareOptions } from '@/features/capture/ShareSheet';
 import { ToolFallback } from '@/features/tools/ToolFallback';
-import { usePalettes } from '@/hooks/usePalettes';
-import { renderShareCard, shareFile } from '@/lib/export';
-import { persistPhoto } from '@/lib/photos';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePalettes } from '@/hooks';
+import { persistPhoto, renderShareCard, shareFile } from '@/lib';
+import { usePreferences } from '@/providers';
 import {
   ActionSheet,
   Button,
@@ -172,7 +171,11 @@ export function PaletteDetailScreen() {
   ];
 
   return (
-    <Screen>
+    <Screen
+      action={
+        <Button label={t('palette.share')} onPress={() => setSharing(true)} variant="contrast" />
+      }
+    >
       <Gutter style={styles.nav}>
         <Pressable
           accessibilityLabel={t('palette.back')}
@@ -291,10 +294,6 @@ export function PaletteDetailScreen() {
           onPress={() => router.push('/paywall?trigger=json-export')}
           tone="pro"
         />
-      </Gutter>
-
-      <Gutter style={styles.action}>
-        <Button label={t('palette.share')} onPress={() => setSharing(true)} variant="contrast" />
       </Gutter>
 
       {/* C4. The sheet is where the format and the card options live, so Share
@@ -426,9 +425,6 @@ const styles = StyleSheet.create({
     paddingTop: space.cardGap,
     flexDirection: 'row',
     gap: space.xs,
-  },
-  action: {
-    paddingTop: space.sm,
   },
   shareBackdrop: {
     ...StyleSheet.absoluteFillObject,

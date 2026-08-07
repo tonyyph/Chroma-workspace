@@ -2,7 +2,7 @@ import { space, tint, ui } from '@chromawave/design-tokens';
 import { hexDeltaE00, type Palette } from '@chromawave/domain';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import {
   ActionSheet,
   Button,
@@ -71,7 +71,20 @@ export function CompareScreen({
   const closestColumn = columns[closest.columnIndex];
 
   return (
-    <Screen>
+    <Screen
+      action={
+        <ButtonRow>
+          <Button
+            disabled={pickActions.length === 0}
+            label={t('compare.addThird')}
+            onPress={() => setPicking(true)}
+            style={styles.flex}
+            variant="secondary"
+          />
+          <Button label={t('compare.merge')} onPress={onMerge} style={styles.wide} />
+        </ButtonRow>
+      }
+    >
       <Gutter style={styles.head}>
         <ScreenHeader meta={t('compare.meta')} title={t('compare.title')} />
       </Gutter>
@@ -173,19 +186,6 @@ export function CompareScreen({
         </Gutter>
       ) : null}
 
-      <Gutter style={styles.actions}>
-        <ButtonRow>
-          <Button
-            disabled={pickActions.length === 0}
-            label={t('compare.addThird')}
-            onPress={() => setPicking(true)}
-            style={styles.flex}
-            variant="secondary"
-          />
-          <Button label={t('compare.merge')} onPress={onMerge} style={styles.wide} />
-        </ButtonRow>
-      </Gutter>
-
       <ActionSheet
         actions={pickActions}
         cancelLabel={t('common.cancel')}
@@ -262,7 +262,6 @@ const styles = StyleSheet.create({
   },
   findingCopy: { gap: 3 },
   swap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  actions: { paddingTop: space.gutter },
   flex: { flex: 1 },
   wide: { flex: 1.3 },
 });

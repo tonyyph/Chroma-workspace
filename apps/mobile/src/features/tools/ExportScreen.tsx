@@ -6,7 +6,7 @@ import * as Linking from 'expo-linking';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { analytics } from '@/infrastructure/dependencies';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import { Button, Card, Chip, InlineError, NavBar, Screen, Text, Toggle } from '@/ui';
 
 const TARGETS = ['CSS', 'TAILWIND', 'SWIFT', 'JSON'] as const;
@@ -64,7 +64,9 @@ export function ExportScreen({
   };
 
   return (
-    <Screen>
+    <Screen
+      action={<Button label={t('export.copyToClipboard')} onPress={copy} variant="contrast" />}
+    >
       <NavBar
         leading={t('export.close')}
         onLeading={onClose}
@@ -134,10 +136,6 @@ export function ExportScreen({
           <InlineError detail={t('export.openFailedDetail')} title={t('export.openFailed')} />
         </View>
       ) : null}
-
-      <View style={styles.action}>
-        <Button label={t('export.copyToClipboard')} onPress={copy} variant="contrast" />
-      </View>
     </Screen>
   );
 }
@@ -261,5 +259,4 @@ const styles = StyleSheet.create({
   },
   destination: { flex: 1, gap: space.xs },
   error: { paddingHorizontal: space.gutter, paddingTop: space.md },
-  action: { paddingHorizontal: space.gutter, paddingTop: space.gutter },
 });
