@@ -80,7 +80,7 @@ export function TrendingScreen() {
           onPress={openItem}
           onSave={saveItem}
           saved={ownedIdFor(item) !== null}
-          variant="row"
+          variant="entry"
         />
       </View>
     ),
@@ -322,9 +322,9 @@ const styles = StyleSheet.create({
   list: {
     paddingTop: space.xs,
   },
+  /** No gutter: a feed entry is full bleed and sets its own copy inset. */
   row: {
-    paddingHorizontal: space.gutter,
-    paddingTop: 10,
+    paddingTop: space.xs,
   },
   footer: {
     paddingTop: space.md,

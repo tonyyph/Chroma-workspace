@@ -40,7 +40,13 @@ export const TrendingCard = memo(function TrendingCard({
   /** Omit for surfaces where saving is not offered — the whole card still opens. */
   onSave?: ((item: TrendingItem) => void) | undefined;
   saved: boolean;
-  variant?: 'tile' | 'row';
+  variant?: 'tile' | 'row' | 'entry';
+  /**
+   * `tile` is the home rail, `row` is a search result, `entry` is a field note.
+   *
+   * Same data, three densities, and the difference is what the surface is for:
+   * a rail is glanced at, a result list is scanned, and a weekly note is read.
+   */
   /** Fixed width for the horizontal rail; omitted the card fills its column. */
   width?: number;
 }) {
@@ -54,6 +60,62 @@ export const TrendingCard = memo(function TrendingCard({
     category: t(`trending.category.${item.category}`),
     age: shortAge(item.publishedAt),
   });
+
+  if (variant === 'entry') {
+    /**
+     * An entry in the feed, as a note rather than a list row.
+     *
+     * This was a 72pt strip beside three lines of truncated text — the shape of
+     * a search result, which is the right shape for scanning a hundred things
+     * and the wrong one for reading seven. Field notes are written weekly by a
+     * person and there are never many; the entry is now the width of the
+     * screen, the artwork carries the palette at its real proportions, and the
+     * blurb is set as body copy instead of a one-line caption clipped at the
+     * gutter.
+     */
+    return (
+      <Pressable
+        accessibilityHint={item.blurb}
+        accessibilityLabel={item.name}
+        accessibilityRole="button"
+        onPress={open}
+        style={({ pressed }) => [
+          styles.entry,
+          pressed && { opacity: uiMotion.listPress.opacity },
+        ]}
+      >
+        <View
+          accessibilityLabel={item.colors.map((color) => color.hex).join(', ')}
+          style={styles.entryArt}
+        >
+          {item.colors.map((color, index) => (
+            <View
+              key={`${index}:${color.hex}`}
+              style={{ flex: color.weight, backgroundColor: color.hex }}
+            />
+          ))}
+        </View>
+
+        <View style={styles.entryCopy}>
+          <Meta style={styles.entryMeta}>{meta}</Meta>
+          <Text variant="section">{item.name}</Text>
+          <Text style={styles.entryBlurb} tone="secondary" variant="body">
+            {item.blurb}
+          </Text>
+        </View>
+
+        {onSave ? (
+          <View style={styles.entryAction}>
+            <Chip
+              label={t(saved ? 'trending.saved' : 'trending.save')}
+              onPress={save}
+              tone={saved ? 'selected' : 'default'}
+            />
+          </View>
+        ) : null}
+      </Pressable>
+    );
+  }
 
   if (variant === 'row') {
     return (
@@ -140,17 +202,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     paddingVertical: 11,
   },
-  rowArt: {
-    width: 72,
-  },
-  rowCopy: {
-    flex: 1,
-    gap: 3,
-  },
-  blurb: {
-    fontSize: 12,
-    lineHeight: 17,
-  },
+  rowArt: { width: 72 },
+  rowCopy: { flex: 1, gap: 3 },
+  blurb: { fontSize: 12, lineHeight: 17 },
+
+  entry: { paddingBottom: space.lg },
+  /** Full bleed and tall enough that a 6% signal is a band, not a line. */
+  entryArt: { height: 190, flexDirection: 'row', backgroundColor: ui.bg.media },
+  entryCopy: { paddingHorizontal: space.gutter, paddingTop: space.cardGap, gap: 6 },
+  entryMeta: { fontSize: 9, letterSpacing: 1.2 },
+  /** A reading measure, not a caption: this is the only prose in the app. */
+  entryBlurb: { fontSize: 15, lineHeight: 24, maxWidth: 520 },
+  entryAction: { paddingHorizontal: space.gutter, paddingTop: space.sm, flexDirection: 'row' },
 
   tile: {
     borderRadius: round.card,
