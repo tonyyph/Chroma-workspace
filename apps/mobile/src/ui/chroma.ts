@@ -85,11 +85,21 @@ export const chromaMix = makeMutable(1);
  */
 const CHROMA_MS = 620;
 
-const lerp = (from: number, to: number, t: number) => from + (to - from) * t;
-
+/**
+ * The arithmetic is inline rather than calling a `lerp` helper.
+ *
+ * This runs inside the driver's frame callback on the UI thread, and a worklet
+ * may only call other worklets — a plain helper reached from here throws
+ * "tried to synchronously call a non-worklet function" on the first frame.
+ * Three multiplications do not need a named function to hide behind.
+ */
 const lerpTriple = (from: Triple, to: Triple, t: number): Triple => {
   'worklet';
-  return [lerp(from[0], to[0], t), lerp(from[1], to[1], t), lerp(from[2], to[2], t)];
+  return [
+    from[0] + (to[0] - from[0]) * t,
+    from[1] + (to[1] - from[1]) * t,
+    from[2] + (to[2] - from[2]) * t,
+  ];
 };
 
 /** The bands as they are on screen this instant, wherever the animation is. */
