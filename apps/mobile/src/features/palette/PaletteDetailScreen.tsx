@@ -9,7 +9,7 @@ import { Modal, StyleSheet, View } from 'react-native';
 import { ShareSheet, type ShareOptions } from '@/features/capture/ShareSheet';
 import { PalettePhoto } from '@/features/library/PalettePhoto';
 import { ToolFallback } from '@/features/tools/ToolFallback';
-import { useChromaticSurface, usePalettes } from '@/hooks';
+import { useAccent, useChromaticSurface, usePalettes } from '@/hooks';
 import { persistPhoto, renderShareCard, shareFile } from '@/lib';
 import { useEntitlement, usePreferences } from '@/providers';
 import {
@@ -78,6 +78,9 @@ export function PaletteDetailScreen() {
 
   // The whole app takes this palette's colour while the screen is in front.
   useChromaticSurface(palette?.colors ?? null);
+  // One borrowed colour for this screen. Tags are the palette's own vocabulary,
+  // so they are the thing worth saying in its own voice.
+  const accent = useAccent(palette?.colors ?? null);
 
   /**
    * Every menu action is a write-then-reflect: persist first, and only update
@@ -260,6 +263,7 @@ export function PaletteDetailScreen() {
       <Gutter style={styles.tags}>
         {palette.tags.map((tag) => (
           <Chip
+            accent={accent?.tint}
             key={tag}
             label={tag.toLocaleUpperCase()}
             onPress={() => router.push(`/explore?q=${encodeURIComponent(tag)}`)}
@@ -290,7 +294,7 @@ export function PaletteDetailScreen() {
           and no order; a list has a reading direction, room for the name to
           breathe, and a shape the eye already knows how to scan. */}
       <Gutter style={styles.sectionHead}>
-        <Text tone="tertiary" variant="eyebrow">
+        <Text style={accent ? { color: accent.color } : undefined} tone="tertiary" variant="eyebrow">
           {t('palette.tools')}
         </Text>
       </Gutter>
@@ -308,7 +312,7 @@ export function PaletteDetailScreen() {
 
       {/* And the three that take it out of the app. */}
       <Gutter style={styles.sectionHead}>
-        <Text tone="tertiary" variant="eyebrow">
+        <Text style={accent ? { color: accent.color } : undefined} tone="tertiary" variant="eyebrow">
           {t('export.title')}
         </Text>
       </Gutter>

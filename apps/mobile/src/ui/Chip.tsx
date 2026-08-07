@@ -61,8 +61,17 @@ export function Chip({
   onPress,
   /** Drawn before the label at the chip's mono size. */
   icon,
-  /** Stretch to share a row equally — the "MERGE ALL / EXPORT SET / INVITE" pattern. */
+  /** Stretch to share a row equally — the "EXPORT SET / INVITE" pattern. */
   fill = false,
+  /**
+   * A recipe to use instead of the tone's own.
+   *
+   * The tones are fixed meanings — pro is violet, danger is coral — and none of
+   * them can describe a colour the user has not photographed yet. A screen
+   * tinting a chip from its own subject supplies the recipe rather than the app
+   * growing a tone per palette. See `accentTint`.
+   */
+  accent,
   style,
 }: {
   label: string;
@@ -70,9 +79,20 @@ export function Chip({
   onPress?: () => void;
   icon?: IconName;
   fill?: boolean;
+  accent?: { backgroundColor: string; borderColor: string; color: string } | undefined;
   style?: ViewStyle;
 }) {
-  const look = tones[tone];
+  const base = tones[tone];
+  const look = accent
+    ? {
+        container: {
+          backgroundColor: accent.backgroundColor,
+          borderWidth: 1,
+          borderColor: accent.borderColor,
+        },
+        color: accent.color,
+      }
+    : base;
   const content = icon ? (
     <View style={styles.withIcon}>
       <Icon color={look.color} name={icon} scale="inline" />

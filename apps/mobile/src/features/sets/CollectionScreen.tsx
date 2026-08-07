@@ -12,7 +12,7 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { PalettePhoto } from '@/features/library/PalettePhoto';
-import { useChromaticSurface } from '@/hooks';
+import { useAccent, useChromaticSurface } from '@/hooks';
 import { usePreferences } from '@/providers';
 import {
   Button,
@@ -85,6 +85,8 @@ export function CollectionScreen({
   const system = useMemo(() => set.merged ?? [], [set.merged]);
   // A project's field is the system it has built so far.
   useChromaticSurface(system.length ? system : null);
+  // The project's own accent, used on the two labels that name its parts.
+  const accent = useAccent(system.length ? system : null);
   // Only the first gap is shown. Three sentences of criticism about someone's
   // own work reads as a scolding; one reads as a next step.
   const gap = useMemo(() => paletteGaps(system)[0] ?? null, [system]);
@@ -140,7 +142,11 @@ export function CollectionScreen({
           re-weights these bands, and the layout transition is what makes that
           legible as a consequence of the capture rather than a new screen. */}
       <Gutter style={styles.systemWrap}>
-        <Text style={styles.eyebrow} tone="tertiary" variant="eyebrow">
+        <Text
+          style={[styles.eyebrow, accent ? { color: accent.color } : null]}
+          tone="tertiary"
+          variant="eyebrow"
+        >
           {t('collection.system')}
         </Text>
         {system.length ? (

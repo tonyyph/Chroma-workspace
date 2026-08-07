@@ -134,3 +134,21 @@ export function bandsAt(t: number, from: Bands, to: Bands): Bands {
     lerpTriple(from[2], to[2], t),
   ];
 }
+
+/**
+ * A container recipe built from one colour, shaped like the `tint.*` tokens.
+ *
+ * The tokens are fixed recipes for fixed meanings — pro is violet, info is
+ * cyan, danger is coral. This is the same shape for a colour that is not known
+ * until the user photographs it, so a screen can tint a control from its own
+ * subject without inventing a second way of describing a filled pill.
+ */
+export function accentTint(accent: string): {
+  backgroundColor: string;
+  borderColor: string;
+  color: string;
+} {
+  const { red, green, blue } = hexToRgb(accent);
+  const rgba = (alpha: number) => `rgba(${red},${green},${blue},${alpha})`;
+  return { backgroundColor: rgba(0.14), borderColor: rgba(0.34), color: accent };
+}
