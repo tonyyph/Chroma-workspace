@@ -294,7 +294,11 @@ export function PaletteDetailScreen() {
           and no order; a list has a reading direction, room for the name to
           breathe, and a shape the eye already knows how to scan. */}
       <Gutter style={styles.sectionHead}>
-        <Text style={accent ? { color: accent.color } : undefined} tone="tertiary" variant="eyebrow">
+        <Text
+          style={accent ? { color: accent.color } : undefined}
+          tone="tertiary"
+          variant="eyebrow"
+        >
           {t('palette.tools')}
         </Text>
       </Gutter>
@@ -312,7 +316,11 @@ export function PaletteDetailScreen() {
 
       {/* And the three that take it out of the app. */}
       <Gutter style={styles.sectionHead}>
-        <Text style={accent ? { color: accent.color } : undefined} tone="tertiary" variant="eyebrow">
+        <Text
+          style={accent ? { color: accent.color } : undefined}
+          tone="tertiary"
+          variant="eyebrow"
+        >
           {t('export.title')}
         </Text>
       </Gutter>

@@ -1,7 +1,7 @@
 import { makeColor, type Palette } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { usePalettes, useSets } from '@/hooks';
+import { useChromaticSurface, usePalettes, useSets } from '@/hooks';
 import { analytics, hapticsService, soundService } from '@/infrastructure/dependencies';
 import { persistPhoto } from '@/lib';
 import { usePreferences } from '@/providers';
@@ -35,6 +35,10 @@ export default function ResultRoute() {
     () => (pending ? toPalette('Untitled capture') : null),
     [pending, toPalette],
   );
+
+  // The field takes the reading's colour the moment it lands, so the palette is
+  // already the room by the time the user decides whether to keep it.
+  useChromaticSurface(draft?.colors ?? null);
 
   const commit = useCallback(
     async (name: string) => {

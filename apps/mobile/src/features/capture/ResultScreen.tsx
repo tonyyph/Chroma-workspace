@@ -1,16 +1,30 @@
-import { round, space, tint, ui } from '@chromawave/design-tokens';
+import { round, space, ui } from '@chromawave/design-tokens';
 import { readStability, type Color, type Palette } from '@chromawave/domain';
 import * as Clipboard from 'expo-clipboard';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
+import { PalettePhoto } from '@/features/library/PalettePhoto';
 import { usePreferences } from '@/providers';
 import { Button, ButtonRow, Card, ColorRow, Icon, Meta, Sheet, Text } from '@/ui';
 
 /**
- * B2 · RESULT SHEET · "drag to expand full hex list".
+ * B2 · RESULT SHEET — what was read, and what it was read from.
  *
- * The capture sits behind a sheet that overlaps it by 28pt. The three named
- * roles get full rows; the extras pair up in a two-up row, exactly as drawn.
+ * **What changed and why.** The capture area was a 392pt panel of `bg/media`
+ * with the word CAPTURE in the middle of it: the photograph the user had taken
+ * one second earlier was never shown. On the screen immediately after the app's
+ * core action, the evidence for the entire reading was a grey rectangle.
+ *
+ * The frame is now the ground, with the extracted bands lying along its bottom
+ * edge — the reading sitting on the thing it was read from, which is the only
+ * arrangement that lets someone check it at a glance.
+ *
+ * The sheet leads with the measurement rather than a name. At this point the
+ * palette is called "Untitled capture", so the old title row was announcing a
+ * placeholder in the largest type on screen, while ΔE — the number that says
+ * whether to trust any of this, and the thing no competitor shows at all — was
+ * a caption under it. They have swapped places.
  */
 export function ResultScreen({
   palette,
@@ -31,10 +45,17 @@ export function ResultScreen({
 
   return (
     <View style={styles.root}>
-      <View style={styles.capture}>
-        <Text tone="quaternary" variant="chip">
-          {t('result.capture')}
-        </Text>
+      <View accessibilityLabel={t('result.capture')} style={styles.capture}>
+        <PalettePhoto palette={palette} style={StyleSheet.absoluteFill} />
+        {/* Top scrim only. The bottom of the frame carries the bands, and a
+            scrim there would mute the very colours being reported. */}
+        <LinearGradient
+          colors={['rgba(8,7,14,.62)', 'rgba(8,7,14,0)']}
+          locations={[0, 0.42]}
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+        />
+
         <View style={styles.captureChrome}>
           <Card
             accessibilityLabel={t('result.close')}
@@ -52,25 +73,37 @@ export function ResultScreen({
             <Text variant="chip">{t('result.retake')}</Text>
           </Card>
         </View>
+
+        {/* The reading, lying on its source at true proportions. */}
+        <View
+          accessibilityLabel={palette.colors.map((color) => color.hex).join(', ')}
+          style={styles.readout}
+        >
+          {palette.colors.map((color, index) => (
+            <View
+              key={`${index}:${color.hex}`}
+              style={{ flex: color.weight, backgroundColor: color.hex }}
+            />
+          ))}
+        </View>
       </View>
 
       <Sheet overlap={28} style={styles.sheet}>
-        <View style={styles.titleRow}>
-          <View style={styles.titleCopy}>
-            <Text variant="section">{palette.name}</Text>
-            <Meta>{`${palette.colors.length} colours · ΔE ${palette.deltaE} · ${palette.space === 'p3' ? 'P3' : 'sRGB'}`}</Meta>
-          </View>
-          <View style={[styles.confidence, tint.info]}>
-            <Text style={{ color: tint.info.color }} variant="chip">
-              {t('result.confidence', { percent: Math.round(palette.confidence * 100) })}
-            </Text>
+        {/* The verdict, at the size the decision deserves. Colour is never the
+            only carrier — the distance is a number and the stability is a word. */}
+        <View style={styles.verdict}>
+          <Text variant="display">{`ΔE ${palette.deltaE}`}</Text>
+          <View style={styles.verdictMeta}>
+            <Meta tone={stability === 'stable' ? 'info' : 'tertiary'}>
+              {t('result.read', { stability: t(`common.stability.${stability}`) })}
+            </Meta>
+            <Meta>
+              {`${t('result.confidence', { percent: Math.round(palette.confidence * 100) })} · ${
+                palette.space === 'p3' ? 'P3' : 'sRGB'
+              }`}
+            </Meta>
           </View>
         </View>
-
-        {/* The stability verdict is text, per the accessibility gate — never colour alone. */}
-        <Meta tone={stability === 'stable' ? 'info' : 'tertiary'}>
-          {t('result.read', { stability: t(`common.stability.${stability}`) })}
-        </Meta>
 
         <View style={styles.rows}>
           {named.map((color) => (
@@ -127,12 +160,12 @@ function roleLabelled(color: Color) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: ui.bg.base },
-  capture: {
-    height: 392,
-    backgroundColor: ui.bg.media,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  /**
+   * Flexes rather than sitting at a fixed 392. The sheet below sizes to its
+   * content, so a three-colour palette leaves room the photograph can use and a
+   * six-colour one takes it back.
+   */
+  capture: { flex: 1, minHeight: 300, backgroundColor: ui.bg.media },
   captureChrome: {
     position: 'absolute',
     top: 64,
@@ -151,15 +184,18 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: round.full,
   },
-  sheet: { paddingHorizontal: space.sectionGap },
-  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  titleCopy: { flex: 1, gap: 3 },
-  confidence: {
-    borderWidth: 1,
-    borderRadius: round.control,
-    paddingHorizontal: 11,
-    paddingVertical: 8,
+  readout: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    // Clear of the sheet's 28pt overlap, so the strip is never tucked under it.
+    bottom: 28,
+    height: 14,
+    flexDirection: 'row',
   },
+  sheet: { paddingHorizontal: space.sectionGap },
+  verdict: { gap: space.xs, paddingBottom: space.md },
+  verdictMeta: { gap: 3 },
   rows: { gap: space.xs },
   row: { paddingHorizontal: 13, paddingVertical: 11, borderRadius: round.control },
   extras: { flexDirection: 'row', gap: space.xs },
