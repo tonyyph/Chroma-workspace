@@ -247,7 +247,7 @@ const LandingHero = memo(function LandingHero({ recent }: { recent: Palette | nu
     moods: [],
     styles: [],
     search: '',
-    sort: 'popular',
+    sort: 'featured',
     pageSize: 1,
   });
 

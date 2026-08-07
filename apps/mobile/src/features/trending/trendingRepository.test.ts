@@ -1,6 +1,8 @@
 import { colorSignature, dedupeById, makeColor } from '@chromawave/domain';
 import { trendingItems, type TrendingItem } from '@/data';
+import type { KeyValueStorage } from '@/infrastructure/KeyValueStorage';
 import {
+  syncDrop,
   HOME_TRENDING_COUNT,
   TrendingFeedError,
   defaultTrendingRequest,
@@ -11,8 +13,6 @@ import {
 
 const item = (overrides: Partial<TrendingItem> & Pick<TrendingItem, 'id'>): TrendingItem => ({
   name: 'Fixture',
-  author: 'test',
-  saves: 100,
   category: 'urban',
   blurb: 'A fixture',
   publishedAt: '2026-08-01T00:00:00.000Z',
@@ -78,11 +78,12 @@ describe('validateCatalogue', () => {
 });
 
 describe('selectTrending', () => {
-  it('orders by saves for popular and by date for newest', () => {
-    const popular = selectTrending({ ...defaultTrendingRequest, sort: 'popular' });
+  it("keeps the editor's order for featured and sorts by date for newest", () => {
+    const featured = selectTrending({ ...defaultTrendingRequest, sort: 'featured' });
     const newest = selectTrending({ ...defaultTrendingRequest, sort: 'new' });
 
-    expect(popular[0]!.saves).toBeGreaterThanOrEqual(popular[1]!.saves);
+    // Featured is the catalogue's own sequence, not a ranking derived from data.
+    expect(featured.map((entry) => entry.id)).toEqual(trendingItems.map((entry) => entry.id));
     expect(newest[0]!.publishedAt >= newest[1]!.publishedAt).toBe(true);
   });
 
@@ -92,9 +93,14 @@ describe('selectTrending', () => {
     expect(nature.every((entry) => entry.category === 'nature')).toBe(true);
   });
 
-  it('searches name, handle, blurb and hex', () => {
+  it('searches name, blurb, category and hex', () => {
     expect(selectTrending({ ...defaultTrendingRequest, search: 'chlorine' })).toHaveLength(1);
-    expect(selectTrending({ ...defaultTrendingRequest, search: 'mira' })).toHaveLength(1);
+    // The blurb, which is the entry's editorial line — handles are gone, and
+    // searching for one used to be how a reader found an author who was fiction.
+    expect(selectTrending({ ...defaultTrendingRequest, search: 'municipal pool' })).toHaveLength(1);
+    expect(selectTrending({ ...defaultTrendingRequest, search: 'nature' }).length).toBeGreaterThan(
+      0,
+    );
     expect(selectTrending({ ...defaultTrendingRequest, search: 'zzzz' })).toHaveLength(0);
   });
 
@@ -144,5 +150,46 @@ describe('fetchTrending', () => {
     await expect(fetchTrending({ ...defaultTrendingRequest, page: -1 })).rejects.toBeInstanceOf(
       TrendingFeedError,
     );
+  });
+});
+
+/**
+ * The drop is content someone publishes weekly to a static file, so every
+ * failure here is ordinary rather than exceptional: no network, a half-written
+ * file, a stale cache. All of them have to end with a readable feed, because a
+ * palette catalogue that shows nothing is worse than one that shows last week's.
+ */
+describe('syncDrop', () => {
+  class MapStorage implements KeyValueStorage {
+    readonly values = new Map<string, string>();
+    async getItem(key: string) {
+      return this.values.get(key) ?? null;
+    }
+    async setItem(key: string, value: string) {
+      this.values.set(key, value);
+    }
+    async removeItem(key: string) {
+      this.values.delete(key);
+    }
+  }
+
+  const bundled = () => selectTrending(defaultTrendingRequest).map((entry) => entry.id);
+  const before = bundled();
+
+  afterEach(() => {
+    // The catalogue is module state, so a test that replaced it would leak.
+    validateCatalogue(trendingItems);
+  });
+
+  it('does nothing at all when no drop URL is configured', async () => {
+    const storage = new MapStorage();
+    await syncDrop(storage);
+    expect(storage.values.size).toBe(0);
+    expect(bundled()).toEqual(before);
+  });
+
+  it('leaves the bundled catalogue in place when the fetch fails', async () => {
+    await syncDrop(new MapStorage());
+    expect(bundled()).toEqual(before);
   });
 });

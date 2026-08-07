@@ -1,4 +1,5 @@
 import { round, space, ui, uiMotion } from '@chromawave/design-tokens';
+import { shortAge } from '@chromawave/domain';
 import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { type TrendingItem } from '@/data';
@@ -46,9 +47,12 @@ export const TrendingCard = memo(function TrendingCard({
   const { t } = usePreferences();
   const open = useCallback(() => onPress(item), [onPress, item]);
   const save = useCallback(() => onSave?.(item), [onSave, item]);
+  // Where it was read and when it was published — the two facts about an entry
+  // that are actually true. This line used to report a save count and a handle,
+  // both of which were numbers and names typed into a fixture.
   const meta = t('trending.meta', {
-    count: (item.saves / 1000).toFixed(1),
-    author: item.author,
+    category: t(`trending.category.${item.category}`),
+    age: shortAge(item.publishedAt),
   });
 
   if (variant === 'row') {

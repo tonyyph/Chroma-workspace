@@ -40,9 +40,6 @@ export type TrendingItem = {
   /** Stable and content-free, so it survives a reordering of this array. */
   readonly id: string;
   readonly name: string;
-  /** The handle that published it. Rendered as "@handle". */
-  readonly author: string;
-  readonly saves: number;
   readonly category: TrendingCategory;
   /** One line of why it is worth a tap. Never a duplicate of the name. */
   readonly blurb: string;
@@ -58,8 +55,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'chlorine-haze',
     name: 'Chlorine haze',
-    author: 'mira',
-    saves: 2100,
     category: 'interior',
     blurb: 'Municipal pool at 7am, before anyone gets in',
     publishedAt: ago(1),
@@ -72,8 +67,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'late-brick',
     name: 'Late brick',
-    author: 'dao',
-    saves: 1800,
     category: 'urban',
     blurb: 'West-facing wall holding the last hour of sun',
     publishedAt: ago(2),
@@ -86,8 +79,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'night-transit',
     name: 'Night transit',
-    author: 'sol',
-    saves: 1200,
     category: 'urban',
     blurb: 'Platform lighting and a single orange sign',
     publishedAt: ago(3),
@@ -100,8 +91,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'paper-mill',
     name: 'Paper mill',
-    author: 'ines',
-    saves: 3400,
     category: 'editorial',
     blurb: 'Ink on uncoated stock — the whole contrast range',
     publishedAt: ago(4),
@@ -114,8 +103,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'salt-flat',
     name: 'Salt flat',
-    author: 'kaya',
-    saves: 980,
     category: 'nature',
     blurb: 'Bleached ground, one degree of sky in it',
     publishedAt: ago(5),
@@ -129,8 +116,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'fern-shade',
     name: 'Fern shade',
-    author: 'noor',
-    saves: 1550,
     category: 'nature',
     blurb: 'Understorey green, three stops below the canopy',
     publishedAt: ago(6),
@@ -143,8 +128,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'server-room',
     name: 'Server room',
-    author: 'wren',
-    saves: 2650,
     category: 'interior',
     blurb: 'Status LEDs against a room with no daylight',
     publishedAt: ago(7),
@@ -157,8 +140,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'kodachrome-64',
     name: 'Kodachrome 64',
-    author: 'tam',
-    saves: 4200,
     category: 'archive',
     blurb: 'Slide film reds that no sensor gets for free',
     publishedAt: ago(8),
@@ -172,8 +153,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'terrazzo-lobby',
     name: 'Terrazzo lobby',
-    author: 'juno',
-    saves: 870,
     category: 'interior',
     blurb: 'Chips of everything in a field of nothing',
     publishedAt: ago(9),
@@ -187,8 +166,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'risograph-two-run',
     name: 'Risograph two-run',
-    author: 'per',
-    saves: 3100,
     category: 'editorial',
     blurb: 'Fluoro pink over teal, misregistered on purpose',
     publishedAt: ago(10),
@@ -201,8 +178,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'harbour-crane',
     name: 'Harbour crane',
-    author: 'esme',
-    saves: 1340,
     category: 'urban',
     blurb: 'Safety orange as the only colour for a mile',
     publishedAt: ago(11),
@@ -215,8 +190,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'plum-dusk',
     name: 'Plum dusk',
-    author: 'rio',
-    saves: 2280,
     category: 'nature',
     blurb: 'Twelve minutes after sunset, facing east',
     publishedAt: ago(12),
@@ -230,8 +203,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'vhs-tracking',
     name: 'VHS tracking',
-    author: 'bex',
-    saves: 1910,
     category: 'archive',
     blurb: 'Chroma bleed from a tape played once too often',
     publishedAt: ago(13),
@@ -245,8 +216,6 @@ export const trendingItems: readonly TrendingItem[] = [
   {
     id: 'linen-and-clay',
     name: 'Linen and clay',
-    author: 'aya',
-    saves: 760,
     category: 'editorial',
     blurb: 'A stylist’s flatlay with the contrast pulled out',
     publishedAt: ago(14),

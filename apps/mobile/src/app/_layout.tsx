@@ -14,10 +14,12 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from '@/components';
+import { syncDrop } from '@/features/trending/trendingRepository';
 import { useNotificationRoute } from '@/hooks';
+import { storage } from '@/infrastructure/dependencies';
 import { EntitlementProvider, PreferencesProvider, usePreferences } from '@/providers';
 import { BackdropDriver } from '@/ui';
 
@@ -66,6 +68,15 @@ function AppNavigator() {
   // Inside the navigator, because it navigates: a router call from above the
   // Stack has nothing mounted to act on.
   useNotificationRoute();
+
+  /**
+   * Pulls this week's field notes once per launch. Deliberately unawaited and
+   * unguarded: the feed already has the bundled catalogue to show, so nothing on
+   * screen is waiting on this and a failure changes nothing.
+   */
+  useEffect(() => {
+    void syncDrop(storage);
+  }, []);
 
   return (
     <>

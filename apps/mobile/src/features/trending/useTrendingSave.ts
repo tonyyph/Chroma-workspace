@@ -80,9 +80,10 @@ export function useTrendingSave(): TrendingSaver {
           capturedAt: now,
           source: 'photo',
           colors: [...item.colors],
-          // The handle it came from, kept as a tag so the copy still says where
-          // it is from once it is one library card among many.
-          tags: [item.author, item.category],
+          // Where it was read, kept as a tag so the copy still says where it is
+          // from once it is one library card among many. The handle that used to
+          // sit alongside it named nobody.
+          tags: [item.category],
           location: null,
           photoUri: null,
           deltaE: 0,

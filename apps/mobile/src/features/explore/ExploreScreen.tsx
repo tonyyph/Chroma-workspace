@@ -67,7 +67,7 @@ export function ExploreScreen() {
     moods: [],
     styles: [],
     search,
-    sort: 'popular',
+    sort: 'featured',
     pageSize: EXPLORE_PREVIEW,
     // While searching, anything already owned is listed above under the user's
     // own name for it, so offering it again as a feed entry is the same palette

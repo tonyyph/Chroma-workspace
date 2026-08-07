@@ -75,7 +75,9 @@ export const HeroCarousel = memo(function HeroCarousel({
         colors: featured.colors.map((color) => color.hex),
         art: 'columns',
         badge: {
-          label: t('trending.saves', { count: (featured.saves / 1000).toFixed(1) }),
+          // The category, not a save count: this slide used to badge a number
+          // that was typed into a fixture.
+          label: t(`trending.category.${featured.category}`),
           tone: 'info',
         },
       });

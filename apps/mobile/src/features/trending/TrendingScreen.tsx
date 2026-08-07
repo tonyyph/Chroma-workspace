@@ -49,7 +49,7 @@ export function TrendingScreen() {
 
   const filters = useDiscoveryFilters();
   const [category, setCategory] = useState<TrendingCategory | 'all'>('all');
-  const [sort, setSort] = useState<TrendingSort>('popular');
+  const [sort, setSort] = useState<TrendingSort>('featured');
   const debouncedSearch = useDebounced(filters.query.search);
 
   const feed = useTrending({
@@ -163,11 +163,11 @@ export function TrendingScreen() {
           id: 'sort',
           label: t('filter.group.sort'),
           options: [
-            { value: 'popular', label: t('trending.sort.popular') },
+            { value: 'featured', label: t('trending.sort.featured') },
             { value: 'new', label: t('trending.sort.new') },
           ],
           selected: [sort],
-          onToggle: (value) => setSort(value === 'new' ? 'new' : 'popular'),
+          onToggle: (value) => setSort(value === 'new' ? 'new' : 'featured'),
         }}
       />
 
