@@ -1,4 +1,4 @@
-import { brandBands, ui } from '@chromawave/design-tokens';
+import { ui } from '@chromawave/design-tokens';
 import { Canvas, Fill, Shader, Skia } from '@shopify/react-native-skia';
 import { memo, useEffect } from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';
@@ -20,6 +20,7 @@ import {
   backdropTouchY,
   backdropUniforms,
 } from './backdropMotion';
+import { bandsAt, chromaFrom, chromaMix, chromaTo } from './chroma';
 
 /**
  * How long one full cycle takes.
@@ -131,15 +132,14 @@ function triplet(hex: string): [number, number, number] {
 }
 
 /**
- * Converted once, at module load.
+ * The ground, converted once at module load.
  *
  * The uniforms are built inside a worklet on the UI thread, and calling a plain
- * JS function from there throws — the colours are constants, so they are turned
- * into plain arrays here and merely closed over.
+ * JS function from there throws — the ground never changes, so it is turned into
+ * a plain array here and merely closed over. The three bands used to be
+ * constants beside it; they now come from `chroma`, because the field wears
+ * whatever palette is on screen.
  */
-const BAND_A = triplet(brandBands[0] ?? '#7C5CFF');
-const BAND_B = triplet(brandBands[1] ?? '#22D3EE');
-const BAND_C = triplet(brandBands[2] ?? '#FF7A5C');
 const GROUND = triplet(ui.bg.base);
 
 /**
@@ -176,14 +176,18 @@ export function BackdropDriver() {
     // Chase rather than track: the lag is what separates the backdrop's plane
     // from the content's.
     backdropShift.value += (backdropScroll.value - backdropShift.value) * 0.06;
+    // The bands are interpolated here rather than animated as nine separate
+    // shared values: this worklet was already running and already building this
+    // object, so adapting the field's colour costs one lerp a frame.
+    const bands = bandsAt(chromaMix.value, chromaFrom.value, chromaTo.value);
     backdropUniforms.value = {
       resolution: backdropResolution.value,
       cycle: backdropCycle.value,
       scroll: backdropShift.value,
       focus: [backdropTouchX.value, backdropTouchY.value],
-      bandA: BAND_A,
-      bandB: BAND_B,
-      bandC: BAND_C,
+      bandA: bands[0] as [number, number, number],
+      bandB: bands[1] as [number, number, number],
+      bandC: bands[2] as [number, number, number],
       ground: GROUND,
     };
   }, false);
@@ -204,14 +208,15 @@ export function BackdropDriver() {
       // Held where the masses are spread, so the still frame is a composition
       // rather than whatever the cycle happens to start on.
       backdropCycle.value = 0.22;
+      const still = bandsAt(chromaMix.value, chromaFrom.value, chromaTo.value);
       backdropUniforms.value = {
         resolution: [width, height],
         cycle: 0.22,
         scroll: 0,
         focus: [0.5, 0.42],
-        bandA: BAND_A,
-        bandB: BAND_B,
-        bandC: BAND_C,
+        bandA: still[0] as [number, number, number],
+        bandB: still[1] as [number, number, number],
+        bandC: still[2] as [number, number, number],
         ground: GROUND,
       };
       return;

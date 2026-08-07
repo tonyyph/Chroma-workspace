@@ -12,6 +12,7 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { PalettePhoto } from '@/features/library/PalettePhoto';
+import { useChromaticSurface } from '@/hooks';
 import { usePreferences } from '@/providers';
 import {
   Button,
@@ -82,6 +83,8 @@ export function CollectionScreen({
   // an unstable identity here would re-run the gap analysis — and re-render the
   // pairings — on every keystroke in the rename sheet.
   const system = useMemo(() => set.merged ?? [], [set.merged]);
+  // A project's field is the system it has built so far.
+  useChromaticSurface(system.length ? system : null);
   // Only the first gap is shown. Three sentences of criticism about someone's
   // own work reads as a scolding; one reads as a next step.
   const gap = useMemo(() => paletteGaps(system)[0] ?? null, [system]);

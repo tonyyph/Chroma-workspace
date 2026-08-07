@@ -8,6 +8,7 @@
  * Files *inside* this directory import each other directly. A module that
  * imports its own barrel is a cycle.
  */
+export * from './useChromaticSurface';
 export * from './useDebounced';
 export * from './useImageSampler';
 export * from './useNotificationRoute';

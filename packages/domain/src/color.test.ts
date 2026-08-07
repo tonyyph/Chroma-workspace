@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  clampOklch,
   contrastRatio,
   deltaE00,
   extractPaletteFromRgba,
   hexDeltaE00,
   hexToRgb,
+  oklchToHex,
+  readableOn,
   rgbToDisplayP3,
   rgbToHex,
   rgbToLab,
@@ -230,5 +233,62 @@ describe('colour vision simulation', () => {
     const { red, green, blue } = hexToRgb(grey);
     expect(red).toBe(green);
     expect(green).toBe(blue);
+  });
+});
+
+describe('oklch round trip', () => {
+  it('returns the colour it was given', () => {
+    for (const hex of ['#7C5CFF', '#22D3EE', '#FF7A5C', '#0C0B18', '#EDEAE3', '#808080']) {
+      expect(oklchToHex(rgbToOklch(hexToRgb(hex)))).toBe(hex);
+    }
+  });
+
+  it('moves lightness without moving hue', () => {
+    const base = rgbToOklch(hexToRgb('#7C5CFF'));
+    const lighter = rgbToOklch(hexToRgb(oklchToHex({ ...base, lightness: base.lightness + 0.2 })));
+    expect(Math.abs(lighter.hue - base.hue)).toBeLessThan(1.5);
+  });
+});
+
+describe('clampOklch', () => {
+  it('pulls a colour into the range and leaves one already inside it alone', () => {
+    const dark = clampOklch('#0C0B18', { lightness: [0.4, 0.75] });
+    expect(rgbToOklch(hexToRgb(dark)).lightness).toBeGreaterThanOrEqual(0.39);
+
+    const inside = '#7C5CFF';
+    expect(clampOklch(inside, { lightness: [0, 1], chroma: [0, 0.5] })).toBe(inside);
+  });
+});
+
+/**
+ * The guard that lets a screen take its accent from whatever the user
+ * photographed. Without it, a palette read off a dark wall would tint the UI
+ * into something nobody can read.
+ */
+describe('readableOn', () => {
+  const GROUND = '#08070E';
+
+  it('leaves a colour that already clears the ratio untouched', () => {
+    expect(readableOn('#EDEAE3', GROUND)).toBe('#EDEAE3');
+  });
+
+  it('lifts a colour too dark for the ground until it clears AA', () => {
+    const fixed = readableOn('#1A1630', GROUND);
+    expect(contrastRatio(fixed, GROUND)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('darkens against a light ground instead of lightening', () => {
+    const fixed = readableOn('#F1E7D6', '#FFFFFF');
+    expect(contrastRatio(fixed, '#FFFFFF')).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('keeps the hue it was given', () => {
+    const before = rgbToOklch(hexToRgb('#4A3AA8'));
+    const after = rgbToOklch(hexToRgb(readableOn('#4A3AA8', GROUND)));
+    expect(Math.abs(after.hue - before.hue)).toBeLessThan(2);
+  });
+
+  it('always returns something readable, even for a colour matching the ground', () => {
+    expect(contrastRatio(readableOn(GROUND, GROUND), GROUND)).toBeGreaterThanOrEqual(4.5);
   });
 });

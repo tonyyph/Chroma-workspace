@@ -327,6 +327,115 @@ export const oklabToOklch = ({ lightness, a, b }: Oklab): Oklch => ({
 
 export const rgbToOklch = (rgb: Rgb): Oklch => oklabToOklch(rgbToOklab(rgb));
 
+/* --------------------------------------------------- the way back out again */
+
+/**
+ * OKLab → linear sRGB, unclamped, so the caller can tell in-gamut from out.
+ *
+ * Everything above this line could turn a colour into a perceptual number;
+ * nothing could turn a perceptual number back into a colour, so any code that
+ * wanted to *adjust* a colour rather than measure one had to fall back to HSL —
+ * which moves hue as it moves lightness.
+ */
+const oklabToLinear = ({ lightness, a, b }: Oklab): [number, number, number] => {
+  const l = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (lightness - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ];
+};
+
+const EPSILON = 1e-4;
+const inGamut = ([red, green, blue]: [number, number, number]): boolean =>
+  red >= -EPSILON &&
+  red <= 1 + EPSILON &&
+  green >= -EPSILON &&
+  green <= 1 + EPSILON &&
+  blue >= -EPSILON &&
+  blue <= 1 + EPSILON;
+
+export const oklabToRgb = (oklab: Oklab): Rgb => {
+  const [red, green, blue] = oklabToLinear(oklab);
+  return { red: linearToSrgb(red), green: linearToSrgb(green), blue: linearToSrgb(blue) };
+};
+
+export const oklchToOklab = ({ lightness, chroma, hue }: Oklch): Oklab => {
+  const radians = (hue * Math.PI) / 180;
+  return { lightness, a: chroma * Math.cos(radians), b: chroma * Math.sin(radians) };
+};
+
+/**
+ * OKLCh → sRGB, gamut-mapped by reducing chroma.
+ *
+ * A colour outside sRGB has to be brought back somehow, and clamping each
+ * channel independently is the tempting way — it is also the wrong one, because
+ * clipping one channel and not the others rotates the hue. Lightening a
+ * saturated violet by a couple of steps is enough to do it, and the result
+ * arrives blue.
+ *
+ * Holding lightness and hue and binary-searching chroma down keeps the colour
+ * recognisably the same colour, only less saturated — which is the trade every
+ * colour-managed pipeline makes, and the one a user would make by eye.
+ */
+export const oklchToHex = (oklch: Oklch): string => {
+  const oklab = oklchToOklab(oklch);
+  if (inGamut(oklabToLinear(oklab))) return rgbToHex(oklabToRgb(oklab));
+
+  let reachable = 0;
+  let unreachable = oklch.chroma;
+  for (let iteration = 0; iteration < 24; iteration += 1) {
+    const chroma = (reachable + unreachable) / 2;
+    if (inGamut(oklabToLinear(oklchToOklab({ ...oklch, chroma })))) reachable = chroma;
+    else unreachable = chroma;
+  }
+  return rgbToHex(oklabToRgb(oklchToOklab({ ...oklch, chroma: reachable })));
+};
+
+/** Holds a colour inside a lightness and chroma range, keeping its hue. */
+export const clampOklch = (
+  hex: string,
+  bounds: { lightness?: readonly [number, number]; chroma?: readonly [number, number] },
+): string => {
+  const oklch = rgbToOklch(hexToRgb(hex));
+  const [lowLightness, highLightness] = bounds.lightness ?? [0, 1];
+  const [lowChroma, highChroma] = bounds.chroma ?? [0, 0.5];
+  return oklchToHex({
+    lightness: clamp(oklch.lightness, lowLightness, highLightness),
+    chroma: clamp(oklch.chroma, lowChroma, highChroma),
+    hue: oklch.hue,
+  });
+};
+
+/**
+ * The nearest version of a colour that can legally carry text on `background`.
+ *
+ * Moves lightness only, away from the ground — so an accent taken from the
+ * user's own palette keeps its hue and its saturation and merely becomes
+ * readable. This is what lets a screen tint itself from its content without
+ * ever producing something nobody can read.
+ *
+ * Falls back to plain black or white in the case no amount of lightness will
+ * do it, which is a colour so close to the ground's own hue that only the
+ * extremes clear the ratio.
+ */
+export const readableOn = (hex: string, background: string, minRatio = 4.5): string => {
+  if (contrastRatio(hex, background) >= minRatio) return hex.toUpperCase();
+
+  const base = rgbToOklch(hexToRgb(hex));
+  const direction = relativeLuminance(background) < 0.5 ? 1 : -1;
+
+  for (let step = 1; step <= 64; step += 1) {
+    const lightness = base.lightness + direction * step * 0.015;
+    if (lightness <= 0 || lightness >= 1) break;
+    const candidate = oklchToHex({ ...base, lightness });
+    if (contrastRatio(candidate, background) >= minRatio) return candidate;
+  }
+  return safeForegroundFor(background);
+};
+
 /**
  * CIELAB (D65). Distinct from OKLab: clustering happens in OKLab because it is
  * perceptually uniform for interpolation, but ΔE00 is *defined* on CIELAB, so

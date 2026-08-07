@@ -7,7 +7,7 @@ import { useCallback, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import { ShareSheet, type ShareOptions } from '@/features/capture/ShareSheet';
 import { ToolFallback } from '@/features/tools/ToolFallback';
-import { usePalettes } from '@/hooks';
+import { useChromaticSurface, usePalettes } from '@/hooks';
 import { persistPhoto, renderShareCard, shareFile } from '@/lib';
 import { useEntitlement, usePreferences } from '@/providers';
 import {
@@ -72,6 +72,9 @@ export function PaletteDetailScreen() {
   // The palette comes from the shared store, so a rename here reaches the
   // library grid, the sets that contain it and Explore's search at once.
   const palette = palettes.find((entry) => entry.id === id) ?? null;
+
+  // The whole app takes this palette's colour while the screen is in front.
+  useChromaticSurface(palette?.colors ?? null);
 
   /**
    * Every menu action is a write-then-reflect: persist first, and only update
