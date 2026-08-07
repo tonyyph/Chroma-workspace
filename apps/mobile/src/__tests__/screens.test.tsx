@@ -21,7 +21,7 @@ import { ScanScreen } from '@/features/tools/ScanScreen';
 import { WidgetsScreen } from '@/features/tools/WidgetsScreen';
 import { TrendingScreen } from '@/features/trending/TrendingScreen';
 import { YouScreen } from '@/features/you/YouScreen';
-import { PreferencesProvider } from '@/providers';
+import { EntitlementProvider, PreferencesProvider } from '@/providers';
 
 /**
  * Mount every screen and press everything that claims to be a button.
@@ -94,7 +94,11 @@ async function mount(node: ReactElement) {
     // `Screen` reads safe-area insets. Navigation provides the provider in the
     // real app; a bare render has to supply it or every screen throws.
     <SafeAreaProvider initialMetrics={METRICS}>
-      <PreferencesProvider>{node}</PreferencesProvider>
+      <PreferencesProvider>
+        {/* Screens with a Pro gate read the tier from context and throw without
+            it, the same way they read preferences. */}
+        <EntitlementProvider>{node}</EntitlementProvider>
+      </PreferencesProvider>
     </SafeAreaProvider>,
   );
   await waitFor(() => expect(view.toJSON()).not.toBeNull(), { timeout: 5000 });
@@ -114,7 +118,7 @@ const cases: readonly [string, () => ReactElement][] = [
   ['Explore', () => <ExploreScreen />],
   ['Trending', () => <TrendingScreen />],
   ['You', () => <YouScreen />],
-  ['Paywall', () => <PaywallScreen trigger="palette-limit" />],
+  ['Paywall', () => <PaywallScreen trigger="pro-tools" />],
   ['Palette detail', () => <PaletteDetailScreen />],
   [
     'Result sheet',

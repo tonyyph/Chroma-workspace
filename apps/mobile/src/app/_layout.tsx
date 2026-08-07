@@ -18,7 +18,7 @@ import { useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from '@/components';
 import { useNotificationRoute } from '@/hooks';
-import { PreferencesProvider, usePreferences } from '@/providers';
+import { EntitlementProvider, PreferencesProvider, usePreferences } from '@/providers';
 import { BackdropDriver } from '@/ui';
 
 void SplashScreen.preventAutoHideAsync();
@@ -49,7 +49,11 @@ export default function RootLayout() {
           leaves a blank screen with no way back. */}
       <ErrorBoundary>
         <PreferencesProvider onReady={handlePreferencesReady}>
-          <AppNavigator />
+          {/* Inside preferences, because entitlements gate features rather than
+              configure them — nothing here blocks first paint. */}
+          <EntitlementProvider>
+            <AppNavigator />
+          </EntitlementProvider>
         </PreferencesProvider>
       </ErrorBoundary>
     </GestureHandlerRootView>

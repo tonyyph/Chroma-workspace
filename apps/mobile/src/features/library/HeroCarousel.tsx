@@ -100,7 +100,7 @@ export const HeroCarousel = memo(function HeroCarousel({
       title: t('hero.pro.title'),
       body: t('hero.pro.body'),
       cta: t('hero.pro.cta'),
-      onPress: () => router.push('/paywall?trigger=palette-limit'),
+      onPress: () => router.push('/paywall?trigger=pro-tools'),
       colors: ['#7C5CFF', '#B79CFF', '#22D3EE'],
       art: 'field',
       badge: { label: t('common.pro'), tone: 'pro' },

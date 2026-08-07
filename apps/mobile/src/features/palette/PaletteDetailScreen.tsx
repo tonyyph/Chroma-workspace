@@ -9,7 +9,7 @@ import { ShareSheet, type ShareOptions } from '@/features/capture/ShareSheet';
 import { ToolFallback } from '@/features/tools/ToolFallback';
 import { usePalettes } from '@/hooks';
 import { persistPhoto, renderShareCard, shareFile } from '@/lib';
-import { usePreferences } from '@/providers';
+import { useEntitlement, usePreferences } from '@/providers';
 import {
   ActionSheet,
   Button,
@@ -36,6 +36,7 @@ export function PaletteDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { t, feedback } = usePreferences();
+  const watermarkFree = useEntitlement('watermark_free_share');
   const { palettes, loading, save: savePalette, remove: removePalette } = usePalettes();
   const [menuOpen, setMenuOpen] = useState(false);
   const [prompt, setPrompt] = useState<Prompt>(null);
@@ -311,7 +312,7 @@ export function PaletteDetailScreen() {
         />
         <View style={styles.shareSheet}>
           <ShareSheet
-            isPro={false}
+            isPro={watermarkFree}
             onSaveImage={(options) => void exportCard(palette, options)}
             onShare={(options) => void exportCard(palette, options)}
             palette={palette}

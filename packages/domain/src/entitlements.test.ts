@@ -1,17 +1,36 @@
 import { describe, expect, it } from 'vitest';
 
-import { canSavePalette, canSaveCollection, hasEntitlement } from './entitlements';
+import { hasEntitlement, subscriptionTierSchemaValues, type Entitlement } from './entitlements';
 
-describe('entitlement rules', () => {
-  it('centralizes free limits', () => {
-    expect(canSavePalette('free', 9)).toBe(true);
-    expect(canSavePalette('free', 10)).toBe(false);
-    expect(canSaveCollection('free', 5)).toBe(false);
+const ALL: readonly Entitlement[] = [
+  'watermark_free_share',
+  'semantic_export_names',
+  'structured_export',
+  'locked_white_balance',
+  'wide_gamut_export',
+];
+
+describe('entitlements', () => {
+  it('gives free nothing and pro everything', () => {
+    for (const entitlement of ALL) {
+      expect(hasEntitlement('free', entitlement)).toBe(false);
+      expect(hasEntitlement('pro', entitlement)).toBe(true);
+    }
   });
 
-  it('grants premium capabilities by tier', () => {
-    expect(hasEntitlement('pro', 'printable_palette')).toBe(false);
-    expect(hasEntitlement('premium', 'printable_palette')).toBe(true);
-    expect(canSavePalette('pro', 200)).toBe(true);
+  it('carries exactly two tiers', () => {
+    expect(subscriptionTierSchemaValues).toEqual(['free', 'pro']);
+  });
+
+  /**
+   * The guard on the actual product decision. Capping saves punishes the one
+   * action the app needs repeated, so nothing here may gate capturing, saving,
+   * tuning, tagging, collecting or checking contrast — those are free at any
+   * volume, and an entitlement named for one of them would be the model
+   * quietly changing back.
+   */
+  it('gates no part of the core loop', () => {
+    const forbidden = /palette|collection|capture|save|tune|tag|contrast|unlimited/;
+    expect(ALL.filter((entitlement) => forbidden.test(entitlement))).toEqual([]);
   });
 });

@@ -259,7 +259,7 @@ export function YouScreen() {
           <Row
             icon="palette"
             label={t('paywall.title').replace('\n', ' ')}
-            onPress={() => router.push('/paywall?trigger=palette-limit')}
+            onPress={() => router.push('/paywall?trigger=pro-tools')}
             value={t('common.pro')}
           />
           <Row

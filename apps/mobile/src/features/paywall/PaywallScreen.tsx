@@ -1,5 +1,6 @@
 import type { PaywallTrigger } from '@chromawave/analytics';
 import { brandBands, round, space, ui } from '@chromawave/design-tokens';
+import type { Palette } from '@chromawave/domain';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
@@ -8,7 +9,7 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '@/components';
 import { analytics } from '@/infrastructure/dependencies';
-import { usePreferences } from '@/providers';
+import { useEntitlements, usePreferences } from '@/providers';
 import { Button, Card, Icon, Pressable, Text } from '@/ui';
 
 type Plan = 'monthly' | 'yearly';
@@ -20,28 +21,42 @@ type Plan = 'monthly' | 'yearly';
  * third. No gold, no crown, no dark patterns." Price, period and Restore are all
  * above the fold, which is also the submission requirement from the build kit.
  */
-export function PaywallScreen({ trigger = 'unknown' }: { trigger?: PaywallTrigger }) {
+export function PaywallScreen({
+  trigger = 'unknown',
+  palette = null,
+}: {
+  trigger?: PaywallTrigger;
+  /** The user's most recent work, rendered as the hero. See `SubjectHero`. */
+  palette?: Palette | null;
+}) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [plan, setPlan] = useState<Plan>('yearly');
   const [restoring, setRestoring] = useState(false);
   const [restoreResult, setRestoreResult] = useState(false);
   const { t } = usePreferences();
+  const { restore: restoreTier } = useEntitlements();
 
   useEffect(() => {
     analytics.track('paywall_shown', { trigger });
   }, [trigger]);
 
   /**
-   * There is no billing provider wired in yet, so a restore has nothing to query
-   * and reports finding nothing. That is the truthful outcome and it is what the
-   * button must do — the requirement is that Restore is reachable and responds,
-   * not that this build has purchases to find.
+   * Goes through the entitlement provider now rather than reporting a hardcoded
+   * nothing. There is still no billing provider behind it, so it still finds
+   * nothing — but the path is real, and wiring StoreKit changes one class rather
+   * than this screen.
    */
   const restore = async () => {
     setRestoring(true);
     setRestoreResult(false);
     analytics.track('paywall_restore_requested', { trigger });
+    try {
+      await restoreTier();
+    } catch {
+      // Nothing to surface differently: found-nothing and could-not-look read
+      // the same to someone who has not bought anything.
+    }
     setRestoring(false);
     setRestoreResult(true);
   };
@@ -70,8 +85,9 @@ export function PaywallScreen({ trigger = 'unknown' }: { trigger?: PaywallTrigge
         </Pressable>
       </View>
 
+      <SubjectHero palette={palette} />
+
       <View style={styles.hero}>
-        <BrandMark size={104} />
         <Text style={styles.centred} variant="headline">
           {t('paywall.title')}
         </Text>
@@ -164,6 +180,46 @@ export function PaywallScreen({ trigger = 'unknown' }: { trigger?: PaywallTrigge
   );
 }
 
+/**
+ * The subject of the sale, which is the user's own most recent palette.
+ *
+ * A paywall that leads with the app's logo is asking someone to buy a brand.
+ * Leading with the thing they just made — at its real proportions, masked into
+ * the ground so it reads as a surface rather than a card — asks them to buy
+ * more of what they are already doing. It falls back to the mark only when
+ * there is genuinely nothing of theirs to show yet.
+ */
+function SubjectHero({ palette }: { palette: Palette | null }) {
+  if (!palette) {
+    return (
+      <View style={styles.markHero}>
+        <BrandMark size={104} />
+      </View>
+    );
+  }
+
+  return (
+    <View
+      accessibilityLabel={palette.colors.map((color) => color.hex).join(', ')}
+      style={styles.subject}
+    >
+      <View style={styles.subjectBands}>
+        {palette.colors.map((color) => (
+          <View key={color.hex} style={{ flex: color.weight, backgroundColor: color.hex }} />
+        ))}
+      </View>
+      {/* Fades into the ground rather than stopping at an edge, so the palette
+          reads as something the screen is made of. */}
+      <LinearGradient
+        colors={['rgba(8,7,14,0)', 'rgba(8,7,14,.55)', ui.bg.base]}
+        locations={[0, 0.55, 1]}
+        pointerEvents="none"
+        style={StyleSheet.absoluteFill}
+      />
+    </View>
+  );
+}
+
 function PlanCard({
   period,
   price,
@@ -214,6 +270,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.sectionGap,
     paddingTop: space.xs,
   },
+  markHero: { alignItems: 'center', paddingTop: space.xs, paddingBottom: space.md },
+  subject: { height: 168, marginBottom: -space.sm },
+  subjectBands: { ...StyleSheet.absoluteFillObject, flexDirection: 'row' },
   centred: { textAlign: 'center' },
   benefits: { paddingHorizontal: space.gutter, paddingTop: space.sectionGap, gap: 9 },
   benefit: {

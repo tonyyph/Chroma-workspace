@@ -50,15 +50,16 @@ export type AnalyticsEventMap = {
 /** G7's four code targets, plus the palette formats from B4's export row. */
 export type ExportFormat = 'css' | 'tailwind' | 'swift' | 'json' | 'svg' | 'ase' | 'png' | 'theme';
 
-/** Where the paywall was entered from, so conversion can be attributed. */
+/**
+ * Where the paywall was entered from, so conversion can be attributed.
+ *
+ * `merge-set` and `palette-limit` are gone. Merging a set is free — it is what
+ * a set is *for* — and there is no palette limit to hit, because the Pro line
+ * moved off quantity and onto export fidelity. Both were selling something the
+ * app either gives away or never withheld.
+ */
 export type PaywallTrigger =
-  | 'merge-set'
-  | 'watermark'
-  | 'json-export'
-  | 'semantic-names'
-  | 'palette-limit'
-  | 'auto-wb'
-  | 'unknown';
+  'watermark' | 'json-export' | 'semantic-names' | 'auto-wb' | 'pro-tools' | 'unknown';
 
 export type ShareRatio = '1x1' | '4x5' | '9x16' | '1.91x1';
 
