@@ -4,13 +4,22 @@ import { memo, useCallback, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { usePreferences } from '@/providers';
 import { useHeroStore } from '@/store/heroStore';
-import { Meta, Pressable, SwatchStrip, Text } from '@/ui';
+import { Meta, Pressable, Text } from '@/ui';
 import { PalettePhoto } from './PalettePhoto';
 
 /**
- * FLOW C · "Cards are photo + band strip + metadata — the same three-zone grid
- * as the social templates, so a shared card and a library card are the same
- * object." The strip is proportional, so the card previews the composition.
+ * FLOW C · a library card.
+ *
+ * **What changed and why.** The card was a 112pt photograph over a 10pt band
+ * strip: eleven parts photograph to one part palette, on the home screen of an
+ * app whose library is a library of colour. Scrolling it read as a photo roll
+ * with a coloured hairline under each frame, and two palettes read off similar
+ * scenes were nearly impossible to tell apart at a glance — the thing that
+ * actually distinguishes them was the hairline.
+ *
+ * Inverted. The palette is the card's face, at the proportions the extractor
+ * measured, and the photograph becomes a thumbnail beside the name — enough to
+ * say where the colour came from, which is all provenance has to do.
  */
 export const PaletteCard = memo(function PaletteCard({
   palette,
@@ -25,11 +34,11 @@ export const PaletteCard = memo(function PaletteCard({
   onOpen: (palette: Palette) => void;
 }) {
   const { t } = usePreferences();
-  const media = useRef<View>(null);
+  const face = useRef<View>(null);
   const begin = useHeroStore((state) => state.begin);
 
   /**
-   * Measures the card's media block, then opens.
+   * Measures the card's face, then opens.
    *
    * `measureInWindow` is a callback rather than a value, so the push happens
    * inside it — a frame later than a bare handler, and imperceptibly so. Opening
@@ -40,7 +49,7 @@ export const PaletteCard = memo(function PaletteCard({
    * the part that is allowed to fail.
    */
   const open = useCallback(() => {
-    const node = media.current;
+    const node = face.current;
     if (!node) {
       onOpen(palette);
       return;
@@ -59,20 +68,37 @@ export const PaletteCard = memo(function PaletteCard({
       onPress={open}
       style={({ pressed }) => [styles.card, pressed && { opacity: uiMotion.listPress.opacity }]}
     >
-      <View ref={media} style={styles.media}>
-        <PalettePhoto palette={palette} style={StyleSheet.absoluteFill} />
+      {/* The palette itself, and the rectangle the hero transition flies from. */}
+      <View
+        accessibilityLabel={palette.colors.map((color) => color.hex).join(', ')}
+        ref={face}
+        style={styles.face}
+      >
+        {palette.colors.map((color, index) => (
+          <View
+            // Position is part of the identity: a palette may legitimately carry
+            // the same hex twice, and keying on the value alone drops the second.
+            key={`${index}:${color.hex}`}
+            style={{ flex: color.weight, backgroundColor: color.hex }}
+          />
+        ))}
       </View>
-      <SwatchStrip colors={palette.colors} height={10} />
+
       <View style={styles.copy}>
-        <Text numberOfLines={1} variant="cardTitle">
-          {palette.name}
-        </Text>
-        <Meta style={styles.meta}>
-          {t('library.card.meta', {
-            count: palette.colors.length,
-            age: shortAge(palette.capturedAt),
-          })}
-        </Meta>
+        <View style={styles.thumb}>
+          <PalettePhoto palette={palette} style={StyleSheet.absoluteFill} />
+        </View>
+        <View style={styles.label}>
+          <Text numberOfLines={1} variant="cardTitle">
+            {palette.name}
+          </Text>
+          <Meta style={styles.meta}>
+            {t('library.card.meta', {
+              count: palette.colors.length,
+              age: shortAge(palette.capturedAt),
+            })}
+          </Meta>
+        </View>
       </View>
     </Pressable>
   );
@@ -87,17 +113,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: ui.border.hairline,
   },
-  media: {
-    height: 112,
-    backgroundColor: ui.bg.media,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  /** Vertical, not horizontal: stacked bands hold their proportions at a
+   *  column's width, where a 160pt-wide row would give a 6% signal 9 points. */
+  face: { height: 148, backgroundColor: ui.bg.media },
   copy: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.xs,
     paddingHorizontal: space.sm,
-    paddingVertical: 11,
-    gap: 3,
+    paddingVertical: 10,
   },
+  thumb: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: ui.bg.media,
+  },
+  label: { flex: 1, gap: 2 },
   meta: {
     fontSize: 9,
     letterSpacing: 1,
