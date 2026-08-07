@@ -17,6 +17,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useNotificationRoute } from '@/hooks/useNotificationRoute';
 import { PreferencesProvider, usePreferences } from '@/providers/PreferencesProvider';
 import { BackdropDriver } from '@/ui';
 
@@ -57,6 +58,10 @@ export default function RootLayout() {
 
 function AppNavigator() {
   const { preferences } = usePreferences();
+
+  // Inside the navigator, because it navigates: a router call from above the
+  // Stack has nothing mounted to act on.
+  useNotificationRoute();
 
   return (
     <>

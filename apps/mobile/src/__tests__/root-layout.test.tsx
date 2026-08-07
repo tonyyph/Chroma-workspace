@@ -26,7 +26,8 @@ jest.mock('expo-router', () => {
       React.createElement(View, { testID: 'app-navigator' }, children),
     { Screen: () => null },
   );
-  return { Stack };
+  // The navigator reads the router so a tapped notification can be routed.
+  return { Stack, useRouter: () => ({ push: jest.fn() }) };
 });
 jest.mock('react-native-gesture-handler', () => {
   const React = require('react');

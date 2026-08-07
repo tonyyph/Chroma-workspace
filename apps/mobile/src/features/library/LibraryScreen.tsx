@@ -104,7 +104,9 @@ export function LibraryScreen() {
             <Pressable
               accessibilityLabel={t('library.search')}
               accessibilityRole="button"
-              onPress={() => router.push('/explore')}
+              // Explore is the next tab along, not a screen to stack on top of
+              // this one — `push` left a duplicate tab bar behind it.
+              onPress={() => router.navigate('/explore')}
               style={styles.searchButton}
             >
               <Icon name="search" scale="action" />

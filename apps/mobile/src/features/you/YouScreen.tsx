@@ -102,7 +102,9 @@ export function YouScreen() {
   };
 
   const openLibrary = (params?: { mood?: ColorMood; style?: VisualStyle }) => {
-    router.push({ pathname: '/(tabs)', params: params ?? {} });
+    // `navigate`, not `push`: the library is a sibling tab, and pushing it puts
+    // a second copy of the whole tab navigator on the stack.
+    router.navigate({ pathname: '/(tabs)', params: params ?? {} });
   };
 
   return (

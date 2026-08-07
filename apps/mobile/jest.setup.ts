@@ -18,6 +18,9 @@ jest.mock('expo-notifications', () => ({
   scheduleNotificationAsync: jest.fn(async () => 'test-notification'),
   setNotificationChannelAsync: jest.fn(),
   setNotificationHandler: jest.fn(),
+  // Null is the ordinary case: the app was opened from the icon, not a
+  // notification. `useNotificationRoute` tests supply their own response.
+  useLastNotificationResponse: jest.fn(() => null),
 }));
 
 const { setUpTests } =

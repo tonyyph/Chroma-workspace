@@ -67,7 +67,10 @@ export class ExpoNotificationScheduler implements NotificationScheduler {
       content: {
         ...reminderCopy[language],
         sound: false,
-        data: { route: '/(tabs)/capture' },
+        // Capture is a modal on the root stack, not a tab. The old
+        // `/(tabs)/capture` named nothing, and `useNotificationRoute` is what
+        // finally reads this.
+        data: { route: '/capture' },
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
