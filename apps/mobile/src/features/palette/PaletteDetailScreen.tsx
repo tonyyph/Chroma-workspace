@@ -27,6 +27,7 @@ import {
   PromptSheet,
   Screen,
   Text,
+  HERO_HEIGHT,
   type MenuAction,
 } from '@/ui';
 
@@ -458,7 +459,9 @@ const styles = StyleSheet.create({
   },
   /** Edge to edge and tall: the subject, not a thumbnail of it. */
   hero: {
-    height: 380,
+    // Shared with the flight overlay, which computes its destination rather
+    // than measuring this — see `HeroTransition`.
+    height: HERO_HEIGHT,
     backgroundColor: ui.bg.media,
     justifyContent: 'flex-end',
   },

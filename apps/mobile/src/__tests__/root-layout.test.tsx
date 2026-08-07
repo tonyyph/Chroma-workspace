@@ -47,6 +47,22 @@ jest.mock('react-native-gesture-handler', () => {
     createNativeWrapper: (Component: unknown) => Component,
   };
 });
+/**
+ * The real provider renders nothing until it has measured, and nothing lays out
+ * in a test renderer — this assertion is about where the navigator sits in the
+ * tree, not about insets.
+ */
+jest.mock('react-native-safe-area-context', () => {
+  const React = require('react');
+  return {
+    SafeAreaProvider: ({ children }: { children?: React.ReactNode }) =>
+      React.createElement(React.Fragment, null, children),
+    initialWindowMetrics: null,
+    useSafeAreaInsets: () => ({ top: 47, bottom: 34, left: 0, right: 0 }),
+    useSafeAreaFrame: () => ({ x: 0, y: 0, width: 428, height: 926 }),
+  };
+});
+
 jest.mock('@/providers/PreferencesProvider', () => {
   const React = require('react');
   return {

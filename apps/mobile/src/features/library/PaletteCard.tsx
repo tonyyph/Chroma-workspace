@@ -1,8 +1,9 @@
 import { round, space, ui, uiMotion } from '@chromawave/design-tokens';
 import { shortAge, type Palette } from '@chromawave/domain';
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { usePreferences } from '@/providers';
+import { useHeroStore } from '@/store/heroStore';
 import { Meta, Pressable, SwatchStrip, Text } from '@/ui';
 import { PalettePhoto } from './PalettePhoto';
 
@@ -24,7 +25,32 @@ export const PaletteCard = memo(function PaletteCard({
   onOpen: (palette: Palette) => void;
 }) {
   const { t } = usePreferences();
-  const open = useCallback(() => onOpen(palette), [onOpen, palette]);
+  const media = useRef<View>(null);
+  const begin = useHeroStore((state) => state.begin);
+
+  /**
+   * Measures the card's media block, then opens.
+   *
+   * `measureInWindow` is a callback rather than a value, so the push happens
+   * inside it — a frame later than a bare handler, and imperceptibly so. Opening
+   * first and measuring after would start the flight from wherever the card had
+   * got to as the screen slid away.
+   *
+   * If the measurement never arrives the palette still opens; the transition is
+   * the part that is allowed to fail.
+   */
+  const open = useCallback(() => {
+    const node = media.current;
+    if (!node) {
+      onOpen(palette);
+      return;
+    }
+    node.measureInWindow((x, y, width, height) => {
+      if (width > 0 && height > 0) begin({ x, y, width, height }, palette.colors);
+      onOpen(palette);
+    });
+  }, [begin, onOpen, palette]);
+
   return (
     <Pressable
       accessibilityHint={t('library.card.hint')}
@@ -33,7 +59,7 @@ export const PaletteCard = memo(function PaletteCard({
       onPress={open}
       style={({ pressed }) => [styles.card, pressed && { opacity: uiMotion.listPress.opacity }]}
     >
-      <View style={styles.media}>
+      <View ref={media} style={styles.media}>
         <PalettePhoto palette={palette} style={StyleSheet.absoluteFill} />
       </View>
       <SwatchStrip colors={palette.colors} height={10} />

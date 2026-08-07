@@ -16,12 +16,13 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components';
 import { syncDrop } from '@/features/trending/trendingRepository';
 import { useNotificationRoute } from '@/hooks';
 import { storage } from '@/infrastructure/dependencies';
 import { EntitlementProvider, PreferencesProvider, usePreferences } from '@/providers';
-import { BackdropDriver } from '@/ui';
+import { BackdropDriver, HeroOverlay } from '@/ui';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -47,17 +48,25 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      {/* A last-resort boundary: without one, any render error unmounts the tree and
-          leaves a blank screen with no way back. */}
-      <ErrorBoundary>
-        <PreferencesProvider onReady={handlePreferencesReady}>
-          {/* Inside preferences, because entitlements gate features rather than
-              configure them — nothing here blocks first paint. */}
-          <EntitlementProvider>
-            <AppNavigator />
-          </EntitlementProvider>
-        </PreferencesProvider>
-      </ErrorBoundary>
+      {/* Expo Router creates one of these *inside* the navigator, which is
+          enough for screens and not enough for anything drawn beside them —
+          the hero overlay is a sibling of the Stack and needs the insets too. */}
+      {/* Seeded with the metrics the native side already knows at launch.
+          Without them the provider renders nothing until its first layout pass,
+          which is a blank frame between the splash and the first screen. */}
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        {/* A last-resort boundary: without one, any render error unmounts the tree and
+            leaves a blank screen with no way back. */}
+        <ErrorBoundary>
+          <PreferencesProvider onReady={handlePreferencesReady}>
+            {/* Inside preferences, because entitlements gate features rather than
+                configure them — nothing here blocks first paint. */}
+            <EntitlementProvider>
+              <AppNavigator />
+            </EntitlementProvider>
+          </PreferencesProvider>
+        </ErrorBoundary>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
@@ -113,11 +122,17 @@ function AppNavigator() {
           options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
         />
         <Stack.Screen name="capture/result" options={{ animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="palette/[id]" />
+        {/* Cross-fades rather than sliding: the hero flying in from the card is
+            the motion here, and a screen sliding under it would be a second one
+            going a different way. */}
+        <Stack.Screen name="palette/[id]" options={{ animation: 'fade' }} />
         {/* Pushed from the library's trending rail, so it slides in over the
             tabs rather than replacing them the way a tab switch would. */}
         <Stack.Screen name="trending" options={{ animation: 'slide_from_right' }} />
       </Stack>
+      {/* Over the navigator, so the strip is not clipped by the screen it is
+          leaving or the one it is arriving at. */}
+      <HeroOverlay />
     </>
   );
 }
