@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
 import { ToolFallback } from '@/features/tools/ToolFallback';
 import { WidgetsScreen } from '@/features/tools/WidgetsScreen';
-import { usePaletteParam } from '@/hooks/usePaletteParam';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePaletteParam } from '@/hooks';
+import { usePreferences } from '@/providers';
 
 export default function WidgetsRoute() {
   const { palette, loading } = usePaletteParam();

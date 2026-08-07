@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { ExportScreen } from '@/features/tools/ExportScreen';
 import { ToolFallback } from '@/features/tools/ToolFallback';
-import { usePaletteParam } from '@/hooks/usePaletteParam';
+import { usePaletteParam } from '@/hooks';
 
 export default function ExportRoute() {
   const router = useRouter();

@@ -4,8 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { memo, useMemo } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import type { TrendingItem } from '@/data/trending';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { type TrendingItem } from '@/data';
+import { usePreferences } from '@/providers';
 import { BandCanvas, Button, Carousel, Icon, Meta, Pressable, Text } from '@/ui';
 import { HERO_HEIGHT, HERO_PEEK } from './heroMetrics';
 

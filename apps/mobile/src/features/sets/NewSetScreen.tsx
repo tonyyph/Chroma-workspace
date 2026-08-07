@@ -3,7 +3,7 @@ import type { Palette } from '@chromawave/domain';
 import { useState } from 'react';
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native';
 import { PalettePhoto } from '@/features/library/PalettePhoto';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import {
   Button,
   Card,

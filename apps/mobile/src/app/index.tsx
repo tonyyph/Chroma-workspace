@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 
 /** First installs see onboarding; returning installs resume in the library. */
 export default function Entry() {

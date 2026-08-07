@@ -12,7 +12,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BrandMark } from '@/components/BrandMark';
+import { BrandMark } from '@/components';
 import { reportBackdropTouch } from './backdropMotion';
 import { Icon, type IconName } from './Icon';
 import { Pressable } from './Pressable';

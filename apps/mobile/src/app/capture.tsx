@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components';
 import { ViewfinderScreen } from '@/features/capture/ViewfinderScreen';
 
 /**

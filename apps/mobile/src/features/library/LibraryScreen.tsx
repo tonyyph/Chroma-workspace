@@ -13,12 +13,11 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { seedPalettes } from '@/data/seed';
+import { seedPalettes } from '@/data';
 import { useTrending } from '@/features/trending/useTrending';
-import { usePalettes } from '@/hooks/usePalettes';
-import { useSets } from '@/hooks/useSets';
+import { usePalettes, useSets } from '@/hooks';
 import { analytics } from '@/infrastructure/dependencies';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import {
   BandRefreshControl,
   Button,

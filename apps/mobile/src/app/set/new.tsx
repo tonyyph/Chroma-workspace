@@ -3,8 +3,7 @@ import * as Crypto from 'expo-crypto';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { NewSetScreen } from '@/features/sets/NewSetScreen';
-import { usePalettes } from '@/hooks/usePalettes';
-import { useSets } from '@/hooks/useSets';
+import { usePalettes, useSets } from '@/hooks';
 import { analytics } from '@/infrastructure/dependencies';
 
 /**

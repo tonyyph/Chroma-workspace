@@ -1,8 +1,8 @@
 import { round, space, ui, uiMotion } from '@chromawave/design-tokens';
 import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { TrendingItem } from '@/data/trending';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { type TrendingItem } from '@/data';
+import { usePreferences } from '@/providers';
 import { Card, Chip, Meta, Pressable, SwatchStrip, Text } from '@/ui';
 
 /**

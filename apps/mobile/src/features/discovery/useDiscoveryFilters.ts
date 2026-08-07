@@ -9,7 +9,7 @@ import {
   type VisualStyle,
 } from '@chromawave/domain';
 import { useCallback, useMemo, useState } from 'react';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import type { FilterGroup, FilterOption } from '@/ui';
 
 /**

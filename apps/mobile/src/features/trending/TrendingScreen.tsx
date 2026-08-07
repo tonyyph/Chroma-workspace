@@ -4,10 +4,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { trendingCategories, type TrendingCategory, type TrendingItem } from '@/data/trending';
+import { trendingCategories, type TrendingCategory, type TrendingItem } from '@/data';
 import { useDiscoveryFilters } from '@/features/discovery/useDiscoveryFilters';
-import { useDebounced } from '@/hooks/useDebounced';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { useDebounced } from '@/hooks';
+import { usePreferences } from '@/providers';
 import {
   BandRefreshControl,
   Button,
@@ -71,10 +71,7 @@ export function TrendingScreen() {
   // every row in the feed re-render to receive an identical handler.
   const { open, save: saveToLibrary, ownedIdFor } = saver;
   const openItem = useCallback((item: TrendingItem) => void open(item), [open]);
-  const saveItem = useCallback(
-    (item: TrendingItem) => void saveToLibrary(item),
-    [saveToLibrary],
-  );
+  const saveItem = useCallback((item: TrendingItem) => void saveToLibrary(item), [saveToLibrary]);
   const renderRow = useCallback(
     ({ item }: { item: TrendingItem }) => (
       <View style={styles.row}>

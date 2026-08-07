@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { GradientScreen } from '@/features/tools/GradientScreen';
 import { ToolFallback } from '@/features/tools/ToolFallback';
-import { usePaletteParam } from '@/hooks/usePaletteParam';
+import { usePaletteParam } from '@/hooks';
 
 export default function GradientRoute() {
   const router = useRouter();

@@ -9,9 +9,9 @@ import {
   useCameraPermission,
   usePhotoOutput,
 } from 'react-native-vision-camera';
-import { usePhotoRead } from '@/hooks/usePhotoRead';
+import { usePhotoRead } from '@/hooks';
 import { analytics, hapticsService } from '@/infrastructure/dependencies';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import { Button, Card, Chip, Icon, LiveReadPulse, Pressable, Text } from '@/ui';
 
 const MAX_PINS = 7;

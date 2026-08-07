@@ -6,9 +6,9 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BrandMark } from '@/components/BrandMark';
+import { BrandMark } from '@/components';
 import { analytics } from '@/infrastructure/dependencies';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import { Button, Card, Icon, Pressable, Text } from '@/ui';
 
 type Plan = 'monthly' | 'yearly';

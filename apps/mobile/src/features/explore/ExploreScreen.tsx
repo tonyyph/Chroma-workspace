@@ -3,13 +3,12 @@ import { emptyQuery, queryPalettes } from '@chromawave/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import type { TrendingItem } from '@/data/trending';
+import { type TrendingItem } from '@/data';
 import { TrendingCard } from '@/features/trending/TrendingCard';
 import { useTrending } from '@/features/trending/useTrending';
 import { useTrendingSave } from '@/features/trending/useTrendingSave';
-import { useDebounced } from '@/hooks/useDebounced';
-import { usePalettes } from '@/hooks/usePalettes';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { useDebounced, usePalettes } from '@/hooks';
+import { usePreferences } from '@/providers';
 import {
   BandCanvas,
   Card,

@@ -2,8 +2,8 @@ import { colorSignature, ownedSignatureIndex } from '@chromawave/domain';
 import * as Crypto from 'expo-crypto';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { trendingItems, type TrendingItem } from '@/data/trending';
-import { usePalettes } from '@/hooks/usePalettes';
+import { trendingItems, type TrendingItem } from '@/data';
+import { usePalettes } from '@/hooks';
 
 /**
  * Saving a feed entry into the library, once.

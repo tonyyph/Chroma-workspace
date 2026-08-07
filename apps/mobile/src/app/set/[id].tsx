@@ -3,9 +3,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { CollectionScreen } from '@/features/sets/CollectionScreen';
 import { ToolFallback } from '@/features/tools/ToolFallback';
-import { usePalettes } from '@/hooks/usePalettes';
-import { useSets } from '@/hooks/useSets';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePalettes, useSets } from '@/hooks';
+import { usePreferences } from '@/providers';
 
 export default function SetRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();

@@ -1,7 +1,7 @@
 import { space } from '@chromawave/design-tokens';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import { Button, EmptyGlyph, Screen, Text } from '@/ui';
 
 export default function NotFound() {

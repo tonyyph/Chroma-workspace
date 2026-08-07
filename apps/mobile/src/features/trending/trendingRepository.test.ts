@@ -1,5 +1,5 @@
 import { colorSignature, dedupeById, makeColor } from '@chromawave/domain';
-import { trendingItems, type TrendingItem } from '@/data/trending';
+import { trendingItems, type TrendingItem } from '@/data';
 import {
   HOME_TRENDING_COUNT,
   TrendingFeedError,

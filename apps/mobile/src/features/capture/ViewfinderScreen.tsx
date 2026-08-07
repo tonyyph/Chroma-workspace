@@ -12,11 +12,11 @@ import {
   usePhotoOutput,
   type CameraRef,
 } from 'react-native-vision-camera';
-import { BrandMark } from '@/components/BrandMark';
-import { usePhotoRead } from '@/hooks/usePhotoRead';
+import { BrandMark } from '@/components';
+import { usePhotoRead } from '@/hooks';
 import { hapticsService, soundService } from '@/infrastructure/dependencies';
-import { usePreferences } from '@/providers/PreferencesProvider';
-import { useCaptureStore } from '@/store/captureStore';
+import { usePreferences } from '@/providers';
+import { useCaptureStore } from '@/store';
 import {
   Button,
   Card,

@@ -3,9 +3,8 @@ import * as Crypto from 'expo-crypto';
 import { useRouter } from 'expo-router';
 import { CompareScreen } from '@/features/tools/CompareScreen';
 import { ToolFallback } from '@/features/tools/ToolFallback';
-import { useComparePair } from '@/hooks/usePaletteParam';
-import { usePalettes } from '@/hooks/usePalettes';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { useComparePair, usePalettes } from '@/hooks';
+import { usePreferences } from '@/providers';
 
 /**
  * Merging two palettes here and merging a whole set on C3 are the same

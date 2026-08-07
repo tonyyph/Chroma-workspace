@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components';
 import { ScanScreen } from '@/features/tools/ScanScreen';
-import { useCaptureStore } from '@/store/captureStore';
+import { useCaptureStore } from '@/store';
 
 /**
  * G1 ends where every other capture path ends: the result sheet.

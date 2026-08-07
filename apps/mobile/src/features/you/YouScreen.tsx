@@ -13,8 +13,8 @@ import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { unreadActivityCount } from '@/features/tools/activity';
-import { usePalettes } from '@/hooks/usePalettes';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePalettes } from '@/hooks';
+import { usePreferences } from '@/providers';
 import {
   BandCanvas,
   Card,

@@ -3,7 +3,7 @@ import { contrastRatio, makeColor, type ColorRole, type Palette } from '@chromaw
 import { useMemo, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { hapticsService } from '@/infrastructure/dependencies';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import { BandCanvas, Card, Chip, Meta, NavBar, Screen, Slider, Text } from '@/ui';
 
 /** Only the three named roles are tunable — 'extra' has no band. */

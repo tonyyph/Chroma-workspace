@@ -4,8 +4,8 @@ import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import { gradientSvg, renderGradientPng, shareFile } from '@/lib/export';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { gradientSvg, renderGradientPng, shareFile } from '@/lib';
+import { usePreferences } from '@/providers';
 import {
   Card,
   Chip,

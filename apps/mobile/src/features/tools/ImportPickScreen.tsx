@@ -4,10 +4,10 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useImageSampler } from '@/hooks/useImageSampler';
+import { useImageSampler } from '@/hooks';
 import { hapticsService } from '@/infrastructure/dependencies';
-import { readPalette } from '@/lib/readPalette';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { readPalette } from '@/lib';
+import { usePreferences } from '@/providers';
 import { Card, Chip, NavBar, Pressable, Screen, Slider, Text } from '@/ui';
 
 const MODES = ['AUTO', 'MANUAL', 'EDGES'] as const;

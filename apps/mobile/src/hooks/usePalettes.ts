@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLibraryStore } from '@/store/libraryStore';
+import { useLibraryStore } from '@/store';
 
 /**
  * The library's palettes, from the shared store.

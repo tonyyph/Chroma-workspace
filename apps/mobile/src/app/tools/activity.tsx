@@ -1,5 +1,5 @@
 import { ActivityScreen } from '@/features/tools/ActivityScreen';
-import { usePalettes } from '@/hooks/usePalettes';
+import { usePalettes } from '@/hooks';
 
 export default function ActivityRoute() {
   const { palettes, refreshing, refresh } = usePalettes();

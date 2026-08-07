@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components';
 import { ImportPickScreen } from '@/features/tools/ImportPickScreen';
-import { useCaptureStore } from '@/store/captureStore';
+import { useCaptureStore } from '@/store';
 
 /**
  * G2 feeds the same result sheet the shutter does.

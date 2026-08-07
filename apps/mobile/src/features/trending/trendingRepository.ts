@@ -5,7 +5,7 @@ import {
   type ColorMood,
   type VisualStyle,
 } from '@chromawave/domain';
-import { trendingItems, type TrendingCategory, type TrendingItem } from '@/data/trending';
+import { trendingItems, type TrendingCategory, type TrendingItem } from '@/data';
 
 /**
  * The read side of the trending feed.

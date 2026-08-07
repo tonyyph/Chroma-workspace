@@ -21,7 +21,7 @@ import { ScanScreen } from '@/features/tools/ScanScreen';
 import { WidgetsScreen } from '@/features/tools/WidgetsScreen';
 import { TrendingScreen } from '@/features/trending/TrendingScreen';
 import { YouScreen } from '@/features/you/YouScreen';
-import { PreferencesProvider } from '@/providers/PreferencesProvider';
+import { PreferencesProvider } from '@/providers';
 
 /**
  * Mount every screen and press everything that claims to be a button.

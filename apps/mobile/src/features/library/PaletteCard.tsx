@@ -2,7 +2,7 @@ import { round, space, ui, uiMotion } from '@chromawave/design-tokens';
 import { shortAge, type Palette } from '@chromawave/domain';
 import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import { Meta, Pressable, SwatchStrip, Text } from '@/ui';
 import { PalettePhoto } from './PalettePhoto';
 

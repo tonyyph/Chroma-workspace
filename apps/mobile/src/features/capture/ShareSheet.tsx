@@ -3,7 +3,7 @@ import type { Palette } from '@chromawave/domain';
 import { Image } from 'expo-image';
 import { useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import { Button, ButtonRow, Card, Sheet, SwatchStrip, Text, Toggle } from '@/ui';
 
 /** The four ratios the social templates ship in. */

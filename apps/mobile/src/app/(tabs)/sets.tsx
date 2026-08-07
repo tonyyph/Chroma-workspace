@@ -2,8 +2,8 @@ import { elevation, space, ui } from '@chromawave/design-tokens';
 import { paletteGaps, type PaletteSet } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { useSets } from '@/hooks/useSets';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { useSets } from '@/hooks';
+import { usePreferences } from '@/providers';
 import { Button, Card, EmptyGlyph, Gutter, Meta, Screen, ScreenHeader, Text } from '@/ui';
 
 /**

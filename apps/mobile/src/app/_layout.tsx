@@ -16,9 +16,9 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { useNotificationRoute } from '@/hooks/useNotificationRoute';
-import { PreferencesProvider, usePreferences } from '@/providers/PreferencesProvider';
+import { ErrorBoundary } from '@/components';
+import { useNotificationRoute } from '@/hooks';
+import { PreferencesProvider, usePreferences } from '@/providers';
 import { BackdropDriver } from '@/ui';
 
 void SplashScreen.preventAutoHideAsync();

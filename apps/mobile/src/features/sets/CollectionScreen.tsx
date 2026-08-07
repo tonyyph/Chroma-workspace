@@ -12,7 +12,7 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { PalettePhoto } from '@/features/library/PalettePhoto';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePreferences } from '@/providers';
 import {
   Button,
   Card,

@@ -1,9 +1,8 @@
 import { makeColor } from '@chromawave/domain';
 import { ContrastScreen } from '@/features/tools/ContrastScreen';
 import { ToolFallback } from '@/features/tools/ToolFallback';
-import { usePaletteParam } from '@/hooks/usePaletteParam';
-import { usePalettes } from '@/hooks/usePalettes';
-import { usePreferences } from '@/providers/PreferencesProvider';
+import { usePaletteParam, usePalettes } from '@/hooks';
+import { usePreferences } from '@/providers';
 
 export default function ContrastRoute() {
   const { palette, loading } = usePaletteParam();

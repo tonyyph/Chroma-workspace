@@ -5,6 +5,9 @@ import {
   type Palette,
   type PaletteRepository,
 } from '@chromawave/domain';
+// Deliberately the module, not the `@/lib` barrel: the barrel also carries
+// `export.ts`, which reaches a Skia canvas. Storage has no business pulling a
+// rendering module into its graph.
 import { deletePhoto } from '@/lib/photos';
 import type { KeyValueStorage } from './KeyValueStorage';
 
