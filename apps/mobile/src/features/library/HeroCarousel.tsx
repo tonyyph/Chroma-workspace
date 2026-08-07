@@ -2,7 +2,7 @@ import { round, space, tint, ui } from '@chromawave/design-tokens';
 import type { Palette } from '@chromawave/domain';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import type { TrendingItem } from '@/data/trending';
 import { usePreferences } from '@/providers/PreferencesProvider';
@@ -34,7 +34,11 @@ export type HeroSlide = {
   badge?: { label: string; tone: 'pro' | 'info' } | undefined;
 };
 
-export function HeroCarousel({
+/**
+ * Memoised: it is drawn in the library's list header, so it reconciled — Skia
+ * artwork and all — every time a filter chip below it was tapped.
+ */
+export const HeroCarousel = memo(function HeroCarousel({
   featured,
   recent,
 }: {
@@ -116,7 +120,7 @@ export function HeroCarousel({
       renderItem={(slide) => <HeroCard slide={slide} />}
     />
   );
-}
+});
 
 /**
  * Long enough to read the body copy before it moves. The usual 3s is tuned for a

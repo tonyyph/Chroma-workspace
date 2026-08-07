@@ -18,6 +18,10 @@ type LibraryState = {
   palettes: readonly Palette[];
   sets: readonly PaletteSet[];
   loading: boolean;
+  /** True once storage has been read, however little came back. */
+  loaded: boolean;
+  /** True while a read is in flight, so a second mount does not start another. */
+  reading: boolean;
   /** True while a pull-to-refresh is in flight, so the spinner is not shown on first load. */
   refreshing: boolean;
   error: boolean;
@@ -63,17 +67,29 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   palettes: [],
   sets: [],
   loading: true,
+  loaded: false,
+  reading: false,
   refreshing: false,
   error: false,
 
   load: async () => {
     // A second screen mounting while the first is still loading must not restart
     // the read; it will be re-rendered by the one already in flight.
-    if (!get().loading && get().palettes.length) return;
+    //
+    // The guard is a flag rather than "is there anything in `palettes`", which
+    // is the same question only for a library that has something in it. On a
+    // fresh install it is false forever, so every screen that mounted — which is
+    // every push, since `usePalettes` loads on mount — re-read storage on the
+    // frame the transition started. The one user who sees that is the one
+    // opening the app for the first time.
+    if (get().loaded || get().reading) return;
+    set({ reading: true });
     try {
-      set({ ...(await readAll()), loading: false, error: false });
+      set({ ...(await readAll()), loaded: true, loading: false, error: false });
     } catch {
       set({ palettes: [], sets: [], loading: false, error: true });
+    } finally {
+      set({ reading: false });
     }
   },
 
@@ -98,7 +114,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       new Promise((resolve) => setTimeout(resolve, MIN_SPINNER_MS)),
     ]);
 
-    if (outcome.ok) set({ ...outcome.data, loading: false, error: false });
+    if (outcome.ok) set({ ...outcome.data, loaded: true, loading: false, error: false });
     else set({ error: true });
     set({ refreshing: false });
   },

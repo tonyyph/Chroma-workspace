@@ -1,5 +1,6 @@
 import { round, space, ui, uiMotion } from '@chromawave/design-tokens';
 import { shortAge, type Palette } from '@chromawave/domain';
+import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import { Meta, Pressable, SwatchStrip, Text } from '@/ui';
@@ -10,14 +11,26 @@ import { PalettePhoto } from './PalettePhoto';
  * as the social templates, so a shared card and a library card are the same
  * object." The strip is proportional, so the card previews the composition.
  */
-export function PaletteCard({ palette, onPress }: { palette: Palette; onPress: () => void }) {
+export const PaletteCard = memo(function PaletteCard({
+  palette,
+  onOpen,
+}: {
+  palette: Palette;
+  /**
+   * Handed the palette back rather than closing over it, so the grid can pass
+   * one handler to every card. A per-card arrow function would be a new prop on
+   * each render of the list and defeat the `memo` above.
+   */
+  onOpen: (palette: Palette) => void;
+}) {
   const { t } = usePreferences();
+  const open = useCallback(() => onOpen(palette), [onOpen, palette]);
   return (
     <Pressable
       accessibilityHint={t('library.card.hint')}
       accessibilityLabel={`${palette.name}, ${t('palette.colourCount', { count: palette.colors.length })}`}
       accessibilityRole="button"
-      onPress={onPress}
+      onPress={open}
       style={({ pressed }) => [styles.card, pressed && { opacity: uiMotion.listPress.opacity }]}
     >
       <View style={styles.media}>
@@ -37,7 +50,7 @@ export function PaletteCard({ palette, onPress }: { palette: Palette; onPress: (
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

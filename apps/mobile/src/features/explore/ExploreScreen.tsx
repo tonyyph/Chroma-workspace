@@ -1,11 +1,13 @@
 import { round, space, ui } from '@chromawave/design-tokens';
 import { emptyQuery, queryPalettes } from '@chromawave/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import type { TrendingItem } from '@/data/trending';
 import { TrendingCard } from '@/features/trending/TrendingCard';
 import { useTrending } from '@/features/trending/useTrending';
 import { useTrendingSave } from '@/features/trending/useTrendingSave';
+import { useDebounced } from '@/hooks/useDebounced';
 import { usePalettes } from '@/hooks/usePalettes';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import {
@@ -56,7 +58,10 @@ export function ExploreScreen() {
     if (q) setQuery(q);
   }, [q]);
 
-  const search = query.trim();
+  // The field renders `query`; everything expensive reads this. A keystroke
+  // otherwise refetched the feed *and* scanned the whole library, both on the
+  // thread that has to draw the next character.
+  const search = useDebounced(query.trim());
 
   const feed = useTrending({
     category: 'all',
@@ -72,6 +77,15 @@ export function ExploreScreen() {
     // saved — so the exclusion is scoped to exactly the case that needs it.
     exclude: search ? saver.ownedSignatures : NOTHING_EXCLUDED,
   });
+
+  // Stable across keystrokes, which is what lets the memoised cards below sit
+  // still while the field above them takes another letter.
+  const { open, save: saveItemToLibrary } = saver;
+  const openItem = useCallback((item: TrendingItem) => void open(item), [open]);
+  const saveItem = useCallback(
+    (item: TrendingItem) => void saveItemToLibrary(item),
+    [saveItemToLibrary],
+  );
 
   /** The user's own matches. Only shown while searching — this is not the library. */
   const mine = useMemo(
@@ -206,8 +220,8 @@ export function ExploreScreen() {
             <TrendingCard
               item={item}
               key={item.id}
-              onPress={() => void saver.open(item)}
-              onSave={() => void saver.save(item)}
+              onPress={openItem}
+              onSave={saveItem}
               saved={saver.ownedIdFor(item) !== null}
               variant="row"
             />

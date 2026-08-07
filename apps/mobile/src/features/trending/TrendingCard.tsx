@@ -1,4 +1,5 @@
 import { round, space, ui, uiMotion } from '@chromawave/design-tokens';
+import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { TrendingItem } from '@/data/trending';
 import { usePreferences } from '@/providers/PreferencesProvider';
@@ -17,7 +18,7 @@ import { Card, Chip, Meta, Pressable, SwatchStrip, Text } from '@/ui';
  * content here, so a thumbnail drawn from them cannot be out of date, and a
  * palette whose bands are 60/25/15 previews as 60/25/15.
  */
-export function TrendingCard({
+export const TrendingCard = memo(function TrendingCard({
   item,
   onPress,
   onSave,
@@ -26,15 +27,25 @@ export function TrendingCard({
   width,
 }: {
   item: TrendingItem;
-  onPress: () => void;
+  /**
+   * Handed the entry back rather than closing over it.
+   *
+   * This is what makes the `memo` above hold: a caller that wrote
+   * `onPress={() => open(item)}` would pass a new function on every keystroke
+   * in the search field above the feed, and every card in it would re-render to
+   * receive a handler that does the same thing as the last one.
+   */
+  onPress: (item: TrendingItem) => void;
   /** Omit for surfaces where saving is not offered — the whole card still opens. */
-  onSave?: (() => void) | undefined;
+  onSave?: ((item: TrendingItem) => void) | undefined;
   saved: boolean;
   variant?: 'tile' | 'row';
   /** Fixed width for the horizontal rail; omitted the card fills its column. */
   width?: number;
 }) {
   const { t } = usePreferences();
+  const open = useCallback(() => onPress(item), [onPress, item]);
+  const save = useCallback(() => onSave?.(item), [onSave, item]);
   const meta = t('trending.meta', {
     count: (item.saves / 1000).toFixed(1),
     author: item.author,
@@ -45,7 +56,7 @@ export function TrendingCard({
       <Card
         accessibilityHint={item.blurb}
         accessibilityLabel={item.name}
-        onPress={onPress}
+        onPress={open}
         style={styles.row}
       >
         <View style={styles.rowArt}>
@@ -65,7 +76,7 @@ export function TrendingCard({
         {onSave ? (
           <Chip
             label={t(saved ? 'trending.saved' : 'trending.save')}
-            onPress={onSave}
+            onPress={save}
             tone={saved ? 'selected' : 'default'}
           />
         ) : null}
@@ -78,7 +89,7 @@ export function TrendingCard({
       accessibilityHint={item.blurb}
       accessibilityLabel={item.name}
       accessibilityRole="button"
-      onPress={onPress}
+      onPress={open}
       style={({ pressed }) => [
         styles.tile,
         width === undefined ? styles.tileFlex : { width },
@@ -115,7 +126,7 @@ export function TrendingCard({
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: {

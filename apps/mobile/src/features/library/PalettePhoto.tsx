@@ -53,6 +53,10 @@ export function PalettePhoto({
   return (
     <Image
       accessibilityElementsHidden
+      // The grid is scrolled back and forth over the same rows; keeping decoded
+      // frames in memory as well as on disk is what stops a card re-decoding its
+      // photo every time it comes back into the window.
+      cachePolicy="memory-disk"
       contentFit="cover"
       onError={() => {
         if (palette.photoUri) setSourceFailed(true);

@@ -69,3 +69,64 @@ describe('libraryStore.refresh', () => {
     expect(useLibraryStore.getState().refreshing).toBe(false);
   });
 });
+
+/**
+ * `usePalettes` loads on mount, and every screen uses it — so `load` runs on
+ * every push. It has to answer from memory after the first read, including for
+ * the user whose library is empty, which is every user on their first launch.
+ * Guarding on "is there anything in `palettes`" made that case re-read storage
+ * on the frame each transition started.
+ */
+describe('libraryStore.load', () => {
+  beforeEach(() => {
+    mockListPalettes.mockReset().mockResolvedValue([]);
+    mockListSets.mockReset().mockResolvedValue([]);
+    useLibraryStore.setState({
+      palettes: [],
+      sets: [],
+      loading: true,
+      loaded: false,
+      reading: false,
+      refreshing: false,
+      error: false,
+    });
+  });
+
+  it('reads storage once when the library is empty', async () => {
+    await useLibraryStore.getState().load();
+    await useLibraryStore.getState().load();
+    await useLibraryStore.getState().load();
+
+    expect(mockListPalettes).toHaveBeenCalledTimes(1);
+    expect(useLibraryStore.getState().loaded).toBe(true);
+    expect(useLibraryStore.getState().loading).toBe(false);
+  });
+
+  it('does not start a second read while the first is in flight', async () => {
+    let release: (() => void) | undefined;
+    mockListPalettes.mockReturnValue(
+      new Promise((resolve) => {
+        release = () => resolve([]);
+      }),
+    );
+
+    const first = useLibraryStore.getState().load();
+    const second = useLibraryStore.getState().load();
+    release?.();
+    await Promise.all([first, second]);
+
+    expect(mockListPalettes).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries after a failed read rather than staying empty forever', async () => {
+    mockListPalettes.mockRejectedValueOnce(new Error('storage unavailable'));
+    await useLibraryStore.getState().load();
+    expect(useLibraryStore.getState().error).toBe(true);
+
+    mockListPalettes.mockResolvedValue([]);
+    await useLibraryStore.getState().load();
+
+    expect(mockListPalettes).toHaveBeenCalledTimes(2);
+    expect(useLibraryStore.getState().error).toBe(false);
+  });
+});

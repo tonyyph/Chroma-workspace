@@ -1,11 +1,12 @@
 import { space } from '@chromawave/design-tokens';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { trendingCategories, type TrendingCategory, type TrendingItem } from '@/data/trending';
 import { useDiscoveryFilters } from '@/features/discovery/useDiscoveryFilters';
+import { useDebounced } from '@/hooks/useDebounced';
 import { usePreferences } from '@/providers/PreferencesProvider';
 import {
   BandRefreshControl,
@@ -49,12 +50,15 @@ export function TrendingScreen() {
   const filters = useDiscoveryFilters();
   const [category, setCategory] = useState<TrendingCategory | 'all'>('all');
   const [sort, setSort] = useState<TrendingSort>('popular');
+  const debouncedSearch = useDebounced(filters.query.search);
 
   const feed = useTrending({
     category,
     moods: filters.query.moods,
     styles: filters.query.styles,
-    search: filters.query.search,
+    // The field keeps the raw value; the feed waits for the typing to stop, so
+    // a five-letter word is one query rather than five.
+    search: debouncedSearch,
     sort,
     pageSize: PAGE_SIZE,
   });
@@ -62,6 +66,29 @@ export function TrendingScreen() {
   const onScroll = useAnimatedScrollHandler((event) => {
     reportBackdropScroll(event.contentOffset.y);
   });
+
+  // Stable identities, so a keystroke in the search field above does not make
+  // every row in the feed re-render to receive an identical handler.
+  const { open, save: saveToLibrary, ownedIdFor } = saver;
+  const openItem = useCallback((item: TrendingItem) => void open(item), [open]);
+  const saveItem = useCallback(
+    (item: TrendingItem) => void saveToLibrary(item),
+    [saveToLibrary],
+  );
+  const renderRow = useCallback(
+    ({ item }: { item: TrendingItem }) => (
+      <View style={styles.row}>
+        <TrendingCard
+          item={item}
+          onPress={openItem}
+          onSave={saveItem}
+          saved={ownedIdFor(item) !== null}
+          variant="row"
+        />
+      </View>
+    ),
+    [openItem, saveItem, ownedIdFor],
+  );
 
   /**
    * The category rail lives outside the disclosure but is still a filter, so it
@@ -173,18 +200,14 @@ export function TrendingScreen() {
         data={feed.status === 'ready' ? feed.items : EMPTY}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.row}>
-            <TrendingCard
-              item={item}
-              onPress={() => void saver.open(item)}
-              onSave={() => void saver.save(item)}
-              saved={saver.ownedIdFor(item) !== null}
-              variant="row"
-            />
-          </View>
-        )}
+        keyExtractor={keyOf}
+        renderItem={renderRow}
+        // Matched to the library grid: a full-width row with a colour strip is
+        // no cheaper to mount than a card, and this list pages to hundreds.
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        removeClippedSubviews
+        windowSize={7}
         ListHeaderComponent={header}
         ListEmptyComponent={
           <Gutter style={styles.state}>
@@ -235,6 +258,8 @@ export function TrendingScreen() {
 
 const PAGE_SIZE = 8;
 /** A stable empty array, so a non-ready feed does not remount the list each render. */
+const keyOf = (item: TrendingItem) => item.id;
+
 const EMPTY: readonly TrendingItem[] = [];
 
 function LoadingRows() {

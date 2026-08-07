@@ -9,14 +9,11 @@ import {
   type VisualStyle,
 } from '@chromawave/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { memo, useCallback, useEffect, useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TrendingCard } from '@/features/trending/TrendingCard';
-import { HOME_TRENDING_COUNT } from '@/features/trending/trendingRepository';
 import { useTrending } from '@/features/trending/useTrending';
-import { useTrendingSave } from '@/features/trending/useTrendingSave';
 import { usePalettes } from '@/hooks/usePalettes';
 import { useSets } from '@/hooks/useSets';
 import { analytics } from '@/infrastructure/dependencies';
@@ -29,7 +26,6 @@ import {
   FilterRail,
   Gutter,
   Icon,
-  InlineError,
   Pressable,
   Screen,
   ScreenHeader,
@@ -84,13 +80,18 @@ export function LibraryScreen() {
     reportBackdropScroll(event.contentOffset.y);
   });
 
+  const openPalette = useCallback(
+    (palette: Palette) => router.push(`/palette/${palette.id}`),
+    [router],
+  );
+
   const renderCard = useCallback(
     ({ item }: { item: (typeof visible)[number] }) => (
       <View style={styles.column}>
-        <PaletteCard onPress={() => router.push(`/palette/${item.id}`)} palette={item} />
+        <PaletteCard onOpen={openPalette} palette={item} />
       </View>
     ),
-    [router],
+    [openPalette],
   );
 
   const header = (
@@ -213,7 +214,12 @@ export function LibraryScreen() {
  * — the rail below asks for its own six, and both are served from the same
  * validated catalogue.
  */
-function LandingHero({ recent }: { recent: Palette | null }) {
+/**
+ * Memoised for the same reason the carousel it renders is: it holds the feed
+ * read for the hero, and it sits in a list header that the filter rail below it
+ * re-renders.
+ */
+const LandingHero = memo(function LandingHero({ recent }: { recent: Palette | null }) {
   const feed = useTrending({
     category: 'all',
     moods: [],
@@ -224,10 +230,7 @@ function LandingHero({ recent }: { recent: Palette | null }) {
   });
 
   return <HeroCarousel featured={feed.items[0] ?? null} recent={recent} />;
-}
-
-/** Wide enough for a two-line title, narrow enough that the next tile peeks. */
-const RAIL_TILE = 168;
+});
 
 /** FLOW E · "Nothing captured yet" — the mark with its wave missing. */
 function EmptyLibrary({
