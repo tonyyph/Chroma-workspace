@@ -9,11 +9,12 @@ import {
   type VisualStyle,
 } from '@chromawave/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { seedPalettes } from '@/data';
+import { useTrending } from '@/features/trending/useTrending';
 import { usePalettes, useSets } from '@/hooks';
 import { analytics } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers';
@@ -33,24 +34,26 @@ import {
 } from '@/ui';
 import { reportBackdropScroll } from '@/ui/backdropMotion';
 import { useDiscoveryFilters } from '../discovery/useDiscoveryFilters';
+import { HeroCarousel } from './HeroCarousel';
 import { toLibraryRows, type LibraryRow } from './libraryRows';
-import { LibrarySignature } from './LibrarySignature';
 import { PaletteRibbon } from './PaletteRibbon';
 
 /**
  * C1 · LIBRARY — the archive.
  *
- * **What this screen used to be.** A masthead, a carousel of up to four things
- * to go and do, a filter rail, and a two-column grid of bordered cards. Which
- * is the layout of every content app there is: promo strip, then tiles. The
- * app's own subject — colour someone went out and stood in — was rendered as
- * 167-point thumbnails behind borders, four to a screenful.
+ * **What this screen used to be.** A masthead, a full-height carousel, a filter
+ * rail, and a two-column grid of bordered cards — the layout of every content
+ * app there is. The app's own subject, colour someone went out and stood in,
+ * was rendered as 167-point thumbnails behind borders, four to a screenful.
+ *
+ * The grid is what changed. The carousel stayed, at four fifths of its old
+ * height: it is worth having somewhere to go next, and it is not worth having
+ * that be the tallest thing above your own archive.
  *
  * **What it is now.** Three things, in the order a personal archive should
  * present itself:
  *
- *  1. the whole collection merged into one signature, which no other install
- *     has and which is made entirely of the user's own work;
+ *  1. a carousel of somewhere to go next, sized as a suggestion;
  *  2. the filter rail, when there is enough to be worth narrowing;
  *  3. the archive itself as a continuous ribbon, cut into months.
  *
@@ -173,8 +176,8 @@ export function LibraryScreen() {
         </Text>
       </Gutter>
 
-      <View style={styles.signature}>
-        <LibrarySignature palettes={palettes} />
+      <View style={styles.hero}>
+        <LandingHero recent={palettes[0] ?? null} />
       </View>
 
       <View style={styles.rail}>
@@ -260,6 +263,26 @@ export function LibraryScreen() {
   );
 }
 
+/**
+ * The carousel's featured slide needs the top field note, so the hero reads the
+ * feed itself rather than the screen threading it down. One page of one item.
+ *
+ * Memoised for the same reason the carousel it renders is: it holds a feed read
+ * and it sits in a list header that the filter rail below it re-renders.
+ */
+const LandingHero = memo(function LandingHero({ recent }: { recent: Palette | null }) {
+  const feed = useTrending({
+    category: 'all',
+    moods: [],
+    styles: [],
+    search: '',
+    sort: 'featured',
+    pageSize: 1,
+  });
+
+  return <HeroCarousel featured={feed.items[0] ?? null} recent={recent} />;
+});
+
 const EMPTY: readonly LibraryRow[] = [];
 const keyOf = (row: LibraryRow) => row.key;
 
@@ -318,7 +341,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     minHeight: 28,
   },
-  signature: { paddingTop: space.lg },
+  hero: { paddingTop: space.lg },
   rail: { paddingTop: space.gutter },
   count: { paddingTop: space.sm },
   list: { paddingTop: space.md },
