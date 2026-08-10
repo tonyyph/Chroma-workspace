@@ -1,5 +1,6 @@
-import { brandBands, ui } from '@chromawave/design-tokens';
+import { brandBands } from '@chromawave/design-tokens';
 import Svg, { Path } from 'react-native-svg';
+import { useSkin } from '@/providers';
 import { sine, squircle } from './BandField';
 
 /**
@@ -16,8 +17,10 @@ const order: Record<EmptyGlyphKind, 1 | 2 | 3 | 4> = {
 };
 
 export function EmptyGlyph({ kind, height = 130 }: { kind: EmptyGlyphKind; height?: number }) {
+  const skin = useSkin();
   const i = order[kind];
-  const stroke = 'rgba(237,234,227,.5)';
+  // Was a hardcoded bone at half alpha, which is the ink of exactly one skin.
+  const stroke = skin.ui.text.tertiary;
   const body = squircle(200, 130, 92, 4);
 
   return (
@@ -49,7 +52,7 @@ export function EmptyGlyph({ kind, height = 130 }: { kind: EmptyGlyphKind; heigh
         <Path
           d={sine(130, 15, 0.85, 0, 130, 270)}
           fill="none"
-          stroke={ui.action.primary}
+          stroke={skin.ui.action.primary}
           strokeLinecap="round"
           strokeWidth={12}
         />

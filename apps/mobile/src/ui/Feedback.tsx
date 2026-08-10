@@ -1,5 +1,6 @@
-import { round, space, tint, ui } from '@chromawave/design-tokens';
+import { space } from '@chromawave/design-tokens';
 import { StyleSheet, View } from 'react-native';
+import { useSkin } from '@/providers';
 import { Pressable } from './Pressable';
 import { Text } from './Text';
 
@@ -19,7 +20,8 @@ export function Toast({
   onUndo?: () => void;
   tone?: 'success' | 'danger';
 }) {
-  const accent = tone === 'success' ? ui.action.primary : ui.status.danger;
+  const skin = useSkin();
+  const accent = tone === 'success' ? skin.ui.action.primary : skin.ui.status.danger;
   const body = (
     <View
       accessibilityLiveRegion="polite"
@@ -27,8 +29,11 @@ export function Toast({
       style={[
         styles.toast,
         tone === 'success'
-          ? { backgroundColor: ui.bg.raised, borderColor: 'rgba(124,92,255,.4)' }
-          : { backgroundColor: tint.danger.backgroundColor, borderColor: tint.danger.borderColor },
+          ? { backgroundColor: skin.ui.bg.raised, borderColor: skin.tint.pro.borderColor }
+          : {
+              backgroundColor: skin.tint.danger.backgroundColor,
+              borderColor: skin.tint.danger.borderColor,
+            },
       ]}
     >
       <View style={[styles.rule, { backgroundColor: accent }]} />
@@ -51,16 +56,21 @@ export function Toast({
 
 /** FLOW E · INLINE ERROR. Same anatomy as the toast, in the destructive tint. */
 export function InlineError({ title, detail }: { title: string; detail: string }) {
+  const skin = useSkin();
   return (
     <View
       accessibilityLiveRegion="polite"
       accessibilityRole="alert"
       style={[
         styles.toast,
-        { backgroundColor: tint.danger.backgroundColor, borderColor: tint.danger.borderColor },
+        {
+          backgroundColor: skin.tint.danger.backgroundColor,
+          borderColor: skin.tint.danger.borderColor,
+          borderRadius: skin.round.card - 2,
+        },
       ]}
     >
-      <View style={[styles.rule, { backgroundColor: ui.status.danger }]} />
+      <View style={[styles.rule, { backgroundColor: skin.ui.status.danger }]} />
       <View style={styles.copy}>
         <Text tone="danger" variant="cardTitle">
           {title}
@@ -78,17 +88,40 @@ export function InlineError({ title, detail }: { title: string; detail: string }
  * is the band sweep, and the sheet is explicit that a spinner is never used.
  */
 export function CardSkeleton() {
+  const skin = useSkin();
   return (
-    <View accessibilityLabel="Loading" style={styles.skeleton}>
-      <View style={styles.skeletonMedia} />
+    <View
+      accessibilityLabel="Loading"
+      style={[
+        styles.skeleton,
+        {
+          borderRadius: skin.round.card,
+          backgroundColor: skin.ui.fill.card,
+          borderColor: skin.ui.border.hairline,
+        },
+      ]}
+    >
+      <View style={[styles.skeletonMedia, { backgroundColor: skin.ui.bg.media }]} />
       <View style={styles.skeletonStrip}>
-        <View style={[styles.skeletonBand, { backgroundColor: 'rgba(237,234,227,.12)' }]} />
-        <View style={[styles.skeletonBand, { backgroundColor: 'rgba(237,234,227,.08)' }]} />
-        <View style={[styles.skeletonBand, { backgroundColor: 'rgba(237,234,227,.05)' }]} />
+        {/* The bands step down through the skin's own fill alphas rather than
+            three hardcoded bones, which only described one ground. */}
+        <View style={[styles.skeletonBand, { backgroundColor: skin.ui.fill.track }]} />
+        <View style={[styles.skeletonBand, { backgroundColor: skin.ui.fill.chip }]} />
+        <View style={[styles.skeletonBand, { backgroundColor: skin.ui.fill.chipGhost }]} />
       </View>
       <View style={styles.skeletonCopy}>
-        <View style={[styles.skeletonLine, { width: '60%', height: 11 }]} />
-        <View style={[styles.skeletonLine, { width: '35%', height: 9, opacity: 0.6 }]} />
+        <View
+          style={[
+            styles.skeletonLine,
+            { width: '60%', height: 11, backgroundColor: skin.ui.fill.track },
+          ]}
+        />
+        <View
+          style={[
+            styles.skeletonLine,
+            { width: '35%', height: 9, opacity: 0.6, backgroundColor: skin.ui.fill.track },
+          ]}
+        />
       </View>
     </View>
   );
@@ -100,7 +133,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: space.sm,
     borderWidth: 1,
-    borderRadius: round.card - 2,
     padding: space.cardGap,
   },
   rule: {
@@ -113,15 +145,11 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   skeleton: {
-    borderRadius: round.card - 2,
     overflow: 'hidden',
-    backgroundColor: ui.fill.card,
     borderWidth: 1,
-    borderColor: ui.border.hairline,
   },
   skeletonMedia: {
     height: 80,
-    backgroundColor: 'rgba(237,234,227,.07)',
   },
   skeletonStrip: {
     flexDirection: 'row',
@@ -136,6 +164,5 @@ const styles = StyleSheet.create({
   },
   skeletonLine: {
     borderRadius: 6,
-    backgroundColor: 'rgba(237,234,227,.12)',
   },
 });

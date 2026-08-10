@@ -1,6 +1,7 @@
-import { size, ui } from '@chromawave/design-tokens';
+import { size } from '@chromawave/design-tokens';
 import Feather from '@expo/vector-icons/Feather';
 import type { StyleProp, TextStyle } from 'react-native';
+import { useSkin } from '@/providers';
 
 /**
  * The icon vocabulary, named by what the control does rather than what it looks
@@ -58,7 +59,7 @@ const SCALES: Record<IconScale, number> = {
 export function Icon({
   name,
   scale = 'control',
-  color = ui.text.primary,
+  color,
   style,
 }: {
   name: IconName;
@@ -66,10 +67,11 @@ export function Icon({
   color?: string;
   style?: StyleProp<TextStyle>;
 }) {
+  const skin = useSkin();
   return (
     <Feather
       accessibilityElementsHidden
-      color={color}
+      color={color ?? skin.ui.text.primary}
       importantForAccessibility="no"
       name={GLYPHS[name]}
       size={SCALES[scale]}

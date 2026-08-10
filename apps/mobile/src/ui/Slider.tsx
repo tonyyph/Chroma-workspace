@@ -1,9 +1,10 @@
-import { size, ui, uiShadow } from '@chromawave/design-tokens';
+import { size } from '@chromawave/design-tokens';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { useSkin } from '@/providers';
 
 /**
  * SYSTEM F slider: 10px track, 24px bone thumb with a soft drop shadow.
@@ -31,6 +32,7 @@ export function Slider({
   minimumValue?: number;
   maximumValue?: number;
 }) {
+  const skin = useSkin();
   const [width, setWidth] = useState(0);
   const fraction = useSharedValue(normalise(value, minimumValue, maximumValue));
 
@@ -77,7 +79,7 @@ export function Slider({
         onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
         style={styles.hitArea}
       >
-        <View style={styles.track}>
+        <View style={[styles.track, { backgroundColor: skin.ui.fill.track }]}>
           {gradient ? (
             <LinearGradient
               colors={[...gradient]}
@@ -86,10 +88,19 @@ export function Slider({
               style={StyleSheet.absoluteFill}
             />
           ) : (
-            <Animated.View style={[styles.fill, fillStyle]} />
+            <Animated.View
+              style={[styles.fill, { backgroundColor: skin.ui.action.primary }, fillStyle]}
+            />
           )}
         </View>
-        <Animated.View style={[styles.thumb, uiShadow.thumb, thumbStyle]} />
+        <Animated.View
+          style={[
+            styles.thumb,
+            { backgroundColor: skin.ui.text.primary },
+            skin.shadow.thumb,
+            thumbStyle,
+          ]}
+        />
       </View>
     </GestureDetector>
   );
@@ -112,19 +123,16 @@ const styles = StyleSheet.create({
   track: {
     height: size.sliderTrack,
     borderRadius: size.sliderTrack / 2,
-    backgroundColor: ui.fill.track,
     overflow: 'hidden',
   },
   fill: {
     height: '100%',
     borderRadius: size.sliderTrack / 2,
-    backgroundColor: ui.action.primary,
   },
   thumb: {
     position: 'absolute',
     width: size.sliderThumb,
     height: size.sliderThumb,
     borderRadius: size.sliderThumb / 2,
-    backgroundColor: ui.text.primary,
   },
 });

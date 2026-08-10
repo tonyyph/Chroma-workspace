@@ -1,4 +1,4 @@
-import { ui } from '@chromawave/design-tokens';
+import { skins } from '@chromawave/design-tokens';
 import { Canvas, Fill, Shader, Skia } from '@shopify/react-native-skia';
 import { memo, useEffect } from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';
@@ -132,6 +132,18 @@ function triplet(hex: string): [number, number, number] {
 }
 
 /**
+ * Bound to `chroma` explicitly, not to whichever skin is active.
+ *
+ * This component is the chroma skin — `swiss` sets `chrome.backdrop` false and
+ * never mounts it, because a drifting metaball wash under a paper ground is not
+ * a quieter version of the same idea. Reading the active skin here would
+ * suggest it could render under either.
+ *
+ * It also could not, even if it should: the uniforms are assembled inside a
+ * frame worklet, and a hook value cannot be read from one.
+ */
+
+/**
  * The ground, converted once at module load.
  *
  * The uniforms are built inside a worklet on the UI thread, and calling a plain
@@ -140,7 +152,7 @@ function triplet(hex: string): [number, number, number] {
  * constants beside it; they now come from `chroma`, because the field wears
  * whatever palette is on screen.
  */
-const GROUND = triplet(ui.bg.base);
+const GROUND = triplet(skins.chroma.ui.bg.base);
 
 /**
  * Compiled once, at module load.
@@ -267,5 +279,5 @@ export const UnderScreenCanvas = memo(function UnderScreenCanvas() {
 });
 
 const styles = StyleSheet.create({
-  canvas: { backgroundColor: ui.bg.base },
+  canvas: { backgroundColor: skins.chroma.ui.bg.base },
 });

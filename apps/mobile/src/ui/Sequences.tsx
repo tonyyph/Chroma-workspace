@@ -1,4 +1,4 @@
-import { brandBands, easing, motionRules, storyboard, ui } from '@chromawave/design-tokens';
+import { brandBands, easing, motionRules, storyboard } from '@chromawave/design-tokens';
 import { useEffect } from 'react';
 import { RefreshControl, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, {
@@ -13,6 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { BrandMark } from '@/components';
+import { useSkin } from '@/providers';
 import { BandCanvas } from './BandCanvas';
 import { Text } from './Text';
 
@@ -217,11 +218,12 @@ export function BandRefreshControl({
   refreshing: boolean;
   onRefresh: () => void;
 }) {
+  const skin = useSkin();
   return (
     <RefreshControl
       colors={[...brandBands]}
       onRefresh={onRefresh}
-      progressBackgroundColor={ui.bg.raised}
+      progressBackgroundColor={skin.ui.bg.raised}
       refreshing={refreshing}
       tintColor={brandBands[0]}
     />
@@ -248,7 +250,6 @@ const styles = StyleSheet.create({
   wordmarkText: {
     fontSize: 21,
     letterSpacing: 3.4,
-    color: ui.text.primary,
     fontFamily: 'SpaceGrotesk_500Medium',
   },
   launchFooter: { position: 'absolute' },

@@ -1,4 +1,4 @@
-import { space, ui } from '@chromawave/design-tokens';
+import { space } from '@chromawave/design-tokens';
 import { useCallback, useEffect, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -19,6 +19,7 @@ import Animated, {
   useSharedValue,
   type SharedValue,
 } from 'react-native-reanimated';
+import { useSkin } from '@/providers';
 import { Pressable } from './Pressable';
 
 /**
@@ -287,6 +288,7 @@ function Dot({
     };
   });
 
+  const skin = useSkin();
   return (
     <Pressable
       accessibilityLabel={`Slide ${index + 1} of ${total}`}
@@ -295,7 +297,7 @@ function Dot({
       hitSlop={10}
       onPress={onPress}
     >
-      <Animated.View style={[styles.dot, animated]} />
+      <Animated.View style={[styles.dot, { backgroundColor: skin.ui.text.primary }, animated]} />
     </Pressable>
   );
 }
@@ -314,6 +316,5 @@ const styles = StyleSheet.create({
   dot: {
     height: DOT,
     borderRadius: DOT / 2,
-    backgroundColor: ui.text.primary,
   },
 });

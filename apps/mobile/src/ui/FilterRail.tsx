@@ -1,7 +1,8 @@
-import { round, space, tint, ui } from '@chromawave/design-tokens';
+import { space } from '@chromawave/design-tokens';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
+import { useSkin } from '@/providers';
 import { Chip } from './Chip';
 import { Icon } from './Icon';
 import { Pressable } from './Pressable';
@@ -58,6 +59,7 @@ export function FilterRail({
 }) {
   // Opens itself when something is already on — arriving from a deep link with a
   // mood applied and no visible reason why is worse than the space it costs.
+  const skin = useSkin();
   const [expanded, setExpanded] = useState(activeCount > 0);
 
   return (
@@ -82,15 +84,26 @@ export function FilterRail({
           accessibilityRole="button"
           accessibilityState={{ expanded }}
           onPress={() => setExpanded((current) => !current)}
-          style={[styles.disclosure, activeCount > 0 && styles.disclosureActive]}
+          style={[
+            styles.disclosure,
+            {
+              borderRadius: skin.round.chip,
+              borderColor: skin.ui.border.hairlineStrong,
+              backgroundColor: skin.ui.fill.chip,
+            },
+            activeCount > 0 && {
+              backgroundColor: skin.tint.pro.backgroundColor,
+              borderColor: skin.tint.pro.borderColor,
+            },
+          ]}
         >
           <Icon
-            color={activeCount > 0 ? tint.pro.color : ui.text.secondary}
+            color={activeCount > 0 ? skin.tint.pro.color : skin.ui.text.secondary}
             name={expanded ? 'collapse' : 'filter'}
             scale="inline"
           />
           <Text
-            style={{ color: activeCount > 0 ? tint.pro.color : ui.text.secondary }}
+            style={{ color: activeCount > 0 ? skin.tint.pro.color : skin.ui.text.secondary }}
             variant="chip"
           >
             {activeCount > 0 ? labels.active : labels.toggle}
@@ -102,11 +115,18 @@ export function FilterRail({
         <Animated.View
           entering={FadeIn.duration(180)}
           exiting={FadeOut.duration(120)}
-          style={styles.panel}
+          style={[
+            styles.panel,
+            {
+              borderRadius: skin.round.card,
+              borderColor: skin.ui.border.hairline,
+              backgroundColor: skin.ui.fill.chipGhost,
+            },
+          ]}
         >
           {groups.map((group) => (
             <View key={group.id} style={styles.group}>
-              <Meta style={styles.groupLabel}>{group.label}</Meta>
+              <Meta tone="quaternary">{group.label}</Meta>
               <View style={styles.groupChips}>
                 {group.options.map((option) => (
                   <Chip
@@ -128,8 +148,8 @@ export function FilterRail({
               onPress={onReset}
               style={styles.reset}
             >
-              <Icon color={ui.status.dangerText} name="close" scale="inline" />
-              <Text style={styles.resetLabel} variant="chip">
+              <Icon color={skin.ui.status.dangerText} name="close" scale="inline" />
+              <Text style={{ color: skin.ui.status.dangerText }} variant="chip">
                 {labels.reset}
               </Text>
             </Pressable>
@@ -153,30 +173,17 @@ const styles = StyleSheet.create({
     gap: 6,
     minHeight: 34,
     paddingHorizontal: 13,
-    borderRadius: round.chip,
     borderWidth: 1,
-    borderColor: ui.border.hairlineStrong,
-    backgroundColor: ui.fill.chip,
-  },
-  disclosureActive: {
-    backgroundColor: tint.pro.backgroundColor,
-    borderColor: tint.pro.borderColor,
   },
   panel: {
     marginHorizontal: space.gutter,
     marginBottom: space.gutter,
     padding: space.cardGap,
-    borderRadius: round.card,
     borderWidth: 1,
-    borderColor: ui.border.hairline,
-    backgroundColor: ui.fill.chipGhost,
     gap: space.sm,
   },
   group: {
     gap: space.xs,
-  },
-  groupLabel: {
-    color: ui.text.quaternary,
   },
   groupChips: {
     flexDirection: 'row',
@@ -189,8 +196,5 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     gap: 5,
     paddingTop: 2,
-  },
-  resetLabel: {
-    color: ui.status.dangerText,
   },
 });

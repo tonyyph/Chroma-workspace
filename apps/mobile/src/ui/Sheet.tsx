@@ -1,11 +1,18 @@
-import { elevation, glass, round, size, space, ui } from '@chromawave/design-tokens';
+import { size, space } from '@chromawave/design-tokens';
 import { BlurView } from 'expo-blur';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSkin } from '@/providers';
 
 /** The 44×5 grabber that marks a sheet as draggable. */
 export function SheetGrabber() {
-  return <View accessibilityElementsHidden style={styles.grabber} />;
+  const skin = useSkin();
+  return (
+    <View
+      accessibilityElementsHidden
+      style={[styles.grabber, { backgroundColor: skin.ui.border.control }]}
+    />
+  );
 }
 
 /**
@@ -26,17 +33,36 @@ export function Sheet({
   overlap?: number;
 }) {
   const insets = useSafeAreaInsets();
+  const skin = useSkin();
+  const depth = skin.elevation.floating;
   return (
     <View
       style={[
         styles.sheet,
-        { marginTop: -overlap, paddingBottom: Math.max(insets.bottom, space.lg) },
+        {
+          marginTop: -overlap,
+          paddingBottom: Math.max(insets.bottom, space.lg),
+          backgroundColor: skin.glass.shell.tint,
+          borderTopLeftRadius: skin.round.sheet,
+          borderTopRightRadius: skin.round.sheet,
+          borderTopColor: skin.ui.border.hairlineStrong,
+          shadowColor: depth.shadowColor,
+          shadowOffset: depth.shadowOffset,
+          shadowOpacity: depth.shadowOpacity,
+          shadowRadius: depth.shadowRadius,
+        },
         style,
       ]}
     >
-      {/* Sheets overlap content, so they blur harder than a card and carry the
-          floating elevation's highlight. */}
-      <BlurView intensity={glass.shell.intensity} style={StyleSheet.absoluteFill} tint="dark" />
+      {/* Sheets overlap content, so they blur harder than a card — where the
+          skin has blur at all. Swiss paints the tint flat instead. */}
+      {skin.chrome.glass ? (
+        <BlurView
+          intensity={skin.glass.shell.intensity}
+          style={StyleSheet.absoluteFill}
+          tint="dark"
+        />
+      ) : null}
       {grabber ? <SheetGrabber /> : null}
       {children}
     </View>
@@ -47,15 +73,7 @@ const styles = StyleSheet.create({
   sheet: {
     flex: 1,
     overflow: 'hidden',
-    backgroundColor: glass.shell.tint,
-    shadowColor: elevation.floating.shadowColor,
-    shadowOffset: elevation.floating.shadowOffset,
-    shadowOpacity: elevation.floating.shadowOpacity,
-    shadowRadius: elevation.floating.shadowRadius,
-    borderTopLeftRadius: round.sheet,
-    borderTopRightRadius: round.sheet,
     borderTopWidth: 1,
-    borderTopColor: ui.border.hairlineStrong,
     paddingTop: space.cardGap,
     paddingHorizontal: space.sectionGap,
     gap: space.md,
@@ -71,7 +89,6 @@ const styles = StyleSheet.create({
     width: size.grabberWidth,
     height: size.grabberHeight,
     borderRadius: 3,
-    backgroundColor: 'rgba(237,234,227,.25)',
     alignSelf: 'center',
   },
 });

@@ -1,4 +1,4 @@
-import { duration, size, space, ui } from '@chromawave/design-tokens';
+import { duration, size, space } from '@chromawave/design-tokens';
 import { useEffect } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, {
@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSkin } from '@/providers';
 import { useHeroStore } from '@/store/heroStore';
 
 /**
@@ -40,6 +41,7 @@ export function HeroOverlay() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const reduced = useReducedMotion();
+  const skin = useSkin();
 
   const progress = useSharedValue(0);
 
@@ -92,7 +94,7 @@ export function HeroOverlay() {
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
       pointerEvents="none"
-      style={[styles.overlay, style]}
+      style={[styles.overlay, { backgroundColor: skin.ui.bg.media }, style]}
     >
       {colors.map((color, index) => (
         <View
@@ -109,7 +111,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     flexDirection: 'row',
     overflow: 'hidden',
-    backgroundColor: ui.bg.media,
     zIndex: 40,
   },
 });

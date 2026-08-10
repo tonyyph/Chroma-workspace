@@ -1,5 +1,6 @@
-import { size, ui } from '@chromawave/design-tokens';
+import { size } from '@chromawave/design-tokens';
 import { StyleSheet, View } from 'react-native';
+import { useSkin } from '@/providers';
 import { Pressable } from './Pressable';
 
 /**
@@ -18,6 +19,7 @@ export function Toggle({
   disabled?: boolean;
   label: string;
 }) {
+  const skin = useSkin();
   return (
     <Pressable
       accessibilityLabel={label}
@@ -28,7 +30,7 @@ export function Toggle({
       onPress={() => onValueChange?.(!value)}
       style={[
         styles.track,
-        { backgroundColor: value ? ui.action.primary : ui.fill.toggleOff },
+        { backgroundColor: value ? skin.ui.action.primary : skin.ui.fill.toggleOff },
         disabled && styles.disabled,
       ]}
     >
@@ -36,7 +38,7 @@ export function Toggle({
         style={[
           styles.knob,
           value ? styles.knobOn : styles.knobOff,
-          { backgroundColor: value ? '#FFFFFF' : ui.text.primary },
+          { backgroundColor: value ? skin.ui.action.onPrimary : skin.ui.text.primary },
         ]}
       />
     </Pressable>

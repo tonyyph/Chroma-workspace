@@ -1,6 +1,7 @@
-import { round, size, space, typeExtra, ui } from '@chromawave/design-tokens';
+import { size, space } from '@chromawave/design-tokens';
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
+import { useSkin } from '@/providers';
 import { Icon } from './Icon';
 
 /**
@@ -21,16 +22,21 @@ export function Field({
   label: string;
   onSubmit?: () => void;
 }) {
+  const skin = useSkin();
   const [focused, setFocused] = useState(false);
 
   return (
     <View
       style={[
         styles.field,
-        { borderColor: focused ? ui.action.primary : ui.border.hairlineStrong },
+        {
+          borderColor: focused ? skin.ui.action.primary : skin.ui.border.hairlineStrong,
+          borderRadius: skin.round.full,
+          backgroundColor: skin.ui.fill.chip,
+        },
       ]}
     >
-      <Icon color={ui.text.tertiary} name="search" />
+      <Icon color={skin.ui.text.tertiary} name="search" />
       <TextInput
         accessibilityLabel={label}
         autoCapitalize="none"
@@ -41,9 +47,9 @@ export function Field({
         onFocus={() => setFocused(true)}
         onSubmitEditing={onSubmit}
         placeholder={placeholder}
-        placeholderTextColor={ui.text.tertiary}
+        placeholderTextColor={skin.ui.text.tertiary}
         returnKeyType="search"
-        style={styles.input}
+        style={[styles.input, { color: skin.ui.text.primary, ...skin.type.button }]}
         value={value}
       />
     </View>
@@ -53,8 +59,6 @@ export function Field({
 const styles = StyleSheet.create({
   field: {
     height: size.field,
-    borderRadius: round.full,
-    backgroundColor: ui.fill.chip,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -64,8 +68,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     padding: 0,
-    color: ui.text.primary,
-    fontFamily: typeExtra.button.fontFamily,
     fontSize: 14,
   },
 });

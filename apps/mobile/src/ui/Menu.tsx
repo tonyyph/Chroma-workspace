@@ -1,4 +1,4 @@
-import { round, space, typeExtra, ui, uiMotion, uiShadow } from '@chromawave/design-tokens';
+import { space, uiMotion } from '@chromawave/design-tokens';
 import { useEffect, useState } from 'react';
 import {
   Keyboard,
@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSkin } from '@/providers';
 import { Button } from './Button';
 import { Pressable } from './Pressable';
 import { SheetGrabber } from './Sheet';
@@ -44,6 +45,7 @@ export function ModalSheet({
   keyboardAware?: boolean;
 }) {
   const insets = useSafeAreaInsets();
+  const skin = useSkin();
   const dismiss = () => {
     Keyboard.dismiss();
     onDismiss();
@@ -62,10 +64,24 @@ export function ModalSheet({
         behavior={keyboardAware ? (Platform.OS === 'ios' ? 'padding' : 'height') : undefined}
         style={styles.modalRoot}
       >
-        <Pressable accessibilityLabel={dismissLabel} onPress={dismiss} style={styles.backdrop} />
+        <Pressable
+          accessibilityLabel={dismissLabel}
+          onPress={dismiss}
+          style={[StyleSheet.absoluteFill, { backgroundColor: skin.ui.scrim.strong }]}
+        />
         <View
           accessibilityViewIsModal
-          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, space.md) }]}
+          style={[
+            styles.sheet,
+            {
+              paddingBottom: Math.max(insets.bottom, space.md),
+              backgroundColor: skin.ui.bg.media,
+              borderTopLeftRadius: skin.round.sheet,
+              borderTopRightRadius: skin.round.sheet,
+              borderTopColor: skin.ui.border.control,
+              ...skin.shadow.sheet,
+            },
+          ]}
         >
           <SheetGrabber />
           <View style={styles.heading}>
@@ -95,6 +111,7 @@ export function ActionSheet({
   cancelLabel: string;
   onDismiss: () => void;
 }) {
+  const skin = useSkin();
   return (
     <ModalSheet dismissLabel={cancelLabel} onDismiss={onDismiss} title={title} visible={visible}>
       <View style={styles.actionGroup}>
@@ -109,7 +126,10 @@ export function ActionSheet({
             }}
             style={({ pressed }) => [
               styles.row,
-              index < actions.length - 1 && styles.rowDivider,
+              index < actions.length - 1 && {
+                borderBottomWidth: 1,
+                borderBottomColor: skin.ui.border.hairline,
+              },
               pressed && { opacity: uiMotion.listPress.opacity },
             ]}
           >
@@ -118,7 +138,15 @@ export function ActionSheet({
             </Text>
             <View
               accessibilityElementsHidden
-              style={[styles.actionMark, action.destructive && styles.actionMarkDanger]}
+              style={[
+                styles.actionMark,
+                {
+                  borderRadius: skin.round.full,
+                  backgroundColor: action.destructive
+                    ? skin.ui.status.danger
+                    : skin.ui.action.primary,
+                },
+              ]}
             />
           </Pressable>
         ))}
@@ -148,6 +176,7 @@ export function PromptSheet({
   onConfirm: (value: string) => void;
   onDismiss: () => void;
 }) {
+  const skin = useSkin();
   const [value, setValue] = useState(initialValue);
 
   useEffect(() => {
@@ -182,10 +211,20 @@ export function PromptSheet({
           onChangeText={setValue}
           onSubmitEditing={submit}
           placeholder={placeholder}
-          placeholderTextColor={ui.text.tertiary}
+          placeholderTextColor={skin.ui.text.tertiary}
           returnKeyType="done"
           selectTextOnFocus
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              borderRadius: skin.round.control,
+              backgroundColor: skin.ui.fill.chip,
+              borderColor: skin.ui.border.control,
+              color: skin.ui.text.primary,
+              fontFamily: skin.type.button.fontFamily,
+              fontSize: skin.type.button.fontSize,
+            },
+          ]}
           value={value}
         />
         <View style={styles.promptActions}>
@@ -281,32 +320,21 @@ export function NoticeSheet({
 
 const styles = StyleSheet.create({
   modalRoot: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: ui.scrim.strong },
   sheet: {
     maxHeight: '88%',
-    backgroundColor: ui.bg.media,
-    borderTopLeftRadius: round.sheet,
-    borderTopRightRadius: round.sheet,
-    borderTopColor: ui.border.control,
     paddingTop: space.sm,
     paddingHorizontal: space.sectionGap,
     gap: space.md,
-    ...uiShadow.sheet,
   },
   heading: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   headingRule: {
     width: 5,
     height: 28,
-    borderRadius: round.full,
-    backgroundColor: ui.action.primary,
   },
   title: { flex: 1 },
   actionGroup: {
     overflow: 'hidden',
-    borderRadius: round.card,
     borderWidth: 1,
-    borderColor: ui.border.hairlineStrong,
-    backgroundColor: ui.fill.card,
   },
   row: {
     minHeight: 54,
@@ -316,26 +344,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: space.md,
   },
-  rowDivider: { borderBottomWidth: 1, borderBottomColor: ui.border.hairline },
   actionMark: {
     width: 6,
     height: 6,
-    borderRadius: round.full,
-    backgroundColor: ui.action.primary,
   },
-  actionMarkDanger: { backgroundColor: ui.status.danger },
   promptContent: { gap: space.md },
   input: {
     minHeight: 52,
-    borderRadius: round.control,
-    backgroundColor: ui.fill.chip,
     borderWidth: 1,
-    borderColor: ui.border.control,
     paddingHorizontal: space.md,
     paddingVertical: space.sm,
-    color: ui.text.primary,
-    fontFamily: typeExtra.button.fontFamily,
-    fontSize: typeExtra.button.fontSize,
   },
   promptActions: { flexDirection: 'row', gap: space.xs },
   promptButton: { flex: 1 },

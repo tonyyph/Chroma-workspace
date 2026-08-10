@@ -1,4 +1,4 @@
-import { brandBands, motionRules, ui, uiMotion } from '@chromawave/design-tokens';
+import { brandBands, motionRules, uiMotion } from '@chromawave/design-tokens';
 import {
   Blur,
   Canvas,
@@ -19,6 +19,7 @@ import {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { useSkin } from '@/providers';
 import { sine } from './BandField';
 
 /**
@@ -112,6 +113,7 @@ export function BandSweepCanvas({
   height: number;
   colors?: readonly string[];
 }) {
+  const skin = useSkin();
   const reduced = useReducedMotion();
   const progress = useSharedValue(0);
   const travel = width * 0.38;
@@ -153,7 +155,7 @@ export function BandSweepCanvas({
 
   return (
     <Canvas style={{ width, height }}>
-      <Rect color={ui.bg.media} height={height} width={width} x={0} y={0} />
+      <Rect color={skin.ui.bg.media} height={height} width={width} x={0} y={0} />
       <Group layer={blurLayer(height * 0.13)} opacity={0.85} transform={transform}>
         {paths.map((path, i) =>
           path ? (

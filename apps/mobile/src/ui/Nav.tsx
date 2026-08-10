@@ -1,5 +1,6 @@
-import { space, ui, uiMotion } from '@chromawave/design-tokens';
+import { space, uiMotion } from '@chromawave/design-tokens';
 import { StyleSheet, View } from 'react-native';
+import { useSkin } from '@/providers';
 import { Icon, type IconName } from './Icon';
 import { Pressable } from './Pressable';
 import { Meta, Text } from './Text';
@@ -25,6 +26,7 @@ export function NavBar({
   onLeading?: (() => void) | undefined;
   onTrailing?: (() => void) | undefined;
 }) {
+  const skin = useSkin();
   return (
     <View style={styles.nav}>
       <View style={styles.navSide}>
@@ -40,7 +42,7 @@ export function NavBar({
             ]}
           >
             {leadingIcon ? (
-              <Icon color={ui.text.secondary} name={leadingIcon} scale="inline" />
+              <Icon color={skin.ui.text.secondary} name={leadingIcon} scale="inline" />
             ) : null}
             <Text style={styles.navLeading} tone="secondary">
               {leading}
@@ -115,11 +117,12 @@ export function SectionHead({
   action?: string | undefined;
   onAction?: (() => void) | undefined;
 }) {
+  const skin = useSkin();
   return (
     <View style={styles.section}>
       <View style={styles.sectionCopy}>
         <Text variant="rowTitle">{title}</Text>
-        {meta ? <Meta style={styles.sectionMeta}>{meta}</Meta> : null}
+        {meta ? <Meta>{meta}</Meta> : null}
       </View>
       {action && onAction ? (
         <Pressable
@@ -135,7 +138,7 @@ export function SectionHead({
           <Text tone="tertiary" variant="chip">
             {action}
           </Text>
-          <Icon color={ui.text.tertiary} name="forward" scale="inline" />
+          <Icon color={skin.ui.text.tertiary} name="forward" scale="inline" />
         </Pressable>
       ) : null}
     </View>
@@ -180,7 +183,6 @@ const styles = StyleSheet.create({
   },
   headerMeta: {
     marginTop: 4,
-    color: ui.text.tertiary,
   },
   section: {
     flexDirection: 'row',
@@ -191,9 +193,6 @@ const styles = StyleSheet.create({
   sectionCopy: {
     flex: 1,
     gap: 3,
-  },
-  sectionMeta: {
-    color: ui.text.quaternary,
   },
   sectionAction: {
     flexDirection: 'row',

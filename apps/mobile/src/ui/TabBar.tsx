@@ -1,18 +1,10 @@
-import {
-  brandBands,
-  glass,
-  round,
-  size,
-  space,
-  ui,
-  uiMotion,
-  uiShadow,
-} from '@chromawave/design-tokens';
+import { brandBands, size, space, uiMotion } from '@chromawave/design-tokens';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '@/components';
+import { useSkin } from '@/providers';
 import { reportBackdropTouch } from './backdropMotion';
 import { Icon, type IconName } from './Icon';
 import { Pressable } from './Pressable';
@@ -32,7 +24,9 @@ const tabs: readonly {
   key: TabKey;
   label: string;
   accessibilityLabel: string;
-  accent: string;
+  /** Null takes the skin's own primary, which is violet in one and red in the
+   *  other — the brand bands beside it are content colours and do not move. */
+  accent: string | null;
   icon: IconName;
 }[] = [
   {
@@ -60,7 +54,7 @@ const tabs: readonly {
     key: 'you',
     label: 'YOU',
     accessibilityLabel: 'You',
-    accent: ui.action.primary,
+    accent: null,
     icon: 'profile',
   },
 ];
@@ -80,19 +74,39 @@ export function TabBar({
   onCapture: () => void;
 }) {
   const insets = useSafeAreaInsets();
+  const skin = useSkin();
   const [left, right] = [tabs.slice(0, 2), tabs.slice(2)];
 
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: insets.bottom }]}>
       <LinearGradient
-        colors={['rgba(8,7,14,0)', 'rgba(18, 17, 25, 0.94)']}
+        colors={
+          skin.chrome.depth
+            ? ['rgba(8,7,14,0)', 'rgba(18, 17, 25, 0.94)']
+            : ['rgba(242,241,238,0)', skin.ui.bg.base]
+        }
         locations={[0, 0.4]}
         pointerEvents="none"
         style={StyleSheet.absoluteFill}
       />
-      <View style={[styles.barShell, uiShadow.tabBar]}>
-        <View style={styles.bar}>
-          <BlurView intensity={glass.shell.intensity} style={StyleSheet.absoluteFill} tint="dark" />
+      <View style={[styles.barShell, { borderRadius: skin.round.pill }, skin.shadow.tabBar]}>
+        <View
+          style={[
+            styles.bar,
+            {
+              borderRadius: skin.round.pill,
+              backgroundColor: skin.ui.tabBar,
+              borderColor: skin.ui.border.control,
+            },
+          ]}
+        >
+          {skin.chrome.glass ? (
+            <BlurView
+              intensity={skin.glass.shell.intensity}
+              style={StyleSheet.absoluteFill}
+              tint="dark"
+            />
+          ) : null}
           <View style={styles.barInner}>
             {left.map((tab) => (
               <TabItem
@@ -115,7 +129,8 @@ export function TabBar({
               }}
               style={({ pressed }) => [
                 styles.capture,
-                uiShadow.mark,
+                { borderRadius: skin.round.full },
+                skin.shadow.mark,
                 pressed && styles.capturePressed,
               ]}
             >
@@ -148,6 +163,8 @@ function TabItem({
   active: boolean;
   onPress: () => void;
 }) {
+  const skin = useSkin();
+  const accent = tab.accent ?? skin.ui.action.primary;
   return (
     <Pressable
       accessibilityLabel={tab.accessibilityLabel}
@@ -159,18 +176,19 @@ function TabItem({
       <View
         style={[
           styles.iconSurface,
+          { borderRadius: skin.round.control },
           active && styles.iconSurfaceActive,
-          active && uiShadow.tabActive,
-          active && { backgroundColor: tab.accent, shadowColor: tab.accent },
+          active && skin.shadow.tabActive,
+          active && { backgroundColor: accent, shadowColor: accent },
         ]}
       >
         <Icon
-          color={active ? ui.text.primary : ui.text.secondary}
+          color={active ? skin.ui.text.primary : skin.ui.text.secondary}
           name={tab.icon}
           scale="navigation"
         />
       </View>
-      <Text style={{ color: active ? ui.text.primary : ui.text.tertiary }} variant="chip">
+      <Text style={{ color: active ? skin.ui.text.primary : skin.ui.text.tertiary }} variant="chip">
         {tab.label}
       </Text>
     </Pressable>
@@ -189,7 +207,6 @@ const styles = StyleSheet.create({
   barShell: {
     height: size.tabBar * 1.15,
     borderRadius: size.tabBar,
-    backgroundColor: ui.tabBar,
   },
   shellHighlight: {
     position: 'absolute',
@@ -201,9 +218,7 @@ const styles = StyleSheet.create({
   bar: {
     flex: 1,
     borderRadius: size.tabBar,
-    backgroundColor: ui.tabBar,
     borderWidth: 1,
-    borderColor: ui.border.control,
     overflow: 'hidden',
   },
   barInner: {
@@ -226,7 +241,6 @@ const styles = StyleSheet.create({
   iconSurface: {
     width: size.tabIconSurfaceWidth,
     height: size.tabIconSurfaceHeight,
-    borderRadius: round.control,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -236,7 +250,6 @@ const styles = StyleSheet.create({
   capture: {
     width: size.tabMark,
     height: size.tabMark,
-    borderRadius: round.full,
   },
   capturePressed: {
     opacity: 0.85,

@@ -1,4 +1,4 @@
-import { brandBands, motionRules, round, ui, uiMotion } from '@chromawave/design-tokens';
+import { brandBands, motionRules, uiMotion } from '@chromawave/design-tokens';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
 import { AccessibilityInfo, StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -12,6 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
+import { useSkin } from '@/providers';
 import { BandSweepCanvas } from './BandCanvas';
 import { SwatchStrip } from './Swatch';
 
@@ -37,18 +38,24 @@ export function BandSweep({
 }) {
   const { width } = useWindowDimensions();
   const reduced = useReducedMotion();
+  const skin = useSkin();
+  const plate = {
+    height,
+    borderRadius: skin.round.control,
+    backgroundColor: skin.ui.bg.media,
+  };
 
   // Reduce-motion: "every sweep becomes a static three-band bar".
   if (reduced) {
     return (
-      <View accessibilityLabel="Loading" style={[styles.clip, { height }]}>
+      <View accessibilityLabel="Loading" style={[styles.clip, plate]}>
         <StaticBands colors={colors} height={Math.max(12, height * 0.14)} />
       </View>
     );
   }
 
   return (
-    <View accessibilityLabel="Loading" style={[styles.clip, { height }]}>
+    <View accessibilityLabel="Loading" style={[styles.clip, plate]}>
       <BandSweepCanvas colors={colors} height={height} width={width - 40} />
     </View>
   );
@@ -230,8 +237,6 @@ export function staggerDelay(index: number): number {
 const styles = StyleSheet.create({
   clip: {
     overflow: 'hidden',
-    borderRadius: round.control,
-    backgroundColor: ui.bg.media,
     justifyContent: 'center',
   },
   sweepLayer: { position: 'absolute', left: '-35%' },
