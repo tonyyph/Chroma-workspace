@@ -191,10 +191,23 @@ export function colorForRole(palette: Palette, role: ColorRole): Color | null {
  * Falls back to source order when a capture produced fewer than three.
  */
 export function roledColors(palette: Palette): readonly Color[] {
+  return roledFrom(palette.colors);
+}
+
+/**
+ * `roledColors` for a bare colour list.
+ *
+ * Exists because the roles are a property of the *colours*, not of the record
+ * holding them: a merged set's strip and a capture still in flight both need the
+ * same ordering and neither is a `Palette`. Callers were reaching this by
+ * constructing a throwaway object with only a `colors` field, which typechecked
+ * only through a cast.
+ */
+export function roledFrom(colors: readonly Color[]): readonly Color[] {
   const ordered = (['dominant', 'support', 'signal'] as const)
-    .map((role) => colorForRole(palette, role))
+    .map((role) => colors.find((color) => color.role === role) ?? null)
     .filter((color): color is Color => color !== null);
-  return ordered.length ? ordered : palette.colors.slice(0, 3);
+  return ordered.length ? ordered : colors.slice(0, 3);
 }
 
 /**

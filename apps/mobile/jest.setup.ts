@@ -126,8 +126,18 @@ jest.mock('react-native-vision-camera', () => {
   };
 });
 
+// The full player surface, not only the two methods the sound cues used: the
+// preview player pauses and releases, and a mock missing those turns a real
+// teardown into a TypeError that only shows up as a failing test elsewhere.
 jest.mock('expo-audio', () => ({
-  createAudioPlayer: () => ({ seekTo: jest.fn(), play: jest.fn() }),
+  createAudioPlayer: () => ({
+    seekTo: jest.fn(),
+    play: jest.fn(),
+    pause: jest.fn(),
+    remove: jest.fn(),
+    currentTime: 0,
+    duration: 0,
+  }),
   setAudioModeAsync: jest.fn(async () => undefined),
 }));
 

@@ -1,4 +1,4 @@
-import { round, size, space, type Skin } from '@chromawave/design-tokens';
+import { size, space, type Skin } from '@chromawave/design-tokens';
 import {
   colorMoods,
   libraryFilters,
@@ -114,6 +114,11 @@ export function LibraryScreen() {
       if (item.kind === 'palette') {
         return <PaletteRibbon onOpen={openPalette} palette={item.palette} />;
       }
+      // The band's end caps come from the active skin, not from chroma's scale:
+      // swiss answers `round.full` with a square edge, and a literal pill here
+      // would put chroma's geometry on a paper ground.
+      const cap = skin.round.full;
+      const last = item.colors.length - 1;
       return (
         <View style={styles.month}>
           <Gutter style={styles.monthCopy}>
@@ -132,10 +137,10 @@ export function LibraryScreen() {
                 style={{
                   flex: color.weight,
                   backgroundColor: color.hex,
-                  borderTopLeftRadius: index === 0 ? round.full : 0,
-                  borderBottomLeftRadius: index === 0 ? round.full : 0,
-                  borderBottomRightRadius: index === item?.colors?.length - 1 ? round.full : 0,
-                  borderTopRightRadius: index === item?.colors?.length - 1 ? round.full : 0,
+                  borderTopLeftRadius: index === 0 ? cap : 0,
+                  borderBottomLeftRadius: index === 0 ? cap : 0,
+                  borderBottomRightRadius: index === last ? cap : 0,
+                  borderTopRightRadius: index === last ? cap : 0,
                 }}
               />
             ))}
@@ -143,7 +148,7 @@ export function LibraryScreen() {
         </View>
       );
     },
-    [openPalette, preferences.language, styles, t],
+    [openPalette, preferences.language, skin.round.full, styles, t],
   );
 
   const filtered = visible.length !== palettes.length;

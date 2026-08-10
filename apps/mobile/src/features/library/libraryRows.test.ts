@@ -1,5 +1,5 @@
 import { makeColor, type Palette } from '@chromawave/domain';
-import { toLibraryRows } from './libraryRows';
+import { clearMonthSignatureCache, toLibraryRows } from './libraryRows';
 
 const at = (id: string, capturedAt: string): Palette => ({
   schemaVersion: 1,
@@ -82,5 +82,77 @@ describe('toLibraryRows', () => {
       at('b', '2025-08-09T10:00:00.000Z'),
     ]);
     expect(rows.filter((row) => row.kind === 'month')).toHaveLength(2);
+  });
+});
+
+/**
+ * The measured problem this cache exists for: `mergePalettes` is a CIEDE2000
+ * comparison of every colour against every kept colour, and the screen rebuilds
+ * its rows on every search keystroke. A 500-palette library was on the order of
+ * a million trigonometric calls per keypress.
+ */
+describe('month signatures are not recomputed on every pass', () => {
+  beforeEach(() => clearMonthSignatureCache());
+
+  const library = Array.from({ length: 40 }, (_, index) =>
+    at(`p${index}`, `2026-08-${String((index % 28) + 1).padStart(2, '0')}T10:00:00.000Z`),
+  );
+
+  it('returns the identical signature array for unchanged membership', () => {
+    const first = toLibraryRows(library);
+    const second = toLibraryRows(library);
+
+    const firstMonth = first.find((row) => row.kind === 'month');
+    const secondMonth = second.find((row) => row.kind === 'month');
+
+    // Reference equality: the merge did not run again.
+    expect(firstMonth?.kind === 'month' && secondMonth?.kind === 'month').toBe(true);
+    if (firstMonth?.kind === 'month' && secondMonth?.kind === 'month') {
+      expect(secondMonth.colors).toBe(firstMonth.colors);
+    }
+  });
+
+  it('recomputes when a palette joins the month', () => {
+    const before = toLibraryRows(library);
+    const after = toLibraryRows([...library, at('new', '2026-08-15T10:00:00.000Z')]);
+
+    const beforeMonth = before.find((row) => row.kind === 'month');
+    const afterMonth = after.find((row) => row.kind === 'month');
+    if (beforeMonth?.kind === 'month' && afterMonth?.kind === 'month') {
+      expect(afterMonth.colors).not.toBe(beforeMonth.colors);
+      expect(afterMonth.count).toBe(beforeMonth.count + 1);
+    }
+  });
+
+  it('recomputes when a palette in the month is retuned', () => {
+    const before = toLibraryRows(library);
+    const retuned = [
+      { ...library[0]!, colors: [makeColor('#FF0000', 0.5, 'dominant'), makeColor('#00FF00', 0.5, 'support')] },
+      ...library.slice(1),
+    ];
+    const after = toLibraryRows(retuned);
+
+    const beforeMonth = before.find((row) => row.kind === 'month');
+    const afterMonth = after.find((row) => row.kind === 'month');
+    if (beforeMonth?.kind === 'month' && afterMonth?.kind === 'month') {
+      // The signature is keyed on colours as well as ids, so a retune that keeps
+      // membership identical still invalidates the entry.
+      expect(afterMonth.colors).not.toBe(beforeMonth.colors);
+    }
+  });
+
+  it('serves a filtered subset without recomputing the untouched months', () => {
+    const july = at('july', '2026-07-01T10:00:00.000Z');
+    const full = toLibraryRows([...library, july]);
+    // A search that drops the July item leaves August's membership unchanged.
+    const filtered = toLibraryRows(library);
+
+    const fullAugust = full.find((row) => row.kind === 'month' && row.key === 'month:2026-08');
+    const filteredAugust = filtered.find(
+      (row) => row.kind === 'month' && row.key === 'month:2026-08',
+    );
+    if (fullAugust?.kind === 'month' && filteredAugust?.kind === 'month') {
+      expect(filteredAugust.colors).toBe(fullAugust.colors);
+    }
   });
 });
