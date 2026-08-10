@@ -21,7 +21,12 @@ import { ErrorBoundary } from '@/components';
 import { syncDrop } from '@/features/trending/trendingRepository';
 import { useNotificationRoute } from '@/hooks';
 import { storage } from '@/infrastructure/dependencies';
-import { EntitlementProvider, PreferencesProvider, usePreferences } from '@/providers';
+import {
+  EntitlementProvider,
+  PreferencesProvider,
+  SkinProvider,
+  usePreferences,
+} from '@/providers';
 import { BackdropDriver, HeroOverlay } from '@/ui';
 
 void SplashScreen.preventAutoHideAsync();
@@ -62,7 +67,10 @@ export default function RootLayout() {
             {/* Inside preferences, because entitlements gate features rather than
                 configure them — nothing here blocks first paint. */}
             <EntitlementProvider>
-              <AppNavigator />
+              {/* Under preferences, which is where the choice is stored. */}
+              <SkinProvider>
+                <AppNavigator />
+              </SkinProvider>
             </EntitlementProvider>
           </PreferencesProvider>
         </ErrorBoundary>

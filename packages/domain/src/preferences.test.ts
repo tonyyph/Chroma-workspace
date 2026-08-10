@@ -11,6 +11,7 @@ describe('UserPreferences', () => {
       notificationIdentifier: null,
       reminderTime: '20:00',
       language: 'en',
+      skin: 'chroma',
       colorSpace: 'srgb',
       soundEnabled: false,
       ambientBackdrop: true,

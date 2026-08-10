@@ -1,5 +1,6 @@
-import { round, tint, ui, uiMotion } from '@chromawave/design-tokens';
+import { uiMotion, type Skin } from '@chromawave/design-tokens';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { useSkin } from '@/providers';
 import { Icon, type IconName } from './Icon';
 import { Pressable } from './Pressable';
 import { Text } from './Text';
@@ -7,53 +8,53 @@ import { Text } from './Text';
 export type ChipTone = 'default' | 'selected' | 'pro' | 'add' | 'info' | 'danger';
 
 /** SYSTEM F · CHIPS. Four base tones plus the two verdict pills used in G3/G4. */
-const tones: Record<ChipTone, { container: ViewStyle; color: string }> = {
+const tonesOf = (skin: Skin): Record<ChipTone, { container: ViewStyle; color: string }> => ({
   default: {
     container: {
-      backgroundColor: ui.fill.chip,
+      backgroundColor: skin.ui.fill.chip,
       borderWidth: 1,
-      borderColor: ui.border.hairlineStrong,
+      borderColor: skin.ui.border.hairlineStrong,
     },
-    color: 'rgba(237,234,227,.7)',
+    color: skin.ui.text.secondary,
   },
   selected: {
-    container: { backgroundColor: ui.action.contrast },
-    color: ui.action.onContrast,
+    container: { backgroundColor: skin.ui.action.contrast },
+    color: skin.ui.action.onContrast,
   },
   pro: {
     container: {
-      backgroundColor: tint.pro.backgroundColor,
+      backgroundColor: skin.tint.pro.backgroundColor,
       borderWidth: 1,
-      borderColor: tint.pro.borderColor,
+      borderColor: skin.tint.pro.borderColor,
     },
-    color: tint.pro.color,
+    color: skin.tint.pro.color,
   },
   add: {
     container: {
-      backgroundColor: ui.fill.chipGhost,
+      backgroundColor: skin.ui.fill.chipGhost,
       borderWidth: 1,
-      borderColor: ui.border.dashed,
+      borderColor: skin.ui.border.dashed,
       borderStyle: 'dashed',
     },
-    color: ui.text.tertiary,
+    color: skin.ui.text.tertiary,
   },
   info: {
     container: {
-      backgroundColor: tint.info.backgroundColor,
+      backgroundColor: skin.tint.info.backgroundColor,
       borderWidth: 1,
-      borderColor: tint.info.borderColor,
+      borderColor: skin.tint.info.borderColor,
     },
-    color: tint.info.color,
+    color: skin.tint.info.color,
   },
   danger: {
     container: {
-      backgroundColor: 'rgba(255,107,90,.16)',
+      backgroundColor: skin.tint.danger.backgroundColor,
       borderWidth: 1,
-      borderColor: 'rgba(255,107,90,.42)',
+      borderColor: skin.tint.danger.borderColor,
     },
-    color: ui.status.dangerText,
+    color: skin.ui.status.dangerText,
   },
-};
+});
 
 export function Chip({
   label,
@@ -82,7 +83,8 @@ export function Chip({
   accent?: { backgroundColor: string; borderColor: string; color: string } | undefined;
   style?: ViewStyle;
 }) {
-  const base = tones[tone];
+  const skin = useSkin();
+  const base = tonesOf(skin)[tone];
   const look = accent
     ? {
         container: {
@@ -105,7 +107,13 @@ export function Chip({
       {label}
     </Text>
   );
-  const box = [styles.chip, look.container, fill && styles.fill, style];
+  const box = [
+    styles.chip,
+    { borderRadius: skin.round.chip },
+    look.container,
+    fill && styles.fill,
+    style,
+  ];
 
   if (!onPress) {
     return (
@@ -132,7 +140,6 @@ const styles = StyleSheet.create({
     minHeight: 34,
     paddingHorizontal: 13,
     paddingVertical: 10,
-    borderRadius: round.chip,
     alignItems: 'center',
     justifyContent: 'center',
   },

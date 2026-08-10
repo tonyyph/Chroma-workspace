@@ -74,6 +74,7 @@ export function YouScreen() {
     setLanguage,
     setNotificationsEnabled,
     setColorSpace,
+    setSkin,
     setDefaultExport,
     setSoundEnabled,
     setAmbientBackdrop,
@@ -169,6 +170,13 @@ export function YouScreen() {
       </Gutter>
       <Gutter style={styles.group}>
         <CardGroup>
+          {/* The one preference that changes everything on every screen, so it
+              leads the group rather than sitting under the export defaults. */}
+          <Row
+            label={t('you.appearance')}
+            onPress={() => void setSkin(preferences.skin === 'chroma' ? 'swiss' : 'chroma')}
+            value={t(`you.appearance.${preferences.skin}`)}
+          />
           <Row
             label={t('you.colourSpace')}
             onPress={() => void setColorSpace(preferences.colorSpace === 'srgb' ? 'p3' : 'srgb')}

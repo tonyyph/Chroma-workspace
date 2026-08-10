@@ -1,5 +1,6 @@
-import { size, ui, uiMotion } from '@chromawave/design-tokens';
+import { size, uiMotion, type Skin } from '@chromawave/design-tokens';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { useSkin } from '@/providers';
 import { Pressable } from './Pressable';
 import { Text } from './Text';
 
@@ -10,45 +11,39 @@ export type ButtonVariant = 'primary' | 'secondary' | 'contrast' | 'ghost' | 'de
  * disabled look is a state of `primary` rather than a seventh variant, which is
  * how the sheet draws it.
  */
-const looks: Record<
-  ButtonVariant,
-  { container: ViewStyle; pressed: ViewStyle; color: string; weight: 'semibold' | 'medium' }
-> = {
+const looksOf = (
+  skin: Skin,
+): Record<ButtonVariant, { container: ViewStyle; pressed: ViewStyle; color: string }> => ({
   primary: {
-    container: { backgroundColor: ui.action.primary },
-    pressed: { backgroundColor: ui.action.primaryActive },
-    color: ui.action.onPrimary,
-    weight: 'semibold',
+    container: { backgroundColor: skin.ui.action.primary },
+    pressed: { backgroundColor: skin.ui.action.primaryActive },
+    color: skin.ui.action.onPrimary,
   },
   secondary: {
-    container: { borderWidth: 1, borderColor: ui.border.control },
-    pressed: { backgroundColor: 'rgba(237,234,227,.07)' },
-    color: ui.text.primary,
-    weight: 'medium',
+    container: { borderWidth: 1, borderColor: skin.ui.border.control },
+    pressed: { backgroundColor: skin.ui.fill.chip },
+    color: skin.ui.text.primary,
   },
   contrast: {
-    container: { backgroundColor: ui.action.contrast },
-    pressed: { backgroundColor: ui.action.contrastHover },
-    color: ui.action.onContrast,
-    weight: 'semibold',
+    container: { backgroundColor: skin.ui.action.contrast },
+    pressed: { backgroundColor: skin.ui.action.contrastHover },
+    color: skin.ui.action.onContrast,
   },
   ghost: {
     container: {},
     pressed: { opacity: uiMotion.listPress.opacity },
-    color: ui.action.link,
-    weight: 'medium',
+    color: skin.ui.action.link,
   },
   destructive: {
     container: {
       borderWidth: 1,
-      borderColor: 'rgba(255,107,90,.4)',
-      backgroundColor: 'rgba(255,107,90,.1)',
+      borderColor: skin.tint.danger.borderColor,
+      backgroundColor: skin.tint.danger.backgroundColor,
     },
-    pressed: { backgroundColor: 'rgba(255,107,90,.18)' },
-    color: ui.status.dangerText,
-    weight: 'medium',
+    pressed: { backgroundColor: skin.tint.danger.borderColor },
+    color: skin.ui.status.dangerText,
   },
-};
+});
 
 export function Button({
   label,
@@ -75,11 +70,19 @@ export function Button({
     xs: size.buttonSm,
     xxs: size.buttonXXS,
   };
+  const skin = useSkin();
   const box = heights[height];
-  const look = looks[variant];
+  const look = looksOf(skin)[variant];
 
-  // Radius is always half the height, which is what produces the pill in the sheet.
-  const shape = { height: box, borderRadius: box / 2 };
+  /**
+   * A pill in `chroma`, a rectangle in `swiss`.
+   *
+   * The radius used to be hardcoded as half the height, which is what made the
+   * pill — and what made a button the one control a skin could not reshape.
+   * `round.pill` is 27 in chroma and 0 in swiss, so the half-height rule only
+   * applies where the skin asks for a pill at all.
+   */
+  const shape = { height: box, borderRadius: skin.round.pill > 0 ? box / 2 : skin.round.control };
 
   return (
     <Pressable
@@ -94,13 +97,13 @@ export function Button({
         shape,
         look.container,
         pressed && !disabled && look.pressed,
-        disabled && styles.disabled,
+        disabled && { backgroundColor: skin.ui.action.primaryDisabled, borderWidth: 0 },
         style,
       ]}
     >
       <Text
         style={{
-          color: disabled ? ui.action.onPrimaryDisabled : look.color,
+          color: disabled ? skin.ui.action.onPrimaryDisabled : look.color,
         }}
         variant={height === 'lg' ? 'buttonLarge' : 'button'}
       >
@@ -120,10 +123,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 22,
-  },
-  disabled: {
-    backgroundColor: ui.action.primaryDisabled,
-    borderWidth: 0,
   },
   row: {
     flexDirection: 'row',

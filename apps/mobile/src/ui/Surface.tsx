@@ -6,6 +6,7 @@ import {
   space,
   ui,
   type ElevationLevel,
+  type Skin,
 } from '@chromawave/design-tokens';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,7 +19,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { usePreferences } from '@/providers';
+import { usePreferences, useSkin } from '@/providers';
 import { reportBackdropScroll } from './backdropMotion';
 import { Pressable } from './Pressable';
 import { BandRefreshControl } from './Sequences';
@@ -52,26 +53,37 @@ export function Card({
   level?: ElevationLevel;
   glass?: boolean;
 }) {
-  const depth = elevation[level];
+  const skin = useSkin();
+  const depth = skin.elevation[level];
+  // Swiss has no glass and no soft depth: a surface is a plane with a rule
+  // around it, and blurring one would be borrowing the other skin's argument.
+  const blur = useGlass && skin.chrome.glass;
   const { outer: outerStyle, inner: innerStyle } = splitCardStyle(style);
   // The shadow and the clip cannot live on one view: iOS drops a shadow
   // entirely when `overflow: hidden` is set on the same node, and the clip is
   // what keeps the blur and the top highlight inside the corner radius. So the
   // outer view casts, the inner view clips.
-  const box = [styles.cardShadow, shadowOf(depth), outerStyle];
+  const box = [styles.cardShadow, { borderRadius: skin.round.card }, shadowOf(depth), outerStyle];
 
   const inner = (
     <View
       style={[
         styles.cardClip,
         padded && styles.cardPadded,
-        { borderColor: depth.borderColor },
-        useGlass ? styles.cardGlass : styles.cardSolid,
+        {
+          borderColor: depth.borderColor,
+          borderRadius: skin.round.card,
+          backgroundColor: blur ? skin.glass.card.tint : skin.ui.fill.card,
+        },
         innerStyle,
       ]}
     >
-      {useGlass ? (
-        <BlurView intensity={glass.card.intensity} style={StyleSheet.absoluteFill} tint="dark" />
+      {blur ? (
+        <BlurView
+          intensity={skin.glass.card.intensity}
+          style={StyleSheet.absoluteFill}
+          tint="dark"
+        />
       ) : null}
       {children}
     </View>
@@ -88,7 +100,7 @@ export function Card({
 }
 
 /** The shadow half of an elevation, for the view that casts rather than clips. */
-function shadowOf(depth: (typeof elevation)[ElevationLevel]): ViewStyle {
+function shadowOf(depth: Skin['elevation'][ElevationLevel]): ViewStyle {
   return {
     shadowColor: depth.shadowColor,
     shadowOffset: depth.shadowOffset,
@@ -286,6 +298,7 @@ export function Screen({
 }) {
   const insets = useSafeAreaInsets();
   const { preferences } = usePreferences();
+  const skin = useSkin();
   /**
    * Measured rather than assumed. The action is a slot, so its height depends on
    * what is in it — and a Vietnamese label that wraps to two lines makes the bar
@@ -341,8 +354,8 @@ export function Screen({
   );
 
   return (
-    <View style={[styles.screen, styles.ground]}>
-      {preferences.ambientBackdrop ? <UnderScreenCanvas /> : null}
+    <View style={[styles.screen, { backgroundColor: skin.ui.bg.base }]}>
+      {skin.chrome.backdrop && preferences.ambientBackdrop ? <UnderScreenCanvas /> : null}
       {content}
       {action ? (
         <View
@@ -361,7 +374,11 @@ export function Screen({
               one dims identically rather than the app having two idioms for
               the same job. */}
           <LinearGradient
-            colors={['rgba(8,7,14,0)', 'rgba(18, 17, 25, 0.94)']}
+            colors={
+              skin.chrome.depth
+                ? ['rgba(8,7,14,0)', 'rgba(18, 17, 25, 0.94)']
+                : ['rgba(242,241,238,0)', skin.ui.bg.base]
+            }
             locations={[0, 0.4]}
             pointerEvents="none"
             style={StyleSheet.absoluteFill}
@@ -382,7 +399,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  ground: { backgroundColor: ui.bg.base },
+  ground: {},
   gutter: {
     paddingHorizontal: space.gutter,
   },

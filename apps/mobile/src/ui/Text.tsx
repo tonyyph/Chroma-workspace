@@ -1,39 +1,30 @@
-import { type, typeExtra, ui } from '@chromawave/design-tokens';
+import type { Skin } from '@chromawave/design-tokens';
 import { Text as RNText, type TextProps, type TextStyle } from 'react-native';
+import { useSkin } from '@/providers';
 
-const variants = {
-  hero: type.hero,
-  display: type.display,
-  title: type.title,
-  section: type.section,
-  headline: typeExtra.headline,
-  rowTitle: type.rowTitle,
-  cardTitle: typeExtra.cardTitle,
-  body: type.body,
-  /** Mono, upper case, +14% track. Callers pass text already upper-cased. */
-  meta: type.meta,
-  eyebrow: typeExtra.eyebrow,
-  chip: typeExtra.chip,
-  mono: typeExtra.mono,
-  monoSmall: typeExtra.monoSmall,
-  button: typeExtra.button,
-  buttonLarge: typeExtra.buttonLarge,
-} as const;
+/**
+ * Both skins declare every variant, so this reads them from the active one
+ * rather than importing a scale. `swiss` sets `section` in mono at 12/16 with
+ * wide tracking where `chroma` sets it in the grotesque at 20/26 — the same
+ * role, a different voice.
+ */
+const variantsOf = (skin: Skin) => skin.type;
 
-const tones = {
-  primary: ui.text.primary,
-  secondary: ui.text.secondary,
-  tertiary: ui.text.tertiary,
-  quaternary: ui.text.quaternary,
-  link: ui.action.link,
-  info: ui.accent.infoText,
-  danger: ui.status.dangerText,
-  onLight: ui.text.onLight,
-  onPrimary: ui.action.onPrimary,
-} as const;
+const tonesOf = (skin: Skin) =>
+  ({
+    primary: skin.ui.text.primary,
+    secondary: skin.ui.text.secondary,
+    tertiary: skin.ui.text.tertiary,
+    quaternary: skin.ui.text.quaternary,
+    link: skin.ui.action.link,
+    info: skin.ui.accent.infoText,
+    danger: skin.ui.status.dangerText,
+    onLight: skin.ui.text.onLight,
+    onPrimary: skin.ui.action.onPrimary,
+  }) as const;
 
-export type TextVariant = keyof typeof variants;
-export type TextTone = keyof typeof tones;
+export type TextVariant = keyof Skin['type'];
+export type TextTone = keyof ReturnType<typeof tonesOf>;
 
 /**
  * The single text primitive. Every size in the app comes from SYSTEM F's type
@@ -45,7 +36,10 @@ export function Text({
   style,
   ...props
 }: TextProps & { variant?: TextVariant; tone?: TextTone }) {
-  return <RNText {...props} style={[variants[variant], { color: tones[tone] }, style]} />;
+  const skin = useSkin();
+  return (
+    <RNText {...props} style={[variantsOf(skin)[variant], { color: tonesOf(skin)[tone] }, style]} />
+  );
 }
 
 /** Mono metadata, upper-cased at render so callers keep readable source strings. */
@@ -55,8 +49,9 @@ export function Meta({
   style,
   ...props
 }: TextProps & { tone?: TextTone }) {
+  const skin = useSkin();
   return (
-    <RNText {...props} style={[type.meta, { color: tones[tone] }, style as TextStyle]}>
+    <RNText {...props} style={[skin.type.meta, { color: tonesOf(skin)[tone] }, style as TextStyle]}>
       {typeof children === 'string' ? children.toLocaleUpperCase() : children}
     </RNText>
   );

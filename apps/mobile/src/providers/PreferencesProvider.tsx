@@ -1,6 +1,7 @@
 import {
   defaultUserPreferences,
   type ColorSpacePreference,
+  type SkinPreference,
   type ExportTarget,
   type Language,
   type NotificationPermission,
@@ -33,6 +34,7 @@ type PreferenceAction =
   | 'notifications'
   | 'reminder'
   | 'colorSpace'
+  | 'skin'
   | 'sound'
   | 'backdrop'
   | 'defaultExport'
@@ -59,6 +61,7 @@ type PreferencesContextValue = {
   setNotificationsEnabled: (enabled: boolean) => Promise<void>;
   setReminderTime: (time: ReminderTime) => Promise<void>;
   setColorSpace: (space: ColorSpacePreference) => Promise<void>;
+  setSkin: (skin: SkinPreference) => Promise<void>;
   setSoundEnabled: (enabled: boolean) => Promise<void>;
   setAmbientBackdrop: (enabled: boolean) => Promise<void>;
   setDefaultExport: (target: ExportTarget) => Promise<void>;
@@ -87,6 +90,7 @@ const defaultContextValue: PreferencesContextValue = {
   setNotificationsEnabled: noop,
   setReminderTime: noop,
   setColorSpace: noop,
+  setSkin: noop,
   setSoundEnabled: noop,
   setAmbientBackdrop: noop,
   setDefaultExport: noop,
@@ -320,6 +324,15 @@ export function PreferencesProvider({
     [preferences, save],
   );
 
+  const setSkin = useCallback(
+    async (skin: SkinPreference) => {
+      const didSave = await save({ ...preferences, skin }, 'skin');
+      if (!didSave) return;
+      if (preferences.hapticsEnabled) await hapticsService.selection();
+    },
+    [preferences, save],
+  );
+
   const setDefaultExport = useCallback(
     async (defaultExport: ExportTarget) => {
       const didSave = await save({ ...preferences, defaultExport }, 'defaultExport');
@@ -374,6 +387,7 @@ export function PreferencesProvider({
       setNotificationsEnabled,
       setReminderTime,
       setColorSpace,
+      setSkin,
       setSoundEnabled,
       setAmbientBackdrop,
       setDefaultExport,
@@ -394,6 +408,7 @@ export function PreferencesProvider({
       preferences,
       refreshNotificationPermission,
       setColorSpace,
+      setSkin,
       setSoundEnabled,
       setAmbientBackdrop,
       setDefaultExport,

@@ -6,6 +6,16 @@ import { z } from 'zod';
 import { colorSpaceSchema } from './palette';
 
 export const languageSchema = z.enum(['en', 'vi']);
+
+/**
+ * Which of the two appearances the app wears.
+ *
+ * A real preference this time. The `theme` field this replaces was persisted,
+ * validated and given a setter that no screen ever called, because there was
+ * never a picker and nothing read the palettes it selected. This one is read by
+ * every primitive through `SkinProvider` and changed from a row in You.
+ */
+export const skinIdSchema = z.enum(['chroma', 'swiss']);
 export const reminderTimeSchema = z.enum(['18:00', '20:00', '21:30']);
 
 /** Which target G7 opens on, so the format someone always uses is one tap away. */
@@ -18,6 +28,7 @@ export const userPreferencesSchema = z.object({
   notificationIdentifier: z.string().min(1).nullable(),
   reminderTime: reminderTimeSchema,
   language: languageSchema,
+  skin: skinIdSchema.default('chroma'),
   // The three below arrived after v1 shipped. They carry defaults so a stored
   // record written before they existed still parses instead of being rejected
   // as invalid and throwing the user back to factory preferences.
@@ -62,6 +73,7 @@ export const defaultUserPreferences = userPreferencesSchema.parse({
 });
 
 export type Language = z.infer<typeof languageSchema>;
+export type SkinPreference = z.infer<typeof skinIdSchema>;
 export type ReminderTime = z.infer<typeof reminderTimeSchema>;
 export type ColorSpacePreference = z.infer<typeof colorSpaceSchema>;
 export type ExportTarget = z.infer<typeof exportTargetSchema>;
