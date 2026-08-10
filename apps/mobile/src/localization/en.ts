@@ -134,6 +134,10 @@ export const en = {
   'library.empty.body': 'Point at something with colour in it. It takes about two seconds.',
   'library.empty.action': 'Open camera',
   'library.empty.examples': 'See examples',
+  'library.signature': 'YOUR COLOUR',
+  'library.signature.empty':
+    'Everything you keep is merged here. Capture something and this becomes yours.',
+  'library.monthCount': '{count} captures',
   'library.noResults.title': 'No matches',
   'library.noResults.body': 'Nothing in this filter yet. Try another, or capture something new.',
   'library.card.meta': '{count} colours · {age}',
@@ -147,17 +151,6 @@ export const en = {
   'explore.noResults': 'Nothing matches “{query}”.',
 
   /* ---------------------------------------- C1 · the landing carousel */
-  'hero.label': 'Featured',
-  'hero.capture.eyebrow': 'START HERE',
-  'hero.capture.title': 'Read the light in front of you',
-  'hero.capture.body': 'Point at anything with colour in it. A palette comes back in two seconds.',
-  'hero.capture.cta': 'Open camera',
-  'hero.trending.eyebrow': 'RISING THIS WEEK',
-  'hero.trending.cta': 'See trending',
-  'hero.studio.eyebrow': 'GRADIENT STUDIO',
-  'hero.studio.title': 'Turn a palette into a surface',
-  'hero.studio.body': 'Take {name} into the studio and export it as a wallpaper.',
-  'hero.studio.cta': 'Open studio',
 
   /* ---------------------------------- discovery filters · library + trending */
   'filter.toggle': 'FILTERS',

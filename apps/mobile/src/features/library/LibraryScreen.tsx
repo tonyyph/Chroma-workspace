@@ -9,12 +9,11 @@ import {
   type VisualStyle,
 } from '@chromawave/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { seedPalettes } from '@/data';
-import { useTrending } from '@/features/trending/useTrending';
 import { usePalettes, useSets } from '@/hooks';
 import { analytics } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers';
@@ -34,31 +33,45 @@ import {
 } from '@/ui';
 import { reportBackdropScroll } from '@/ui/backdropMotion';
 import { useDiscoveryFilters } from '../discovery/useDiscoveryFilters';
-import { HeroCarousel } from './HeroCarousel';
-import { PaletteCard } from './PaletteCard';
+import { toLibraryRows, type LibraryRow } from './libraryRows';
+import { LibrarySignature } from './LibrarySignature';
+import { PaletteRibbon } from './PaletteRibbon';
 
 /**
- * C1 · LIBRARY — the landing screen.
+ * C1 · LIBRARY — the archive.
  *
- * Three bands of content, in the order someone opens the app wanting them:
+ * **What this screen used to be.** A masthead, a carousel of up to four things
+ * to go and do, a filter rail, and a two-column grid of bordered cards. Which
+ * is the layout of every content app there is: promo strip, then tiles. The
+ * app's own subject — colour someone went out and stood in — was rendered as
+ * 167-point thumbnails behind borders, four to a screenful.
  *
- *  1. a carousel of destinations, each one a thing to *do* right now;
- *  2. what the rest of the app is saving, as a rail with its own screen behind it;
- *  3. the user's own library, under a filter rail that can ask real questions of it.
+ * **What it is now.** Three things, in the order a personal archive should
+ * present itself:
  *
- * The grid stays a `FlatList` and everything above it is its header, rather than
- * the whole screen being a `ScrollView` with a nested list. Two nested scrollers
- * on the same axis break recycling — the grid would mount every card it has —
- * and on a library of any size that is the difference between a screen that
- * opens instantly and one that hitches.
+ *  1. the whole collection merged into one signature, which no other install
+ *     has and which is made entirely of the user's own work;
+ *  2. the filter rail, when there is enough to be worth narrowing;
+ *  3. the archive itself as a continuous ribbon, cut into months.
+ *
+ * Time is the ordering because that is what a record of light *is*. Each month
+ * opens with its own merged colour, so scrolling back is scrolling through what
+ * the year actually looked like rather than through a paginated grid.
+ *
+ * Still one recycling `FlatList` with everything above it as the header. Months
+ * are interleaved into the same flat array rather than made into sections: a
+ * `SectionList` or a nested scroller would cost more than the grouping is worth.
  */
 export function LibraryScreen() {
   const router = useRouter();
   const { palettes, loading, refreshing, refresh, save } = usePalettes();
   const { sets } = useSets();
-  const { t } = usePreferences();
+  const { t, preferences } = usePreferences();
   const insets = useSafeAreaInsets();
   const [addingExamples, setAddingExamples] = useState(false);
+
+  const filters = useDiscoveryFilters();
+  const { apply, query } = filters;
 
   /**
    * The examples, on request. They are written through the ordinary save path
@@ -71,14 +84,11 @@ export function LibraryScreen() {
     try {
       for (const palette of seedPalettes()) await save(palette);
     } catch {
-      // Nothing to say here that the still-empty grid does not already say.
+      // Nothing to say here that the still-empty archive does not already say.
     } finally {
       setAddingExamples(false);
     }
   }, [save]);
-
-  const filters = useDiscoveryFilters();
-  const { apply, query } = filters;
 
   // A deep link — the You tab's taste chips land here — arrives as params rather
   // than as state, and has to be applied when it changes, not only on mount.
@@ -90,8 +100,9 @@ export function LibraryScreen() {
   }, [apply, mood, style]);
 
   const visible = useMemo(() => queryPalettes(palettes, query), [palettes, query]);
+  const rows = useMemo(() => toLibraryRows(visible), [visible]);
 
-  // The grid is the app's busiest scroll, so it is the one the backdrop most
+  // The archive is the app's busiest scroll, so it is the one the backdrop most
   // needs to move against.
   const onScroll = useAnimatedScrollHandler((event) => {
     reportBackdropScroll(event.contentOffset.y);
@@ -102,29 +113,47 @@ export function LibraryScreen() {
     [router],
   );
 
-  const renderCard = useCallback(
-    ({ item }: { item: (typeof visible)[number] }) => (
-      <View style={styles.column}>
-        <PaletteCard onOpen={openPalette} palette={item} />
-      </View>
-    ),
-    [openPalette],
+  /**
+   * A month reads as a rule across the page: its own colour as a thin bar, the
+   * month itself, and how many readings it holds. Deliberately quiet — it is a
+   * chapter mark, and competing with the ribbon underneath would defeat it.
+   */
+  const renderRow = useCallback(
+    ({ item }: { item: LibraryRow }) => {
+      if (item.kind === 'palette') {
+        return <PaletteRibbon onOpen={openPalette} palette={item.palette} />;
+      }
+      return (
+        <View style={styles.month}>
+          <Gutter style={styles.monthCopy}>
+            <Text variant="section">
+              {new Date(item.iso).toLocaleDateString(preferences.language, {
+                month: 'long',
+                year: 'numeric',
+              })}
+            </Text>
+            <Meta>{t('library.monthCount', { count: item.count })}</Meta>
+          </Gutter>
+          <View style={styles.monthBand}>
+            {item.colors.map((color, index) => (
+              <View
+                key={`${index}:${color.hex}`}
+                style={{ flex: color.weight, backgroundColor: color.hex }}
+              />
+            ))}
+          </View>
+        </View>
+      );
+    },
+    [openPalette, preferences.language, t],
   );
 
   const filtered = visible.length !== palettes.length;
 
   const header = (
     <>
-      {/* MASTHEAD.
-          The screen used to say "Library" three times before showing a single
-          palette — once as the header, once as a section head over the grid,
-          once as the filter rail's own axis label — with a counts line, a
-          carousel and a rail stacked between them. Six blocks of chrome in
-          front of the thing the screen is for.
-
-          One title now, at the size a front door deserves, with the counts as
-          its eyebrow and search sharing that line rather than competing with
-          46pt type. */}
+      {/* MASTHEAD. One title, with the counts as its eyebrow and search sharing
+          that line, so nothing sits beside 46pt type to be measured against. */}
       <Gutter style={styles.masthead}>
         <View style={styles.mastheadTop}>
           <Meta>{t('library.meta', { palettes: palettes.length, collections: sets.length })}</Meta>
@@ -144,8 +173,8 @@ export function LibraryScreen() {
         </Text>
       </Gutter>
 
-      <View style={styles.hero}>
-        <LandingHero recent={palettes[0] ?? null} />
+      <View style={styles.signature}>
+        <LibrarySignature palettes={palettes} />
       </View>
 
       <View style={styles.rail}>
@@ -171,7 +200,7 @@ export function LibraryScreen() {
         />
       </View>
 
-      {/* Only when a filter is narrowing something. An unfiltered library
+      {/* Only when a filter is narrowing something. An unfiltered archive
           counting itself twice on one screen is noise. */}
       {filtered ? (
         <Gutter style={styles.count}>
@@ -184,31 +213,23 @@ export function LibraryScreen() {
   return (
     <Screen scroll={false}>
       <Animated.FlatList
-        columnWrapperStyle={styles.row}
         contentContainerStyle={[
           styles.list,
           { paddingBottom: size.tabBar + space.sectionGap * 2 + insets.bottom },
         ]}
-        data={loading ? [] : visible}
-        // The search field lives in this list's header, so without these the
-        // filter chips and every card below it need a tap to close the keyboard
+        data={loading ? EMPTY : rows}
+        // The search control lives in this list's header, so without these the
+        // filter chips and every row below need a tap to close the keyboard
         // before they take one of their own.
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        keyExtractor={(item) => item.id}
-        renderItem={renderCard}
+        keyExtractor={keyOf}
+        renderItem={renderRow}
         ListEmptyComponent={
           loading ? (
-            <Gutter>
+            <Gutter style={styles.loading}>
               <Shimmer>
-                <View style={styles.grid}>
-                  <View style={styles.column}>
-                    <CardSkeleton />
-                  </View>
-                  <View style={styles.column}>
-                    <CardSkeleton />
-                  </View>
-                </View>
+                <CardSkeleton />
               </Shimmer>
             </Gutter>
           ) : (
@@ -228,41 +249,19 @@ export function LibraryScreen() {
         refreshControl={
           <BandRefreshControl onRefresh={() => void refresh()} refreshing={refreshing} />
         }
-        initialNumToRender={8}
-        maxToRenderPerBatch={8}
-        numColumns={2}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
         removeClippedSubviews
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
-        windowSize={7}
+        windowSize={9}
       />
     </Screen>
   );
 }
 
-/**
- * The carousel's featured slide needs the top trending entry, so the hero reads
- * the feed itself rather than the screen threading it down. One page of one item
- * — the rail below asks for its own six, and both are served from the same
- * validated catalogue.
- */
-/**
- * Memoised for the same reason the carousel it renders is: it holds the feed
- * read for the hero, and it sits in a list header that the filter rail below it
- * re-renders.
- */
-const LandingHero = memo(function LandingHero({ recent }: { recent: Palette | null }) {
-  const feed = useTrending({
-    category: 'all',
-    moods: [],
-    styles: [],
-    search: '',
-    sort: 'featured',
-    pageSize: 1,
-  });
-
-  return <HeroCarousel featured={feed.items[0] ?? null} recent={recent} />;
-});
+const EMPTY: readonly LibraryRow[] = [];
+const keyOf = (row: LibraryRow) => row.key;
 
 /** FLOW E · "Nothing captured yet" — the mark with its wave missing. */
 function EmptyLibrary({
@@ -289,14 +288,14 @@ function EmptyLibrary({
         {t(filtered ? 'library.noResults.body' : 'library.empty.body')}
       </Text>
       {/* A filtered empty state offers the way out of the filter; an empty
-          library offers the only thing that can fill it. */}
+          archive offers the only thing that can fill it. */}
       {filtered ? (
         <Button label={t('filter.reset')} onPress={onReset} size="xs" variant="secondary" />
       ) : (
         <>
           <Button label={t('library.empty.action')} onPress={onCapture} size="xs" />
           {/* Secondary, and secondary on purpose: the examples are worth having
-              to see what a saved palette looks like, but a library that fills
+              to see what a saved palette looks like, but an archive that fills
               itself with someone else's work is what this replaced. */}
           <Button
             disabled={addingExamples}
@@ -317,32 +316,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    // The eyebrow sits on the search control's line, so the title below has the
-    // full width and nothing beside it to be measured against.
     minHeight: 28,
   },
-  hero: { paddingTop: space.lg },
-  rail: { paddingTop: space.sectionGap },
+  signature: { paddingTop: space.lg },
+  rail: { paddingTop: space.gutter },
   count: { paddingTop: space.sm },
   list: { paddingTop: space.md },
-  row: {
-    // Ragged by design: cards size to the palette they carry, so a row of a
-    // three-band and a six-band palette does not pretend they are the same
-    // object. Aligning to the top is what lets that read as rhythm.
-    alignItems: 'flex-start',
-    paddingHorizontal: space.gutter - space.md / 2,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingTop: space.md,
-    marginHorizontal: -space.md / 2,
-  },
-  column: {
-    flex: 1,
-    paddingHorizontal: space.md / 2,
-    paddingBottom: space.md,
-  },
+  /** Air above a chapter, none below it: the rule belongs to the month it
+   *  opens, and an even gap would leave it floating between two of them. */
+  month: { paddingTop: space.xl, paddingBottom: space.sm },
+  monthCopy: { gap: 2, paddingBottom: space.xs },
+  monthBand: { height: 3, flexDirection: 'row', marginHorizontal: space.gutter },
+  loading: { paddingTop: space.md },
   empty: {
     alignItems: 'center',
     gap: space.md,

@@ -137,6 +137,10 @@ export const vi: Record<MessageKey, string> = {
   'library.empty.body': 'Hướng vào thứ gì có màu. Chỉ mất khoảng hai giây.',
   'library.empty.action': 'Mở camera',
   'library.empty.examples': 'Xem ví dụ',
+  'library.signature': 'MÀU CỦA BẠN',
+  'library.signature.empty':
+    'Mọi thứ bạn giữ sẽ được gộp ở đây. Hãy chụp một tấm và nó thành của bạn.',
+  'library.monthCount': '{count} lần chụp',
   'library.noResults.title': 'Không có kết quả',
   'library.noResults.body': 'Bộ lọc này chưa có gì. Thử bộ lọc khác, hoặc chụp mới.',
   'library.card.meta': '{count} màu · {age}',
@@ -150,17 +154,6 @@ export const vi: Record<MessageKey, string> = {
   'explore.noResults': 'Không có kết quả cho “{query}”.',
 
   /* ---------------------------------------- C1 · băng chuyền trang chính */
-  'hero.label': 'Nổi bật',
-  'hero.capture.eyebrow': 'BẮT ĐẦU TỪ ĐÂY',
-  'hero.capture.title': 'Đọc ánh sáng ngay trước mặt',
-  'hero.capture.body': 'Hướng vào thứ gì có màu. Bảng màu hiện ra sau hai giây.',
-  'hero.capture.cta': 'Mở camera',
-  'hero.trending.eyebrow': 'ĐANG LÊN TUẦN NÀY',
-  'hero.trending.cta': 'Xem thịnh hành',
-  'hero.studio.eyebrow': 'XƯỞNG GRADIENT',
-  'hero.studio.title': 'Biến bảng màu thành bề mặt',
-  'hero.studio.body': 'Đưa {name} vào xưởng và xuất thành hình nền.',
-  'hero.studio.cta': 'Mở xưởng',
 
   /* -------------------------------- bộ lọc khám phá · thư viện + thịnh hành */
   'filter.toggle': 'BỘ LỌC',
