@@ -151,7 +151,7 @@ export function LibraryScreen() {
         </View>
       );
     },
-    [openPalette, preferences.language, t],
+    [openPalette, preferences.language, styles, t],
   );
 
   const filtered = visible.length !== palettes.length;

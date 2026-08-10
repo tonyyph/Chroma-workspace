@@ -3,7 +3,7 @@ import { shortAge, type Palette } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { usePreferences, useSkin } from '@/providers';
+import { usePreferences } from '@/providers';
 import { Card, Chip, Gutter, Meta, Screen, ScreenHeader, SwatchStrip, Text, useStyles } from '@/ui';
 import { unreadActivity } from './activity';
 
@@ -180,5 +180,10 @@ const makeStyles = (skin: Skin) =>
     recap: { gap: space.cardGap, padding: 18 },
     recapHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
     chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 5, height: 78 },
-    bar: { flex: 1, borderRadius: 5, minHeight: 8, backgroundColor: skin.ui.fill.track },
+    bar: {
+      flex: 1,
+      borderRadius: skin.round.swatch,
+      minHeight: 8,
+      backgroundColor: skin.ui.fill.track,
+    },
   });

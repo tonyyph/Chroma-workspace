@@ -1,7 +1,6 @@
 import type { PaywallTrigger } from '@chromawave/analytics';
-import { brandBands, round, space, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import type { Palette } from '@chromawave/domain';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -9,8 +8,8 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '@/components';
 import { analytics } from '@/infrastructure/dependencies';
-import { useEntitlements, usePreferences } from '@/providers';
-import { Button, Card, Icon, Pressable, Text } from '@/ui';
+import { useEntitlements, usePreferences, useSkin } from '@/providers';
+import { Button, Card, Gradient, Icon, Pressable, Text, useStyles } from '@/ui';
 
 type Plan = 'monthly' | 'yearly';
 
@@ -29,6 +28,8 @@ export function PaywallScreen({
   /** The user's most recent work, rendered as the hero. See `SubjectHero`. */
   palette?: Palette | null;
 }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [plan, setPlan] = useState<Plan>('yearly');
@@ -62,18 +63,16 @@ export function PaywallScreen({
   };
 
   const benefits = [
-    { color: brandBands[0], label: t('paywall.benefit1') },
-    { color: brandBands[1], label: t('paywall.benefit2') },
-    { color: brandBands[2], label: t('paywall.benefit3') },
+    { color: skin.accents[0], label: t('paywall.benefit1') },
+    { color: skin.accents[1], label: t('paywall.benefit2') },
+    { color: skin.accents[2], label: t('paywall.benefit3') },
   ];
 
   return (
-    <LinearGradient
-      colors={['#241C4A', ui.bg.base]}
-      end={{ x: 0.5, y: 0.62 }}
-      start={{ x: 0.5, y: 0 }}
-      style={[styles.root, { paddingTop: insets.top }]}
-    >
+    <View style={[styles.root, { backgroundColor: skin.ui.bg.base, paddingTop: insets.top }]}>
+      {/* Chroma washes the head of the screen; swiss answers the same role
+          flat, because a screen-wide wash is a mood. Neither is decided here. */}
+      <Gradient role={skin.effects.screenWash} style={styles.wash} />
       <View style={styles.close}>
         <Pressable
           accessibilityLabel={t('paywall.close')}
@@ -81,7 +80,7 @@ export function PaywallScreen({
           hitSlop={12}
           onPress={router.back}
         >
-          <Icon color={ui.text.tertiary} name="close" scale="action" />
+          <Icon color={skin.ui.text.tertiary} name="close" scale="action" />
         </Pressable>
       </View>
 
@@ -176,7 +175,7 @@ export function PaywallScreen({
             : t('paywall.smallPrintMonthly', { price: '$4.99' })}
         </Text>
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -190,6 +189,8 @@ export function PaywallScreen({
  * there is genuinely nothing of theirs to show yet.
  */
 function SubjectHero({ palette }: { palette: Palette | null }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   if (!palette) {
     return (
       <View style={styles.markHero}>
@@ -210,12 +211,7 @@ function SubjectHero({ palette }: { palette: Palette | null }) {
       </View>
       {/* Fades into the ground rather than stopping at an edge, so the palette
           reads as something the screen is made of. */}
-      <LinearGradient
-        colors={['rgba(8,7,14,0)', 'rgba(8,7,14,.55)', ui.bg.base]}
-        locations={[0, 0.55, 1]}
-        pointerEvents="none"
-        style={StyleSheet.absoluteFill}
-      />
+      <Gradient role={skin.effects.fadeToGround} />
     </View>
   );
 }
@@ -235,6 +231,7 @@ function PlanCard({
   badge?: string;
   onPress: () => void;
 }) {
+  const styles = useStyles(makeStyles);
   return (
     <Pressable
       accessibilityLabel={`${period} ${price} ${detail}`}
@@ -261,67 +258,70 @@ function PlanCard({
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-  close: { alignItems: 'flex-end', paddingHorizontal: space.gutter, paddingTop: space.sm },
-  hero: {
-    alignItems: 'center',
-    gap: space.md,
-    paddingHorizontal: space.sectionGap,
-    paddingTop: space.xs,
-  },
-  markHero: { alignItems: 'center', paddingTop: space.xs, paddingBottom: space.md },
-  subject: { height: 168, marginBottom: -space.sm },
-  subjectBands: { ...StyleSheet.absoluteFillObject, flexDirection: 'row' },
-  centred: { textAlign: 'center' },
-  benefits: { paddingHorizontal: space.gutter, paddingTop: space.sectionGap, gap: 9 },
-  benefit: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    paddingHorizontal: space.cardGap,
-    paddingVertical: 12,
-    borderRadius: round.control,
-  },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  benefitLabel: { flex: 1, fontSize: 14 },
-  plans: {
-    flexDirection: 'row',
-    gap: 10,
-    paddingHorizontal: space.gutter,
-    paddingTop: space.md + 2,
-  },
-  plan: {
-    flex: 1,
-    borderRadius: round.card,
-    borderWidth: 1,
-    borderColor: ui.border.hairlineStrong,
-    backgroundColor: ui.fill.card,
-    paddingHorizontal: space.cardGap,
-    paddingVertical: space.md,
-    gap: 6,
-  },
-  planSelected: {
-    borderWidth: 1.5,
-    borderColor: ui.action.primary,
-    backgroundColor: 'rgba(124,92,255,.18)',
-  },
-  badge: {
-    position: 'absolute',
-    right: space.sm,
-    top: -10,
-    backgroundColor: ui.action.primary,
-    borderRadius: 8,
-    paddingHorizontal: space.xs,
-    paddingVertical: 5,
-  },
-  badgeText: { color: '#FFFFFF', fontSize: 8.5 },
-  footer: {
-    marginTop: 'auto',
-    paddingHorizontal: space.gutter,
-    paddingTop: space.md,
-    gap: space.sm,
-  },
-  legalRow: { flexDirection: 'row', justifyContent: 'center', gap: 18 },
-  smallPrint: { textAlign: 'center', lineHeight: 16 },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    root: { flex: 1 },
+    /** Only the head of the screen: the wash is a treatment, not a ground. */
+    wash: { position: 'absolute', left: 0, right: 0, top: 0, height: '62%' },
+    close: { alignItems: 'flex-end', paddingHorizontal: space.gutter, paddingTop: space.sm },
+    hero: {
+      alignItems: 'center',
+      gap: space.md,
+      paddingHorizontal: space.sectionGap,
+      paddingTop: space.xs,
+    },
+    markHero: { alignItems: 'center', paddingTop: space.xs, paddingBottom: space.md },
+    subject: { height: 168, marginBottom: -space.sm },
+    subjectBands: { ...StyleSheet.absoluteFillObject, flexDirection: 'row' },
+    centred: { textAlign: 'center' },
+    benefits: { paddingHorizontal: space.gutter, paddingTop: space.sectionGap, gap: 9 },
+    benefit: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space.sm,
+      paddingHorizontal: space.cardGap,
+      paddingVertical: 12,
+      borderRadius: skin.round.control,
+    },
+    dot: { width: 8, height: 8, borderRadius: 4 },
+    benefitLabel: { flex: 1, fontSize: 14 },
+    plans: {
+      flexDirection: 'row',
+      gap: 10,
+      paddingHorizontal: space.gutter,
+      paddingTop: space.md + 2,
+    },
+    plan: {
+      flex: 1,
+      borderRadius: skin.round.card,
+      borderWidth: 1,
+      borderColor: skin.ui.border.hairlineStrong,
+      backgroundColor: skin.ui.fill.card,
+      paddingHorizontal: space.cardGap,
+      paddingVertical: space.md,
+      gap: 6,
+    },
+    planSelected: {
+      borderWidth: 1.5,
+      borderColor: skin.ui.action.primary,
+      backgroundColor: skin.tint.pro.backgroundColor,
+    },
+    badge: {
+      position: 'absolute',
+      right: space.sm,
+      top: -10,
+      backgroundColor: skin.ui.action.primary,
+      borderRadius: skin.round.chip,
+      paddingHorizontal: space.xs,
+      paddingVertical: 5,
+    },
+    badgeText: { color: '#FFFFFF', fontSize: 8.5 },
+    footer: {
+      marginTop: 'auto',
+      paddingHorizontal: space.gutter,
+      paddingTop: space.md,
+      gap: space.sm,
+    },
+    legalRow: { flexDirection: 'row', justifyContent: 'center', gap: 18 },
+    smallPrint: { textAlign: 'center', lineHeight: 16 },
+  });

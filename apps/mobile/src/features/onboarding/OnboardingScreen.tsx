@@ -14,7 +14,7 @@ import { useCameraPermission } from 'react-native-vision-camera';
 import { BrandMark } from '@/components';
 import { analytics } from '@/infrastructure/dependencies';
 import { usePreferences, useSkin } from '@/providers';
-import { Button, Card, InlineError, SwatchStrip, Text, useStyles } from '@/ui';
+import { Button, Card, Gradient, InlineError, SwatchStrip, Text, useStyles } from '@/ui';
 const welcomePhoto: number = require('../../../assets/brand/library/harbour-dusk.jpg');
 const steps = [1, 2, 3, 4, 5] as const;
 type Step = (typeof steps)[number];
@@ -127,6 +127,7 @@ export function OnboardingScreen() {
 }
 
 function Welcome() {
+  const skin = useSkin();
   const styles = useStyles(makeStyles);
   const { height } = useWindowDimensions();
   const { t } = usePreferences();
@@ -140,7 +141,7 @@ function Welcome() {
           source={welcomePhoto}
           style={StyleSheet.absoluteFill}
         />
-        <View style={styles.photoScrim} />
+        <Gradient role={skin.effects.scrimTop('soft')} />
         <Text style={styles.photoLabel} variant="chip">
           {t('onboarding.welcome.photoSlot')}
         </Text>
@@ -349,7 +350,6 @@ const makeStyles = (skin: Skin) =>
       backgroundColor: skin.ui.bg.media,
       overflow: 'hidden',
     },
-    photoScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(8,7,14,.18)' },
     photoLabel: {
       position: 'absolute',
       top: space.md,

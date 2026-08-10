@@ -242,13 +242,16 @@ const makeStyles = (skin: Skin) =>
     },
     codeWrap: { paddingHorizontal: space.gutter, paddingTop: space.md },
     code: {
-      backgroundColor: skin.ui.bg.base === '#08070E' ? '#0C0B18' : skin.ui.bg.base,
+      // Was a ternary comparing the ground to a literal, which is a skin check
+      // wearing a disguise. The code block wants the panel ground, and that is
+      // a value each skin already declares.
+      backgroundColor: skin.ui.bg.sheet,
       borderWidth: 1,
       borderColor: skin.ui.border.hairlineStrong,
       borderRadius: skin.round.card,
       maxHeight: 220,
     },
-    codeText: { padding: space.md, lineHeight: 21, color: 'rgba(237,234,227,.82)' },
+    codeText: { padding: space.md, lineHeight: 21, color: skin.ui.text.secondary },
     options: { paddingHorizontal: space.gutter, paddingTop: space.md + 2, gap: 10 },
     option: {
       flexDirection: 'row',
@@ -259,7 +262,12 @@ const makeStyles = (skin: Skin) =>
       borderRadius: skin.round.control,
     },
     optionLabel: { fontSize: 14 },
-    pro: { borderWidth: 1, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 7 },
+    pro: {
+      borderWidth: 1,
+      borderRadius: skin.round.chip,
+      paddingHorizontal: 9,
+      paddingVertical: 7,
+    },
     destinations: {
       flexDirection: 'row',
       gap: 10,

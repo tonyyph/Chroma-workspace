@@ -108,6 +108,9 @@ export function TuneScreen({
       <Card style={styles.sliders}>
         <Labelled label={t('tune.hue')} value={`${Math.round(current.hue)}°`}>
           <Slider
+            // appearance-exempt: a hue track has to show hue. These five stops
+            // are a trip round the wheel, not this app's palette, and a skin that
+            // recoloured them would be lying about what the slider selects.
             gradient={['#FF7A5C', '#FFC24A', '#22D3EE', '#7C5CFF', '#FF7A5C']}
             label={`${role} hue`}
             maximumValue={180}
@@ -293,5 +296,10 @@ const makeStyles = (skin: Skin) =>
       justifyContent: 'space-between',
     },
     contrastCopy: { gap: 3 },
-    verdict: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8 },
+    verdict: {
+      borderWidth: 1,
+      borderRadius: skin.round.chip,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+    },
   });

@@ -11,8 +11,8 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePreferences, useSkin } from '@/providers';
 import { reportBackdropScroll } from './backdropMotion';
-import { Pressable } from './Pressable';
 import { Gradient } from './Gradient';
+import { Pressable } from './Pressable';
 import { BandRefreshControl } from './Sequences';
 import { UnderScreenCanvas } from './UnderScreenCanvas';
 

@@ -12,7 +12,6 @@ import {
   type CameraRef,
 } from 'react-native-vision-camera';
 import { Button, Card, Meta, Screen, Text, useStyles } from '@/ui';
-import { useSkin } from '@/providers';
 
 /**
  * THROUGHPUT PROBE — not a product screen. Delete before release.

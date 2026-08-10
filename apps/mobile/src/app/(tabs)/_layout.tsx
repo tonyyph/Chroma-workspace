@@ -1,6 +1,6 @@
 import { Tabs, useRouter } from 'expo-router';
-import { TabBar, type TabKey } from '@/ui';
 import { useSkin } from '@/providers';
+import { TabBar, type TabKey } from '@/ui';
 
 /**
  * Tab key to route name. Typed as the literal names so `navigate` accepts it

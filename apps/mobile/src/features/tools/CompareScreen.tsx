@@ -255,7 +255,7 @@ const makeStyles = (skin: Skin) =>
     matrixHeader: { flexDirection: 'row', gap: 6, alignItems: 'center' },
     matrixRow: { flexDirection: 'row', gap: 6, alignItems: 'center' },
     matrixCorner: { width: 34 },
-    matrixSwatch: { flex: 1, height: 22, borderRadius: 6 },
+    matrixSwatch: { flex: 1, height: 22, borderRadius: skin.round.swatch },
     matrixCell: { flex: 1, alignItems: 'center' },
     findings: { paddingTop: space.md, gap: 10 },
     finding: {

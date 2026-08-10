@@ -1,4 +1,4 @@
-import { space, type Skin } from '@chromawave/design-tokens';
+import { brandBands, space, type Skin } from '@chromawave/design-tokens';
 import {
   exportTargetSchema,
   shortAge,
@@ -8,7 +8,6 @@ import {
   type VisualStyle,
 } from '@chromawave/domain';
 import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -353,7 +352,7 @@ function SignatureHero({ palettes }: { palettes: readonly Palette[] }) {
 
 const HERO_HEIGHT = 184;
 /** The brand bands, for a library with nothing in it yet. */
-const BRAND_FALLBACK = ['#7C5CFF', '#22D3EE', '#FF7A5C'] as const;
+const BRAND_FALLBACK = brandBands;
 
 function StatsRail({
   palettes,
@@ -637,7 +636,9 @@ const makeStyles = (skin: Skin) =>
     signatureChip: {
       flex: 1,
       height: 8,
-      borderRadius: 4,
+      // Clamped to half the height either way, so chroma renders exactly the 4
+      // it always did; swiss squares it off.
+      borderRadius: skin.round.swatch,
     },
 
     statsSection: {
@@ -650,7 +651,7 @@ const makeStyles = (skin: Skin) =>
       borderRadius: skin.round.control,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: skin.ui.border.hairline,
-      backgroundColor: 'rgba(255,255,255,.018)',
+      backgroundColor: skin.ui.fill.chipGhost,
     },
     compactStat: {
       flex: 1,
@@ -692,7 +693,7 @@ const makeStyles = (skin: Skin) =>
     tasteBar: {
       flexDirection: 'row',
       height: 8,
-      borderRadius: 4,
+      borderRadius: skin.round.swatch,
       overflow: 'hidden',
       backgroundColor: skin.ui.fill.track,
     },

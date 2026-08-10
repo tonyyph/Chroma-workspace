@@ -1,11 +1,10 @@
 import { space, type Skin } from '@chromawave/design-tokens';
 import type { Palette } from '@chromawave/domain';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '@/components';
 import { usePreferences, useSkin } from '@/providers';
-import { Meta, NavBar, SwatchStrip, Text, useStyles } from '@/ui';
+import { Gradient, Meta, NavBar, SwatchStrip, Text, useStyles } from '@/ui';
 
 /**
  * G8 · WIDGETS & LOCK SCREEN · "small/medium widgets, capture shortcut".
@@ -15,6 +14,7 @@ import { Meta, NavBar, SwatchStrip, Text, useStyles } from '@/ui';
  * lock screen. Wallpaper is the brand gradient rather than a user photo.
  */
 export function WidgetsScreen({ palette, onClose }: { palette: Palette; onClose?: () => void }) {
+  const skin = useSkin();
   const styles = useStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const { t } = usePreferences();
@@ -25,12 +25,10 @@ export function WidgetsScreen({ palette, onClose }: { palette: Palette; onClose?
     .toUpperCase();
 
   return (
-    <LinearGradient
-      colors={['#2A2352', '#0C0B18']}
-      end={{ x: 0.5, y: 0.66 }}
-      start={{ x: 0.2, y: 0 }}
-      style={[styles.root, { paddingTop: insets.top }]}
-    >
+    <View style={[styles.root, { paddingTop: insets.top }]}>
+      {/* The plate behind the previews. Chroma tints it; swiss steps it to a
+          second sheet of paper, because a gradient here would be decoration. */}
+      <Gradient role={skin.effects.surfaceWash} />
       {/* A full-bleed preview with no chrome had no way out but the OS gesture. */}
       {onClose ? (
         <View style={styles.nav}>
@@ -74,7 +72,7 @@ export function WidgetsScreen({ palette, onClose }: { palette: Palette; onClose?
           <BrandMark size={52} />
         </View>
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 

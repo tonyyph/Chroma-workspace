@@ -2,7 +2,7 @@ import { space, type Skin } from '@chromawave/design-tokens';
 import { contrastRatio, safeForegroundFor, type Palette } from '@chromawave/domain';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { usePreferences, useSkin } from '@/providers';
+import { usePreferences } from '@/providers';
 import { Button, Card, Chip, Gutter, Screen, ScreenHeader, Text, useStyles } from '@/ui';
 
 const SURFACES = ['APP UI', 'WEB', 'POSTER', 'SLIDE'] as const;

@@ -7,7 +7,7 @@ import { StyleSheet, View } from 'react-native';
 import { useImageSampler } from '@/hooks';
 import { hapticsService } from '@/infrastructure/dependencies';
 import { readPalette } from '@/lib';
-import { usePreferences, useSkin } from '@/providers';
+import { usePreferences } from '@/providers';
 import { Card, Chip, NavBar, Pressable, Screen, Slider, Text, useStyles } from '@/ui';
 
 const MODES = ['AUTO', 'MANUAL', 'EDGES'] as const;
@@ -319,7 +319,7 @@ const makeStyles = (skin: Skin) =>
       right: space.cardGap,
       bottom: space.cardGap,
       backgroundColor: skin.ui.scrim.strong,
-      borderRadius: 11,
+      borderRadius: skin.round.chip,
       paddingHorizontal: space.xs,
       paddingVertical: 8,
     },

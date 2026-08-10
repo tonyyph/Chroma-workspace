@@ -15,7 +15,7 @@ import {
 import { BrandMark } from '@/components';
 import { usePhotoRead } from '@/hooks';
 import { hapticsService, soundService } from '@/infrastructure/dependencies';
-import { usePreferences, useSkin } from '@/providers';
+import { usePreferences } from '@/providers';
 import { useCaptureStore } from '@/store';
 import {
   Button,
@@ -415,8 +415,18 @@ const makeStyles = (skin: Skin) =>
     reticle: {
       width: 236,
       height: 236,
-      borderRadius: 64,
+      // Rounded where the skin rounds, square where it does not.
+      borderRadius: skin.round.media > 0 ? 64 : 0,
       borderWidth: 2,
+      /* appearance-exempt: see below. */
+      /**
+       * Fixed, and not a skin leak.
+       *
+       * Every other surface sits on a ground the skin owns; this one sits on a
+       * live camera frame, which is an unknown scene. A high-luminance stroke
+       * stays visible over both a dark room and a white wall, which is why
+       * camera apps draw their guides this way whatever their theme.
+       */
       borderColor: 'rgba(237,234,227,.5)',
       alignItems: 'center',
       justifyContent: 'center',
@@ -435,7 +445,7 @@ const makeStyles = (skin: Skin) =>
     readHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     readRow: { flexDirection: 'row', gap: space.xs },
     readItem: { flex: 1, gap: 6 },
-    readSwatch: { height: 44, borderRadius: 10 },
+    readSwatch: { height: 44, borderRadius: skin.round.swatch },
     shutterRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -458,6 +468,7 @@ const makeStyles = (skin: Skin) =>
       borderRadius: size.shutter / 2,
       borderWidth: 3,
       borderColor: skin.ui.text.primary,
+      // Same reason as the reticle: chrome over an unknown photographic scene.
       backgroundColor: 'rgba(237,234,227,.14)',
       alignItems: 'center',
       justifyContent: 'center',

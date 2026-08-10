@@ -272,6 +272,13 @@ const makeStyles = (skin: Skin) =>
     },
     sample: { padding: space.gutter, gap: 4 },
     sampleTitle: { fontSize: 21, lineHeight: 25, fontWeight: '600', color: '#FFFFFF' },
+    /* appearance-exempt: these are the measurement, not the chrome. */
+    /**
+     * Fixed, like the grounds beneath them: these lines sit *inside* the
+     * contrast samples, demonstrating readable and unreadable copy against a
+     * known surface. They are part of the measurement, not app chrome, and
+     * following the skin would change what the screen claims to prove.
+     */
     sampleBody: { fontSize: 13.5, lineHeight: 20, color: 'rgba(255,255,255,.9)' },
     sampleBodyMuted: { fontSize: 13.5, lineHeight: 20, color: 'rgba(237,234,227,.75)' },
     checks: { paddingTop: space.md + 2, gap: 9 },
@@ -283,10 +290,18 @@ const makeStyles = (skin: Skin) =>
       paddingVertical: 12,
       borderRadius: skin.round.control,
     },
-    checkFail: { backgroundColor: 'rgba(255,107,90,.08)', borderColor: 'rgba(255,107,90,.32)' },
-    checkSwatch: { width: 24, height: 24, borderRadius: 8 },
+    checkFail: {
+      backgroundColor: skin.tint.danger.backgroundColor,
+      borderColor: skin.tint.danger.borderColor,
+    },
+    checkSwatch: { width: 24, height: 24, borderRadius: skin.round.swatch },
     ratio: { flex: 1, textAlign: 'right', fontSize: 13 },
-    verdict: { borderWidth: 1, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 7 },
+    verdict: {
+      borderWidth: 1,
+      borderRadius: skin.round.chip,
+      paddingHorizontal: 9,
+      paddingVertical: 7,
+    },
     fixWrap: { paddingTop: space.md + 2 },
     fix: { gap: space.sm },
     fixRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },

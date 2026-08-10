@@ -1,4 +1,4 @@
-import { space, type Skin } from '@chromawave/design-tokens';
+import { brandBands, space, type Skin } from '@chromawave/design-tokens';
 import type { Palette } from '@chromawave/domain';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -69,7 +69,7 @@ export const HeroCarousel = memo(function HeroCarousel({
         body: t('hero.capture.body'),
         cta: t('hero.capture.cta'),
         onPress: () => router.push('/capture'),
-        colors: ['#7C5CFF', '#22D3EE', '#FF7A5C'],
+        colors: [...brandBands],
         art: 'field',
       },
     ];

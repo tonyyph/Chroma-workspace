@@ -21,6 +21,23 @@ function leaves(value: unknown, path = ''): [string, string | number][] {
 const tokensOf = (skin: Skin) =>
   leaves({ ui: skin.ui, tint: skin.tint, round: skin.round, type: skin.type });
 
+const WEIGHTS = ['soft', 'medium', 'strong', 'full'] as const;
+
+/** Every gradient a skin can be asked for, flattened to its stop colours. */
+const everyEffect = (skin: Skin): string[] => [
+  ...WEIGHTS.flatMap((w) => [
+    ...skin.effects.scrimBottom(w).colors,
+    ...skin.effects.scrimTop(w).colors,
+  ]),
+  ...skin.effects.fadeToGround.colors,
+  ...skin.effects.screenWash.colors,
+  ...skin.effects.surfaceWash.colors,
+];
+
+/** Chroma's ground and its violet, in the forms a stop can be written in. */
+const CHROMA_DARK = /rgba\(\s*8,\s*7,\s*14|rgba\(\s*18,\s*17,\s*25|#0C0B18|#08070E/i;
+const CHROMA_VIOLET = /rgba\(\s*124,\s*92,\s*255|#7C5CFF|#241C4A|#2A2352/i;
+
 describe('skins', () => {
   it.each(entries)('%s declares every token the shape requires', (_id, skin) => {
     expect(tokensOf(skin).length).toBeGreaterThan(60);
@@ -67,5 +84,75 @@ describe('skins', () => {
     expect(skins.chroma.ui.bg.base).toBe('#08070E');
     expect(skins.chroma.ui.action.primary).toBe('#7C5CFF');
     expect(skins.chroma.chrome.backdrop).toBe(true);
+  });
+});
+
+describe('skin effects', () => {
+  it.each(entries)('%s answers every role', (_id, skin) => {
+    for (const weight of WEIGHTS) {
+      expect(skin.effects.scrimBottom(weight).colors.length).toBeGreaterThanOrEqual(2);
+      expect(skin.effects.scrimTop(weight).colors.length).toBeGreaterThanOrEqual(2);
+    }
+    for (const role of [
+      skin.effects.fadeToGround,
+      skin.effects.screenWash,
+      skin.effects.surfaceWash,
+    ]) {
+      expect(role.colors.length).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it.each(entries)('%s keeps stops and locations the same length', (_id, skin) => {
+    const roles = [
+      ...WEIGHTS.map((w) => skin.effects.scrimBottom(w)),
+      ...WEIGHTS.map((w) => skin.effects.scrimTop(w)),
+      skin.effects.fadeToGround,
+      skin.effects.screenWash,
+      skin.effects.surfaceWash,
+    ];
+    // Mismatched arrays are the one way to make LinearGradient render nothing.
+    for (const role of roles) {
+      if (role.locations) expect(role.locations.length).toBe(role.colors.length);
+    }
+  });
+
+  it.each(entries)(
+    '%s reads a scrim from the head the same way it reads one from the foot',
+    (_id, skin) => {
+      for (const weight of WEIGHTS) {
+        expect([...skin.effects.scrimTop(weight).colors]).toEqual(
+          [...skin.effects.scrimBottom(weight).colors].reverse(),
+        );
+      }
+    },
+  );
+
+  /** The whole point of the contract: swiss must not inherit a dark premise. */
+  it('gives swiss no chroma ground and no violet anywhere in its effects', () => {
+    for (const stop of everyEffect(skins.swiss)) {
+      expect(stop).not.toMatch(CHROMA_DARK);
+      expect(stop).not.toMatch(CHROMA_VIOLET);
+    }
+  });
+
+  it('leaves swiss with a flat screen wash, because it does not do washes', () => {
+    const wash = skins.swiss.effects.screenWash;
+    expect(new Set(wash.colors).size).toBe(1);
+  });
+
+  it('pins chroma effects, so the default look cannot drift', () => {
+    expect(skins.chroma.effects.scrimBottom('medium').colors).toEqual([
+      'rgba(8,7,14,0)',
+      'rgba(8,7,14,.78)',
+    ]);
+    expect(skins.chroma.effects.screenWash.colors[0]).toBe('#241C4A');
+  });
+
+  it('gives each skin three accents of its own', () => {
+    expect(skins.chroma.accents).toHaveLength(3);
+    expect(skins.swiss.accents).toHaveLength(3);
+    for (const accent of skins.swiss.accents) {
+      expect(accent).not.toMatch(CHROMA_VIOLET);
+    }
   });
 });

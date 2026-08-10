@@ -3,7 +3,7 @@ import { paletteGaps, type PaletteSet } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useSets } from '@/hooks';
-import { usePreferences, useSkin } from '@/providers';
+import { usePreferences } from '@/providers';
 import {
   Button,
   Card,

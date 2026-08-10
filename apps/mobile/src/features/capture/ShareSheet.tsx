@@ -166,7 +166,7 @@ const makeStyles = (skin: Skin) =>
       paddingBottom: space.sm,
       overflow: 'hidden',
     },
-    formatHex: { textAlign: 'center', paddingTop: 5, color: 'rgba(237,234,227,.72)' },
+    formatHex: { textAlign: 'center', paddingTop: 5, color: skin.ui.text.secondary },
     formatLabel: { textAlign: 'center', paddingTop: space.xs },
     options: { gap: 9 },
     option: {
@@ -178,7 +178,12 @@ const makeStyles = (skin: Skin) =>
       borderRadius: skin.round.control,
     },
     optionLabel: { fontSize: 14 },
-    pro: { borderWidth: 1, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 7 },
+    pro: {
+      borderWidth: 1,
+      borderRadius: skin.round.chip,
+      paddingHorizontal: 9,
+      paddingVertical: 7,
+    },
     half: { flex: 1 },
     wide: { flex: 1.3 },
   });

@@ -11,7 +11,7 @@ import {
 } from 'react-native-vision-camera';
 import { usePhotoRead } from '@/hooks';
 import { analytics, hapticsService } from '@/infrastructure/dependencies';
-import { usePreferences, useSkin } from '@/providers';
+import { usePreferences } from '@/providers';
 import { Button, Card, Chip, Icon, LiveReadPulse, Pressable, Text, useStyles } from '@/ui';
 
 const MAX_PINS = 7;
@@ -199,13 +199,13 @@ const makeStyles = (skin: Skin) =>
     markerDot: {
       width: 26,
       height: 26,
-      borderRadius: 13,
+      borderRadius: skin.round.control,
       borderWidth: 2,
       borderColor: '#FFFFFF',
     },
     markerLabel: {
       backgroundColor: skin.ui.scrim.strong,
-      borderRadius: 9,
+      borderRadius: skin.round.chip,
       paddingHorizontal: space.xs,
       paddingVertical: 6,
     },
@@ -220,7 +220,7 @@ const makeStyles = (skin: Skin) =>
     },
     panelHead: { flexDirection: 'row', justifyContent: 'space-between' },
     pinRow: { flexDirection: 'row', gap: 7 },
-    pin: { flex: 1, height: 38, borderRadius: 10 },
+    pin: { flex: 1, height: 38, borderRadius: skin.round.swatch },
     pinEmpty: {
       backgroundColor: skin.ui.fill.chipGhost,
       borderWidth: 1,

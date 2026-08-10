@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { gradientSvg, renderGradientPng, shareFile } from '@/lib';
-import { usePreferences, useSkin } from '@/providers';
+import { usePreferences } from '@/providers';
 import {
   Card,
   Chip,
@@ -223,7 +223,7 @@ const makeStyles = (skin: Skin) =>
       position: 'absolute',
       width: 22,
       height: 22,
-      borderRadius: 11,
+      borderRadius: skin.round.chip,
       borderWidth: 3,
       borderColor: '#FFFFFF',
     },

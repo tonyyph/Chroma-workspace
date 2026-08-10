@@ -1,3 +1,4 @@
+import { brandBands } from './brand';
 import { elevation, glass, round, tint, type, typeExtra, ui, uiShadow } from './ui';
 
 /**
@@ -101,6 +102,16 @@ export type SkinEffects = {
 
 export type Skin = {
   id: SkinId;
+  /**
+   * Three colours for the "one per item" pattern — a benefit list, the three
+   * capture roles, the tab accents.
+   *
+   * Not `brandBands`, which is artwork: the bands are what the mark and the
+   * empty glyphs are drawn from and they do not change with appearance. These
+   * are accents, and a skin that answered them with violet, cyan and coral
+   * would be wearing the other one's palette.
+   */
+  accents: readonly [string, string, string];
   ui: Loosen<typeof ui>;
   tint: Loosen<typeof tint>;
   round: Loosen<typeof round>;
@@ -167,6 +178,7 @@ const chromaEffects: SkinEffects = {
 
 const chroma: Skin = {
   id: 'chroma',
+  accents: [brandBands[0] ?? '#7C5CFF', brandBands[1] ?? '#22D3EE', brandBands[2] ?? '#FF7A5C'],
   ui,
   tint,
   round,
@@ -241,6 +253,8 @@ const swissEffects: SkinEffects = {
 
 const swiss: Skin = {
   id: 'swiss',
+  // One accent and two weights of ink. A second hue would be a second argument.
+  accents: [SIGNAL, INK, 'rgba(16,16,16,.45)'],
   ui: {
     bg: { base: PAPER, sheet: '#FFFFFF', raised: '#FFFFFF', media: '#DEDCD6' },
     action: {
