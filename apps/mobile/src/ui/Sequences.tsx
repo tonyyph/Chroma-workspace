@@ -12,7 +12,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { BrandMark } from '@/components';
+import { BrandMark } from '@/components/BrandMark';
 import { useSkin } from '@/providers';
 import { BandCanvas } from './BandCanvas';
 import { Text } from './Text';

@@ -48,8 +48,6 @@ export const PaletteRibbon = memo(function PaletteRibbon({
       onOpen(palette);
       return;
     }
-    // Measured before opening so the hero flies from where the band actually
-    // is; opening first would measure it mid-transition.
     node.measureInWindow((x, y, width, height) => {
       if (width > 0 && height > 0) begin({ x, y, width, height }, palette.colors);
       onOpen(palette);
@@ -75,8 +73,6 @@ export const PaletteRibbon = memo(function PaletteRibbon({
       >
         {palette.colors.map((color, index) => (
           <View
-            // Position is part of the identity: a palette may legitimately carry
-            // the same hex twice, and keying on the value alone drops the second.
             key={`${index}:${color.hex}`}
             style={{ flex: color.weight, backgroundColor: color.hex }}
           />
@@ -111,9 +107,7 @@ export const PaletteRibbon = memo(function PaletteRibbon({
 });
 
 const styles = StyleSheet.create({
-  /** A hairline, not a gap: the ribbon is continuous and the rule is what
-   *  separates one reading from the next without breaking the material. */
-  row: { borderBottomWidth: StyleSheet.hairlineWidth },
+  row: { borderBottomWidth: StyleSheet.hairlineWidth, marginHorizontal: space.gutter },
   band: { height: 172, flexDirection: 'row', justifyContent: 'flex-end' },
   copy: {
     position: 'absolute',

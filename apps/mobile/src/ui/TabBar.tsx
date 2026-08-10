@@ -2,7 +2,7 @@ import { brandBands, size, space, uiMotion } from '@chromawave/design-tokens';
 import { BlurView } from 'expo-blur';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BrandMark } from '@/components';
+import { BrandMark } from '@/components/BrandMark';
 import { useSkin } from '@/providers';
 import { reportBackdropTouch } from './backdropMotion';
 import { Gradient } from './Gradient';

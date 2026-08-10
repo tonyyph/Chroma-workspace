@@ -55,14 +55,10 @@ export function ExploreScreen() {
   const saver = useTrendingSave();
   const { width } = useWindowDimensions();
 
-  // Arriving from a tag chip on B4 lands here with the tag already typed.
   useEffect(() => {
     if (q) setQuery(q);
   }, [q]);
 
-  // The field renders `query`; everything expensive reads this. A keystroke
-  // otherwise refetched the feed *and* scanned the whole library, both on the
-  // thread that has to draw the next character.
   const search = useDebounced(query.trim());
 
   const feed = useTrending({
@@ -72,16 +68,9 @@ export function ExploreScreen() {
     search,
     sort: 'featured',
     pageSize: EXPLORE_PREVIEW,
-    // While searching, anything already owned is listed above under the user's
-    // own name for it, so offering it again as a feed entry is the same palette
-    // twice. With no search there is no library section to collide with, and
-    // excluding it there would instead make a row vanish the moment it is
-    // saved — so the exclusion is scoped to exactly the case that needs it.
     exclude: search ? saver.ownedSignatures : NOTHING_EXCLUDED,
   });
 
-  // Stable across keystrokes, which is what lets the memoised cards below sit
-  // still while the field above them takes another letter.
   const { open, save: saveItemToLibrary } = saver;
   const openItem = useCallback((item: TrendingItem) => void open(item), [open]);
   const saveItem = useCallback(
@@ -89,7 +78,6 @@ export function ExploreScreen() {
     [saveItemToLibrary],
   );
 
-  /** The user's own matches. Only shown while searching — this is not the library. */
   const mine = useMemo(
     () => (search ? queryPalettes(palettes, { ...emptyQuery, search }) : []),
     [palettes, search],
@@ -114,9 +102,6 @@ export function ExploreScreen() {
         />
       </Gutter>
 
-      {/* The editorial banner is the featured palette, so it opens it. It is
-          only drawn when there is one — a banner that opens nothing is worse
-          than a screen that starts at the results. */}
       {featured ? (
         <Gutter style={styles.bannerWrap}>
           <Pressable
@@ -127,9 +112,6 @@ export function ExploreScreen() {
             style={styles.banner}
           >
             <View style={StyleSheet.absoluteFill}>
-              {/* Measured, not assumed: the fixed 342 this used to draw at was
-                  clipped on a 375pt phone and left a strip of bare ground on a
-                  430pt one. */}
               <BandCanvas
                 background={skin.ui.bg.media}
                 blur={13}

@@ -1,4 +1,4 @@
-import { size, space, type Skin } from '@chromawave/design-tokens';
+import { round, size, space, type Skin } from '@chromawave/design-tokens';
 import {
   colorMoods,
   libraryFilters,
@@ -79,26 +79,18 @@ export function LibraryScreen() {
   const filters = useDiscoveryFilters();
   const { apply, query } = filters;
 
-  /**
-   * The examples, on request. They are written through the ordinary save path
-   * rather than straight into storage, so they are real palettes the user can
-   * rename, tag and delete exactly like their own — which is the only honest
-   * way to show someone what a saved palette is.
-   */
   const addExamples = useCallback(async () => {
     setAddingExamples(true);
     try {
       for (const palette of seedPalettes()) await save(palette);
     } catch {
-      // Nothing to say here that the still-empty archive does not already say.
     } finally {
       setAddingExamples(false);
     }
   }, [save]);
 
-  // A deep link — the You tab's taste chips land here — arrives as params rather
-  // than as state, and has to be applied when it changes, not only on mount.
   const { mood, style } = useLocalSearchParams<{ mood?: string; style?: string }>();
+
   useEffect(() => {
     const moods = colorMoods.filter((entry): entry is ColorMood => entry === mood);
     const styles = visualStyles.filter((entry): entry is VisualStyle => entry === style);
@@ -108,8 +100,6 @@ export function LibraryScreen() {
   const visible = useMemo(() => queryPalettes(palettes, query), [palettes, query]);
   const rows = useMemo(() => toLibraryRows(visible), [visible]);
 
-  // The archive is the app's busiest scroll, so it is the one the backdrop most
-  // needs to move against.
   const onScroll = useAnimatedScrollHandler((event) => {
     reportBackdropScroll(event.contentOffset.y);
   });
@@ -119,11 +109,6 @@ export function LibraryScreen() {
     [router],
   );
 
-  /**
-   * A month reads as a rule across the page: its own colour as a thin bar, the
-   * month itself, and how many readings it holds. Deliberately quiet — it is a
-   * chapter mark, and competing with the ribbon underneath would defeat it.
-   */
   const renderRow = useCallback(
     ({ item }: { item: LibraryRow }) => {
       if (item.kind === 'palette') {
@@ -144,7 +129,14 @@ export function LibraryScreen() {
             {item.colors.map((color, index) => (
               <View
                 key={`${index}:${color.hex}`}
-                style={{ flex: color.weight, backgroundColor: color.hex }}
+                style={{
+                  flex: color.weight,
+                  backgroundColor: color.hex,
+                  borderTopLeftRadius: index === 0 ? round.full : 0,
+                  borderBottomLeftRadius: index === 0 ? round.full : 0,
+                  borderBottomRightRadius: index === item?.colors?.length - 1 ? round.full : 0,
+                  borderTopRightRadius: index === item?.colors?.length - 1 ? round.full : 0,
+                }}
               />
             ))}
           </View>
@@ -158,25 +150,21 @@ export function LibraryScreen() {
 
   const header = (
     <>
-      {/* MASTHEAD. One title, with the counts as its eyebrow and search sharing
-          that line, so nothing sits beside 46pt type to be measured against. */}
       <Gutter style={styles.masthead}>
         <View style={styles.mastheadTop}>
-          <Meta>{t('library.meta', { palettes: palettes.length, collections: sets.length })}</Meta>
+          <Text accessibilityRole="header" variant="title">
+            {t('library.title')}
+          </Text>
           <Pressable
             accessibilityLabel={t('library.search')}
             accessibilityRole="button"
             hitSlop={12}
-            // Explore is the next tab along, not a screen to stack on top of
-            // this one — `push` left a duplicate tab bar behind it.
             onPress={() => router.navigate('/explore')}
           >
             <Icon color={skin.ui.text.secondary} name="search" scale="action" />
           </Pressable>
         </View>
-        <Text accessibilityRole="header" variant="hero">
-          {t('library.title')}
-        </Text>
+        <Meta>{t('library.meta', { palettes: palettes.length, collections: sets.length })}</Meta>
       </Gutter>
 
       <View style={styles.hero}>
@@ -206,8 +194,6 @@ export function LibraryScreen() {
         />
       </View>
 
-      {/* Only when a filter is narrowing something. An unfiltered archive
-          counting itself twice on one screen is noise. */}
       {filtered ? (
         <Gutter style={styles.count}>
           <Meta>{t('library.resultCount', { count: visible.length, total: palettes.length })}</Meta>
@@ -224,9 +210,6 @@ export function LibraryScreen() {
           { paddingBottom: size.tabBar + space.sectionGap * 2 + insets.bottom },
         ]}
         data={loading ? EMPTY : rows}
-        // The search control lives in this list's header, so without these the
-        // filter chips and every row below need a tap to close the keyboard
-        // before they take one of their own.
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         keyExtractor={keyOf}
@@ -314,16 +297,11 @@ function EmptyLibrary({
       <Text style={styles.emptyBody} tone="secondary" variant="body">
         {t(filtered ? 'library.noResults.body' : 'library.empty.body')}
       </Text>
-      {/* A filtered empty state offers the way out of the filter; an empty
-          archive offers the only thing that can fill it. */}
       {filtered ? (
         <Button label={t('filter.reset')} onPress={onReset} size="xs" variant="secondary" />
       ) : (
         <>
           <Button label={t('library.empty.action')} onPress={onCapture} size="xs" />
-          {/* Secondary, and secondary on purpose: the examples are worth having
-              to see what a saved palette looks like, but an archive that fills
-              itself with someone else's work is what this replaced. */}
           <Button
             disabled={addingExamples}
             label={t(addingExamples ? 'common.working' : 'library.empty.examples')}
@@ -339,7 +317,7 @@ function EmptyLibrary({
 
 const makeStyles = (skin: Skin) =>
   StyleSheet.create({
-    masthead: { paddingTop: space.sm, gap: 6 },
+    masthead: { gap: 6 },
     mastheadTop: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -350,11 +328,13 @@ const makeStyles = (skin: Skin) =>
     rail: { paddingTop: space.gutter },
     count: { paddingTop: space.sm },
     list: { paddingTop: space.md },
-    /** Air above a chapter, none below it: the rule belongs to the month it
-     *  opens, and an even gap would leave it floating between two of them. */
-    month: { paddingTop: space.xl, paddingBottom: space.sm },
+    month: { paddingTop: space.gutter, paddingBottom: space.sm },
     monthCopy: { gap: 2, paddingBottom: space.xs },
-    monthBand: { height: 3, flexDirection: 'row', marginHorizontal: space.gutter },
+    monthBand: {
+      height: 4.5,
+      flexDirection: 'row',
+      marginHorizontal: space.gutter,
+    },
     loading: { paddingTop: space.md },
     empty: {
       alignItems: 'center',
