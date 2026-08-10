@@ -52,6 +52,53 @@ export type SkinChrome = {
   shout: boolean;
 };
 
+/**
+ * A gradient, as the two things `LinearGradient` needs and nothing else.
+ *
+ * Screens spread this rather than naming stops, so a skin can change how many
+ * stops a role has without every call site learning about it.
+ */
+export type GradientRole = {
+  colors: readonly [string, string, ...string[]];
+  locations?: readonly [number, number, ...number[]];
+};
+
+/**
+ * How much of a surface a readability scrim covers.
+ *
+ * Weight rather than colour: a screen knows it needs the foot of an image dark
+ * enough to carry a title, and has no business knowing whether "dark" means
+ * near-black or near-paper. `soft` is a band at the very edge; `full` reaches
+ * most of the way up.
+ */
+export type ScrimWeight = 'soft' | 'medium' | 'strong' | 'full';
+
+/**
+ * The gradients and washes a screen is allowed to ask for.
+ *
+ * Everything here exists because a screen previously wrote a literal
+ * `rgba(8,7,14,…)` — which is chroma's ground, and meaningless under a paper
+ * one. Roles are named for what they are *for*, so swiss can answer the same
+ * question with a completely different shape: where chroma dissolves over half
+ * a surface, swiss cuts at a hard stop, because a precise transition is the
+ * Swiss answer to the same problem.
+ *
+ * Deliberately small. If a screen needs something outside these five roles, the
+ * right move is to question the screen, not to add a sixth.
+ */
+export type SkinEffects = {
+  /** Foot of a surface, so overlaid copy reads over arbitrary content. */
+  scrimBottom: (weight: ScrimWeight) => GradientRole;
+  /** Head of a surface, for chrome floating over content. */
+  scrimTop: (weight: ScrimWeight) => GradientRole;
+  /** Transparent to the page's own ground: bars, and heroes dissolving out. */
+  fadeToGround: GradientRole;
+  /** A whole screen's ground treatment. Flat in a skin that does not wash. */
+  screenWash: GradientRole;
+  /** A decorative plate behind a preview or a mock. */
+  surfaceWash: GradientRole;
+};
+
 export type Skin = {
   id: SkinId;
   ui: Loosen<typeof ui>;
@@ -62,9 +109,61 @@ export type Skin = {
   shadow: Loosen<typeof uiShadow>;
   type: Loosen<typeof type & typeof typeExtra>;
   chrome: SkinChrome;
+  effects: SkinEffects;
 };
 
 /* ------------------------------------------------------------------ chroma */
+
+/**
+ * Chroma's own values, lifted verbatim from the screens that held them.
+ *
+ * Four weights rather than three because four distinct scrims existed in the
+ * app and collapsing them would have changed what those screens look like.
+ * `medium` and `strong` are exact transcriptions of the ribbon's and the
+ * palette hero's; `full` is the carousel's; `soft` is the one new value, for
+ * the You signature, whose original started at 15% rather than transparent.
+ */
+const chromaScrim = (weight: ScrimWeight): GradientRole => {
+  switch (weight) {
+    case 'soft':
+      return { colors: ['rgba(8,7,14,0)', 'rgba(8,7,14,.55)'], locations: [0.45, 1] };
+    case 'medium':
+      return { colors: ['rgba(8,7,14,0)', 'rgba(8,7,14,.78)'], locations: [0.42, 1] };
+    case 'strong':
+      return {
+        colors: ['rgba(8,7,14,0)', 'rgba(8,7,14,.35)', 'rgba(8,7,14,.88)'],
+        locations: [0, 0.45, 1],
+      };
+    case 'full':
+      return {
+        colors: ['rgba(8,7,14,0)', 'rgba(8,7,14,.58)', 'rgba(8,7,14,.92)'],
+        locations: [0, 0.45, 1],
+      };
+  }
+};
+
+/** The same ramp read from the other end. */
+const flip = (role: GradientRole): GradientRole => ({
+  colors: [...role.colors].reverse() as unknown as GradientRole['colors'],
+  ...(role.locations
+    ? {
+        locations: role.locations.map((stop) => 1 - stop).reverse() as unknown as NonNullable<
+          GradientRole['locations']
+        >,
+      }
+    : {}),
+});
+
+const chromaEffects: SkinEffects = {
+  scrimBottom: chromaScrim,
+  scrimTop: (weight) => flip(chromaScrim(weight)),
+  fadeToGround: {
+    colors: ['rgba(8,7,14,0)', 'rgba(18, 17, 25, 0.94)'],
+    locations: [0, 0.4],
+  },
+  screenWash: { colors: ['#241C4A', ui.bg.base], locations: [0, 0.62] },
+  surfaceWash: { colors: ['#2A2352', '#0C0B18'], locations: [0, 1] },
+};
 
 const chroma: Skin = {
   id: 'chroma',
@@ -76,6 +175,7 @@ const chroma: Skin = {
   shadow: uiShadow,
   type: { ...type, ...typeExtra },
   chrome: { backdrop: true, glass: true, depth: true, rules: false, shout: true },
+  effects: chromaEffects,
 };
 
 /* ------------------------------------------------------------------- swiss */
@@ -96,6 +196,47 @@ const NO_SHADOW = {
   shadowOpacity: 0,
   shadowRadius: 0,
   elevation: 0,
+};
+
+/**
+ * Swiss answers the same questions with a different instrument.
+ *
+ * Not chroma's ramps with paper substituted for ink. A dark cinematic wash is
+ * an argument about atmosphere; this skin's argument is about structure, so its
+ * scrims are **short and decisive** — most of the surface is left alone and the
+ * transition happens across a narrow band near the edge. `full` is the only one
+ * that travels, and it still lands harder than its chroma counterpart.
+ *
+ * Reads toward paper rather than toward ink, which is what keeps overlaid copy
+ * legible: `text.primary` is ink in this skin, so the ground beneath it has to
+ * go light for the same reason chroma's goes dark.
+ */
+const swissScrim = (weight: ScrimWeight): GradientRole => {
+  switch (weight) {
+    case 'soft':
+      return { colors: [paper(0), paper(0.82)], locations: [0.62, 1] };
+    case 'medium':
+      return { colors: [paper(0), paper(0.94)], locations: [0.58, 1] };
+    case 'strong':
+      // A hard edge rather than a fade: the transition is an event, not a haze.
+      return { colors: [paper(0), paper(0.96), paper(0.98)], locations: [0.5, 0.62, 1] };
+    case 'full':
+      return { colors: [paper(0), paper(0.9), paper(0.99)], locations: [0.28, 0.66, 1] };
+  }
+};
+
+const swissEffects: SkinEffects = {
+  scrimBottom: swissScrim,
+  scrimTop: (weight) => flip(swissScrim(weight)),
+  // Cuts rather than dissolves: transparent until it is nearly at the bar, then
+  // the page. The two-point gap is the hard rule this skin separates things with.
+  fadeToGround: { colors: [paper(0), PAPER, PAPER], locations: [0.55, 0.62, 1] },
+  // Flat. A screen-wide wash is a mood, and this skin does not do moods — the
+  // API shape is kept so no screen has to ask which skin it is running under.
+  screenWash: { colors: [PAPER, PAPER], locations: [0, 1] },
+  // The one place a tone is allowed, and it is a paper-to-ink-tint step rather
+  // than a colour: a plate that reads as a different sheet, not a gradient.
+  surfaceWash: { colors: ['#E9E7E2', '#DEDCD6'], locations: [0, 1] },
 };
 
 const swiss: Skin = {
@@ -294,6 +435,7 @@ const swiss: Skin = {
     },
   },
   chrome: { backdrop: false, glass: false, depth: false, rules: true, shout: true },
+  effects: swissEffects,
 };
 
 export const skins: Record<SkinId, Skin> = { chroma, swiss };

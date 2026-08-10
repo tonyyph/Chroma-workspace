@@ -1,15 +1,5 @@
-import {
-  elevation,
-  glass,
-  round,
-  size,
-  space,
-  ui,
-  type ElevationLevel,
-  type Skin,
-} from '@chromawave/design-tokens';
+import { size, space, type ElevationLevel, type Skin } from '@chromawave/design-tokens';
 import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 import Animated, {
@@ -22,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePreferences, useSkin } from '@/providers';
 import { reportBackdropScroll } from './backdropMotion';
 import { Pressable } from './Pressable';
+import { Gradient } from './Gradient';
 import { BandRefreshControl } from './Sequences';
 import { UnderScreenCanvas } from './UnderScreenCanvas';
 
@@ -229,25 +220,40 @@ export function CardGroup({
   glass?: boolean;
 }) {
   const rows = Array.isArray(children) ? children.filter(Boolean) : [children];
-  const depth = elevation.raised;
+  const skin = useSkin();
+  const depth = skin.elevation.raised;
+  const blur = useGlass && skin.chrome.glass;
   return (
-    <View style={[styles.cardShadow, shadowOf(depth), style]}>
+    <View style={[styles.cardShadow, { borderRadius: skin.round.card }, shadowOf(depth), style]}>
       <View
         style={[
           styles.cardClip,
-          useGlass ? styles.cardGlass : styles.cardSolid,
-          { borderColor: depth.borderColor },
+          {
+            borderColor: depth.borderColor,
+            borderRadius: skin.round.card,
+            backgroundColor: blur ? skin.glass.card.tint : skin.ui.fill.card,
+          },
         ]}
       >
         {/* Settings groups are the largest flat surfaces in the app, so they
             are where the moving field behind is most worth seeing through. */}
-        {useGlass ? (
-          <BlurView intensity={glass.card.intensity} style={StyleSheet.absoluteFill} tint="dark" />
+        {blur ? (
+          <BlurView
+            intensity={skin.glass.card.intensity}
+            style={StyleSheet.absoluteFill}
+            tint="dark"
+          />
         ) : null}
         {rows.map((row, index) => (
           <View
             key={index}
-            style={[styles.groupRow, index < rows.length - 1 && styles.groupDivider]}
+            style={[
+              styles.groupRow,
+              index < rows.length - 1 && {
+                borderBottomWidth: 1,
+                borderBottomColor: skin.ui.border.hairline,
+              },
+            ]}
           >
             {row}
           </View>
@@ -373,16 +379,7 @@ export function Screen({
           {/* The same fade the tab bar uses, so content passing behind either
               one dims identically rather than the app having two idioms for
               the same job. */}
-          <LinearGradient
-            colors={
-              skin.chrome.depth
-                ? ['rgba(8,7,14,0)', 'rgba(18, 17, 25, 0.94)']
-                : ['rgba(242,241,238,0)', skin.ui.bg.base]
-            }
-            locations={[0, 0.4]}
-            pointerEvents="none"
-            style={StyleSheet.absoluteFill}
-          />
+          <Gradient role={skin.effects.fadeToGround} />
           {action}
         </View>
       ) : null}
@@ -414,17 +411,12 @@ const styles = StyleSheet.create({
     paddingTop: space.lg,
   },
   /** Casts the shadow. Must not clip, or iOS drops the shadow. */
-  cardShadow: {
-    borderRadius: round.card,
-  },
+  cardShadow: {},
   /** Clips the blur and the highlight to the radius. Must not cast. */
   cardClip: {
     borderWidth: 1,
-    borderRadius: round.card,
     overflow: 'hidden',
   },
-  cardSolid: { backgroundColor: ui.fill.card },
-  cardGlass: { backgroundColor: glass.card.tint },
   topHighlight: {
     position: 'absolute',
     top: 0,
@@ -439,9 +431,5 @@ const styles = StyleSheet.create({
   groupRow: {
     paddingHorizontal: space.cardGap,
     paddingVertical: space.cardGap,
-  },
-  groupDivider: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(237,234,227,.07)',
   },
 });

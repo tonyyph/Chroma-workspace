@@ -1,5 +1,6 @@
 export { BandCanvas, BandSweepCanvas, ScanSweep, bandPath } from './BandCanvas';
 export { BandField, sine, squircle } from './BandField';
+export { Gradient } from './Gradient';
 export { GradientCanvas, type GradientKind, type Interpolation } from './GradientCanvas';
 export { Button, ButtonRow, type ButtonVariant } from './Button';
 export { Carousel, type CarouselProps } from './Carousel';

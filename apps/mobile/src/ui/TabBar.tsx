@@ -1,11 +1,11 @@
 import { brandBands, size, space, uiMotion } from '@chromawave/design-tokens';
 import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '@/components';
 import { useSkin } from '@/providers';
 import { reportBackdropTouch } from './backdropMotion';
+import { Gradient } from './Gradient';
 import { Icon, type IconName } from './Icon';
 import { Pressable } from './Pressable';
 import { Text } from './Text';
@@ -79,16 +79,7 @@ export function TabBar({
 
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: insets.bottom }]}>
-      <LinearGradient
-        colors={
-          skin.chrome.depth
-            ? ['rgba(8,7,14,0)', 'rgba(18, 17, 25, 0.94)']
-            : ['rgba(242,241,238,0)', skin.ui.bg.base]
-        }
-        locations={[0, 0.4]}
-        pointerEvents="none"
-        style={StyleSheet.absoluteFill}
-      />
+      <Gradient role={skin.effects.fadeToGround} />
       <View style={[styles.barShell, { borderRadius: skin.round.pill }, skin.shadow.tabBar]}>
         <View
           style={[
