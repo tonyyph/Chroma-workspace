@@ -6,12 +6,12 @@ because its code exists.
 
 ## Baseline to hold, every phase
 
-| Check     | Baseline           |
-| --------- | ------------------ |
-| Typecheck | 0 errors           |
-| Tests     | 339+ passing       |
-| Lint      | ≤12 warnings       |
-| Format    | ≤8 files           |
+| Check     | Baseline     |
+| --------- | ------------ |
+| Typecheck | 0 errors     |
+| Tests     | 339+ passing |
+| Lint      | ≤12 warnings |
+| Format    | ≤8 files     |
 
 The 12 lint warnings and 8 format failures are pre-existing and untouched. Any
 increase is new debt and is called out, not absorbed.
@@ -80,7 +80,7 @@ import an image → palette → atmosphere → intent → iTunes search
 run on an iOS simulator or device and observe, in one session: an imported photo
 producing a palette, real candidates from a real network call, audio actually
 coming out of the speaker, a saved memory, and that memory replaying after a
-cold start. Until that has been *seen*, Phase 2 is Implemented, not Verified, and
+cold start. Until that has been _seen_, Phase 2 is Implemented, not Verified, and
 Phase 3 does not begin.
 
 ---
@@ -136,15 +136,15 @@ without overlapping audio.
 
 ## Deferred, deliberately
 
-| Item                          | Why                                                     |
-| ----------------------------- | ------------------------------------------------------- |
-| Apple Music adapter           | Needs the token endpoint (`08`) and a MusicKit key       |
-| LLM analysis                  | Needs the edge function and a model key                  |
-| Deezer adapter                | Terms confirmation pending (`07`)                        |
-| MusicKit subscriber playback  | Native module + prebuild; previews satisfy the product   |
-| Live read                     | Blocked on RN 0.83 pod compilation; unproven on device   |
-| Android                       | Out of scope this phase, by instruction                  |
-| Cloud sync / accounts         | No product reason yet                                    |
+| Item                         | Why                                                    |
+| ---------------------------- | ------------------------------------------------------ |
+| Apple Music adapter          | Needs the token endpoint (`08`) and a MusicKit key     |
+| LLM analysis                 | Needs the edge function and a model key                |
+| Deezer adapter               | Terms confirmation pending (`07`)                      |
+| MusicKit subscriber playback | Native module + prebuild; previews satisfy the product |
+| Live read                    | Blocked on RN 0.83 pod compilation; unproven on device |
+| Android                      | Out of scope this phase, by instruction                |
+| Cloud sync / accounts        | No product reason yet                                  |
 
 Each is a one-file adapter behind an interface that Phase 1 already defines. None
 requires reopening the architecture.

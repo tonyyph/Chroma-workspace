@@ -32,7 +32,8 @@ const signal = new AbortController().signal;
 describe('ITunesMusicProvider', () => {
   it('normalises a provider row into a domain track', async () => {
     const provider = new ITunesMusicProvider(respond([row()]));
-    const [track] = await provider.search([query('ambient')], signal);
+    const [result] = await provider.search([query('ambient')], signal);
+    const track = result?.track;
 
     expect(musicTrackReferenceSchema.safeParse(track).success).toBe(true);
     expect(track).toMatchObject({
@@ -49,7 +50,7 @@ describe('ITunesMusicProvider', () => {
 
   it('attaches the attribution the licence requires to every track', async () => {
     const provider = new ITunesMusicProvider(respond([row(), row({ trackId: 2 })]));
-    const tracks = await provider.search([query('ambient')], signal);
+    const tracks = (await provider.search([query('ambient')], signal)).map((r) => r.track);
 
     expect(tracks).toHaveLength(2);
     for (const track of tracks) {
@@ -60,7 +61,8 @@ describe('ITunesMusicProvider', () => {
 
   it('never exposes a preview URL on the track model', async () => {
     const provider = new ITunesMusicProvider(respond([row()]));
-    const [track] = await provider.search([query('ambient')], signal);
+    const [result] = await provider.search([query('ambient')], signal);
+    const track = result?.track;
 
     // The reference is what gets persisted; a preview URL in it would be a dead
     // link in six months and a stored pointer to copyrighted audio today.
@@ -70,7 +72,8 @@ describe('ITunesMusicProvider', () => {
 
   it('resolves a preview separately, from the search it already ran', async () => {
     const provider = new ITunesMusicProvider(respond([row()]));
-    const [track] = await provider.search([query('ambient')], signal);
+    const [result] = await provider.search([query('ambient')], signal);
+    const track = result?.track;
     const preview = await provider.getPreview(track!, signal);
 
     expect(preview).toEqual({
@@ -83,7 +86,8 @@ describe('ITunesMusicProvider', () => {
 
   it('reports no preview rather than throwing when the catalogue offers none', async () => {
     const provider = new ITunesMusicProvider(respond([row({ previewUrl: undefined })]));
-    const [track] = await provider.search([query('ambient')], signal);
+    const [result] = await provider.search([query('ambient')], signal);
+    const track = result?.track;
 
     // A row with no clip is a normal catalogue condition, so the track still
     // exists and is still selectable — it just cannot be heard.
@@ -100,7 +104,7 @@ describe('ITunesMusicProvider', () => {
         row({ trackId: 4, trackName: 'Second' }),
       ]),
     );
-    const tracks = await provider.search([query('ambient')], signal);
+    const tracks = (await provider.search([query('ambient')], signal)).map((r) => r.track);
     expect(tracks.map((t) => t.providerTrackId)).toEqual(['1440857781', '4']);
   });
 
@@ -108,6 +112,29 @@ describe('ITunesMusicProvider', () => {
     const provider = new ITunesMusicProvider(respond([row()]));
     const tracks = await provider.search([query('ambient'), query('downtempo')], signal);
     expect(tracks).toHaveLength(1);
+  });
+
+  /**
+   * iTunes files Slowdive under "Alternative", so the provider's own taxonomy
+   * cannot confirm a shoegaze match. What can is that our shoegaze query
+   * returned it — so the term that found each track travels with it.
+   */
+  it('records which genre query surfaced each track', async () => {
+    const provider = new ITunesMusicProvider(respond([row()]));
+    const [result] = await provider.search([query('shoegaze', { genre: 'shoegaze' })], signal);
+    expect(result!.matchedGenre).toBe('shoegaze');
+  });
+
+  it('keeps the first query’s provenance when two queries find the same track', async () => {
+    const provider = new ITunesMusicProvider(respond([row()]));
+    const results = await provider.search(
+      [query('shoegaze', { genre: 'shoegaze' }), query('dream pop', { genre: 'dream pop' })],
+      signal,
+    );
+    // `queriesForIntent` orders genres most-specific first, so the first match
+    // is the better label.
+    expect(results).toHaveLength(1);
+    expect(results[0]!.matchedGenre).toBe('shoegaze');
   });
 
   it('asks for the market it was given, so a VN user gets the VN catalogue', async () => {
@@ -122,7 +149,8 @@ describe('ITunesMusicProvider', () => {
 
   it('requests artwork large enough for a card', async () => {
     const provider = new ITunesMusicProvider(respond([row()]));
-    const [track] = await provider.search([query('ambient')], signal);
+    const [result] = await provider.search([query('ambient')], signal);
+    const track = result?.track;
     expect(track!.artworkUrl).toContain('600x600bb');
   });
 
@@ -175,7 +203,8 @@ describe('ITunesMusicProvider', () => {
   it('opens the store link, and does nothing when there is none', async () => {
     const openUrl = jest.fn(async () => undefined);
     const provider = new ITunesMusicProvider(respond([row()]), openUrl);
-    const [track] = await provider.search([query('ambient')], signal);
+    const [result] = await provider.search([query('ambient')], signal);
+    const track = result?.track;
 
     await provider.openExternal(track!);
     expect(openUrl).toHaveBeenCalledWith('https://music.apple.com/track/1440857781');

@@ -15,29 +15,63 @@ new apps. A Spotify app registered today returns `preview_url: null`. Full
 playback requires the native Spotify SDK **and** a Premium subscription on the
 listener's account.
 
-Any design that assumes "we'll just use Spotify previews" is dead on arrival in
-2026. This is the single most important fact in this document.
+Any design that assumes "we'll just use Spotify previews" is dead on arrival in 2026. This is the single most important fact in this document.
+
+## Verified against the live API — 2026-08-10
+
+The iTunes rows below are **Verified**, not researched: the endpoint was called
+from this workspace against the `VN` storefront and the responses inspected.
+
+- `GET /search?media=music&entity=song&country=VN&term=…` → HTTP 200.
+- `previewUrl`, `artworkUrl100`, `trackViewUrl`, `primaryGenreName`,
+  `trackTimeMillis` all present on real rows.
+- No key, no account, no header. A plain `fetch`.
+
+**The finding that changed the design.** Query shape dominates result quality,
+and compound queries are worse than useless:
+
+| Query                 | Result                                                 |
+| --------------------- | ------------------------------------------------------ |
+| `shoegaze`            | Cocteau Twins · Slowdive · Mazzy Star · Massive Attack |
+| `krautrock`           | Faust · Cluster & Eno · Pink Floyd · Tangerine Dream   |
+| `krautrock angular`   | **zero results**                                       |
+| `mid tempo krautrock` | **zero results**                                       |
+| `attribute=genreTerm` | ignored — identical to no attribute                    |
+
+These catalogues match keywords against _title and artist text_, not a semantic
+index. Adding a texture word does not narrow a genre, it demands that the word
+appear in the title. `queriesForIntent` therefore issues **bare genre terms
+only**; texture, pace and instrumentation live in the intent, the ranking and the
+explanation, and never in the query string.
+
+**Second finding: provider genre taxonomy is too coarse to rank on.** iTunes
+files Slowdive and Cocteau Twins under "Alternative" and Tangerine Dream under
+"Electronic", so matching an intent's `shoegaze` against `primaryGenreName`
+almost never fires. The reliable signal is that _our shoegaze query returned it_.
+`MusicSearchResult.matchedGenre` carries that provenance, and using it moved the
+top five for a dusk palette from filler at score 0.55 to Pale Saints, Beach
+House, Slowdive and Cocteau Twins at 0.81–0.83.
 
 ## Feasibility matrix
 
-| | **iTunes Search** | **Apple Music API** | **Deezer** | **Spotify** |
-|---|---|---|---|---|
-| Track search | ✅ keyless | ✅ | ✅ keyless | ✅ |
-| Preview clips | ✅ `previewUrl` | ✅ `previews[].url` | ✅ `preview` | ❌ new apps |
-| Preview length | ~30s | ~30s | 30s | — |
-| Auth required | **None** | ES256 JWT, server-signed | **None** | OAuth |
-| Paid sub for preview | No | No | No | — |
-| Full playback | No — deep link out | Subscriber + MusicKit native | No | Premium + native SDK |
-| Custom highlight segment | ❌ | ❌ | ❌ | ❌ |
-| Regional (incl. 🇻🇳) | ✅ `country=` | ✅ storefronts | ✅ (Deezer operates in VN) | — |
-| Attribution required | ✅ store badge, proximate | ✅ "Music previews via Apple Music" | ⚠️ needs legal confirmation | — |
-| Artwork use | Store-promotion context | Per Apple Music guidelines | ⚠️ needs legal confirmation | — |
-| Deep link | `trackViewUrl` | `url` | `link` | — |
-| Expo/native impact | **None** — plain `fetch` | None for previews; native module for subscriber playback | **None** | Native SDK |
-| App Store review risk | Low if badge shown | Low | Medium — third-party catalogue | — |
-| Caching audio | ❌ prohibited | ❌ prohibited | ❌ prohibited | — |
-| Preview URL stability | Fairly stable, not guaranteed | Re-resolve per session | Fairly stable | — |
-| Rate limit | ~20 req/min | Per developer token | Undocumented, modest | — |
+|                          | **iTunes Search**             | **Apple Music API**                                      | **Deezer**                     | **Spotify**          |
+| ------------------------ | ----------------------------- | -------------------------------------------------------- | ------------------------------ | -------------------- |
+| Track search             | ✅ keyless                    | ✅                                                       | ✅ keyless                     | ✅                   |
+| Preview clips            | ✅ `previewUrl`               | ✅ `previews[].url`                                      | ✅ `preview`                   | ❌ new apps          |
+| Preview length           | ~30s                          | ~30s                                                     | 30s                            | —                    |
+| Auth required            | **None**                      | ES256 JWT, server-signed                                 | **None**                       | OAuth                |
+| Paid sub for preview     | No                            | No                                                       | No                             | —                    |
+| Full playback            | No — deep link out            | Subscriber + MusicKit native                             | No                             | Premium + native SDK |
+| Custom highlight segment | ❌                            | ❌                                                       | ❌                             | ❌                   |
+| Regional (incl. 🇻🇳)      | ✅ `country=`                 | ✅ storefronts                                           | ✅ (Deezer operates in VN)     | —                    |
+| Attribution required     | ✅ store badge, proximate     | ✅ "Music previews via Apple Music"                      | ⚠️ needs legal confirmation    | —                    |
+| Artwork use              | Store-promotion context       | Per Apple Music guidelines                               | ⚠️ needs legal confirmation    | —                    |
+| Deep link                | `trackViewUrl`                | `url`                                                    | `link`                         | —                    |
+| Expo/native impact       | **None** — plain `fetch`      | None for previews; native module for subscriber playback | **None**                       | Native SDK           |
+| App Store review risk    | Low if badge shown            | Low                                                      | Medium — third-party catalogue | —                    |
+| Caching audio            | ❌ prohibited                 | ❌ prohibited                                            | ❌ prohibited                  | —                    |
+| Preview URL stability    | Fairly stable, not guaranteed | Re-resolve per session                                   | Fairly stable                  | —                    |
+| Rate limit               | ~20 req/min                   | Per developer token                                      | Undocumented, modest           | —                    |
 
 ## Constraint that shapes the product: no custom highlights
 
@@ -73,8 +107,8 @@ GET https://itunes.apple.com/search
              releaseDate, trackViewUrl, trackTimeMillis
 ```
 
-**The binding condition.** Apple's terms permit these previews and artwork *to
-promote store content* and require sound samples to sit **proximate to a store
+**The binding condition.** Apple's terms permit these previews and artwork _to
+promote store content_ and require sound samples to sit **proximate to a store
 badge**. Chromawave complies by construction:
 
 - every recommendation card carries a **"Listen on Apple Music"** store link, in
@@ -125,13 +159,13 @@ restores preview access, the adapter is one file behind the existing interface.
 export interface MusicProvider {
   readonly id: MusicProviderId;
   readonly attribution: string;
-  search(queries: readonly MusicSearchQuery[], signal: AbortSignal):
-    Promise<readonly MusicTrackReference[]>;
-  getTrack(providerTrackId: string, signal: AbortSignal):
-    Promise<MusicTrackReference | null>;
+  search(
+    queries: readonly MusicSearchQuery[],
+    signal: AbortSignal,
+  ): Promise<readonly MusicTrackReference[]>;
+  getTrack(providerTrackId: string, signal: AbortSignal): Promise<MusicTrackReference | null>;
   /** Resolved at playback time. Never persisted. */
-  getPreview(track: MusicTrackReference, signal: AbortSignal):
-    Promise<MusicPreview | null>;
+  getPreview(track: MusicTrackReference, signal: AbortSignal): Promise<MusicPreview | null>;
   openExternal(track: MusicTrackReference): Promise<void>;
 }
 ```

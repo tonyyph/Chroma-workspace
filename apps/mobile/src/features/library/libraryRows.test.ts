@@ -127,7 +127,10 @@ describe('month signatures are not recomputed on every pass', () => {
   it('recomputes when a palette in the month is retuned', () => {
     const before = toLibraryRows(library);
     const retuned = [
-      { ...library[0]!, colors: [makeColor('#FF0000', 0.5, 'dominant'), makeColor('#00FF00', 0.5, 'support')] },
+      {
+        ...library[0]!,
+        colors: [makeColor('#FF0000', 0.5, 'dominant'), makeColor('#00FF00', 0.5, 'support')],
+      },
       ...library.slice(1),
     ];
     const after = toLibraryRows(retuned);

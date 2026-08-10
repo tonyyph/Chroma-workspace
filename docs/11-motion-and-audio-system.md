@@ -19,11 +19,11 @@ motions and removes none.
 On analysis, the palette ribbon draws from the photograph's foot: each band
 widens from zero to its true weight, staggered by weight order (dominant first).
 The photograph does not move. Duration `duration.enter`; stagger 40ms.
-*Reads as:* the colour was always in the image.
+_Reads as:_ the colour was always in the image.
 
 **2. Ribbon → waveform** — colour becomes sound.
 On entering pairing, the ribbon's bands lean: each band's top edge displaces
-vertically by a value derived from the *intent's* energy, forming a coarse
+vertically by a value derived from the _intent's_ energy, forming a coarse
 waveform silhouette while keeping every band's colour and width. It is not audio
 data and is never labelled as such — it is the brand's abstract mark for
 "this colour became this music", and `10` requires that distinction be honest.
@@ -67,15 +67,15 @@ invisible to the test suite, and one already reached device once
 
 `useReducedMotion` is already used. Under it:
 
-| Motion            | Static equivalent                                    |
-| ----------------- | ---------------------------------------------------- |
-| Extraction reveal | Ribbon present at full weight, cross-faded 120ms     |
-| Ribbon → waveform | Waveform silhouette drawn in its final state         |
-| Artwork arrival   | Cross-fade                                           |
+| Motion              | Static equivalent                                                                                                                                                       |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Extraction reveal   | Ribbon present at full weight, cross-faded 120ms                                                                                                                        |
+| Ribbon → waveform   | Waveform silhouette drawn in its final state                                                                                                                            |
+| Artwork arrival     | Cross-fade                                                                                                                                                              |
 | **Ribbon playhead** | **Still animates.** It is information, not decoration — a static progress bar communicates nothing. Rendered as a discrete stepped fill rather than a continuous sweep. |
-| Ambient drift     | Field static at its resting composition              |
+| Ambient drift       | Field static at its resting composition                                                                                                                                 |
 
-The distinction: Reduce Motion removes *decoration*, not *state*. A user who has
+The distinction: Reduce Motion removes _decoration_, not _state_. A user who has
 reduced motion still needs to know how much preview is left.
 
 ---
@@ -92,12 +92,12 @@ which is what Apple's preview assets are designed to be played with (`07`).
 
 ```ts
 export interface PreviewPlaybackService {
-  readonly state: PreviewPlaybackState;   // observable
+  readonly state: PreviewPlaybackState; // observable
   play(track: MusicTrackReference, preview: MusicPreview): Promise<void>;
   pause(): void;
   resume(): void;
   stop(): void;
-  seek(ms: number): void;                 // only if the provider allows it
+  seek(ms: number): void; // only if the provider allows it
   subscribe(listener: (s: PreviewPlaybackState) => void): () => void;
 }
 
@@ -105,7 +105,7 @@ type PreviewPlaybackState =
   | { kind: 'idle' }
   | { kind: 'loading'; trackId: string }
   | { kind: 'playing'; trackId: string; positionMs: number; durationMs: number }
-  | { kind: 'paused';  trackId: string; positionMs: number; durationMs: number }
+  | { kind: 'paused'; trackId: string; positionMs: number; durationMs: number }
   | { kind: 'unavailable'; trackId: string; reason: PreviewUnavailableReason }
   | { kind: 'error'; trackId: string; reason: PlaybackErrorReason };
 ```
@@ -117,19 +117,19 @@ player — enforced in the service, not asked of screens. A test asserts a secon
 
 ### Behaviour
 
-| Situation                        | Behaviour                                                     |
-| -------------------------------- | ------------------------------------------------------------- |
-| First preview                    | **Never autoplays.** Explicit "Hear it".                      |
-| After one deliberate play        | Offer "auto-play as I browse"; remember (`preferences.autoPlayPreviews`, default false) |
-| Move to next candidate           | Previous stops immediately, before the next request           |
-| Screen popped                    | `stop()` on unmount. Audio never outlives its screen          |
-| App backgrounded                 | Pause. **No background audio mode is declared** (`08`)        |
-| Phone call / interruption        | Pause; do not auto-resume — resuming into a conversation is worse than silence |
-| Headphones unplugged             | Pause (the platform default; honoured, not overridden)        |
-| Preview URL 404 / expired        | Re-resolve once via `getPreview`; then `unavailable`          |
-| Provider gives no preview        | `unavailable` before playback is offered — the control is never a lie |
-| Offline                          | Controls disabled with a stated reason, not a spinner          |
-| Silent switch                    | Platform default honoured                                      |
+| Situation                 | Behaviour                                                                               |
+| ------------------------- | --------------------------------------------------------------------------------------- |
+| First preview             | **Never autoplays.** Explicit "Hear it".                                                |
+| After one deliberate play | Offer "auto-play as I browse"; remember (`preferences.autoPlayPreviews`, default false) |
+| Move to next candidate    | Previous stops immediately, before the next request                                     |
+| Screen popped             | `stop()` on unmount. Audio never outlives its screen                                    |
+| App backgrounded          | Pause. **No background audio mode is declared** (`08`)                                  |
+| Phone call / interruption | Pause; do not auto-resume — resuming into a conversation is worse than silence          |
+| Headphones unplugged      | Pause (the platform default; honoured, not overridden)                                  |
+| Preview URL 404 / expired | Re-resolve once via `getPreview`; then `unavailable`                                    |
+| Provider gives no preview | `unavailable` before playback is offered — the control is never a lie                   |
+| Offline                   | Controls disabled with a stated reason, not a spinner                                   |
+| Silent switch             | Platform default honoured                                                               |
 
 ### Audio session
 

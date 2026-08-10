@@ -36,22 +36,22 @@ SDK. One `fetch` exists in the entire app: `features/trending/trendingRepository
 26 route files under `src/app/`. Root `Stack` in `app/_layout.tsx`; a four-tab
 `Tabs` with a custom `TabBar` that centres capture as a raised action.
 
-| Route                      | Screen                | Notes                                        |
-| -------------------------- | --------------------- | -------------------------------------------- |
-| `index`                    | redirect              | → `onboarding` or `(tabs)`                   |
-| `onboarding`               | `OnboardingScreen`    | **5 static slides**, camera permission last  |
-| `(tabs)/index`             | `LibraryScreen`       | Month-grouped ribbon archive                 |
-| `(tabs)/explore`           | `ExploreScreen`       | Search + discovery filters                   |
-| `(tabs)/sets`              | `CollectionScreen`    | Working Sets                                 |
-| `(tabs)/you`               | `YouScreen`           | 757 LOC — preferences, insights, skin picker |
-| `capture`                  | `ViewfinderScreen`    | Vision Camera shutter                        |
-| `capture/result`           | `ResultRoute`         | Result sheet + Tune, owns pending capture    |
-| `palette/[id]`             | `PaletteDetailScreen` | Hero / spec / workbench                      |
-| `set/[id]`, `set/new`      | Sets detail + create  |                                              |
-| `trending`                 | `TrendingScreen`      | "Field notes" weekly drop                    |
-| `paywall`                  | `PaywallScreen`       | **CTA calls `router.back()`** (`:130`)       |
-| `tools/*` (10 routes)      | Colour tools          | scan, compare, contrast, export, gradient, theme, import, activity, widgets |
-| `tools/spike-liveread`     | dev probe             | 350 LOC, never run on device                 |
+| Route                  | Screen                | Notes                                                                       |
+| ---------------------- | --------------------- | --------------------------------------------------------------------------- |
+| `index`                | redirect              | → `onboarding` or `(tabs)`                                                  |
+| `onboarding`           | `OnboardingScreen`    | **5 static slides**, camera permission last                                 |
+| `(tabs)/index`         | `LibraryScreen`       | Month-grouped ribbon archive                                                |
+| `(tabs)/explore`       | `ExploreScreen`       | Search + discovery filters                                                  |
+| `(tabs)/sets`          | `CollectionScreen`    | Working Sets                                                                |
+| `(tabs)/you`           | `YouScreen`           | 757 LOC — preferences, insights, skin picker                                |
+| `capture`              | `ViewfinderScreen`    | Vision Camera shutter                                                       |
+| `capture/result`       | `ResultRoute`         | Result sheet + Tune, owns pending capture                                   |
+| `palette/[id]`         | `PaletteDetailScreen` | Hero / spec / workbench                                                     |
+| `set/[id]`, `set/new`  | Sets detail + create  |                                                                             |
+| `trending`             | `TrendingScreen`      | "Field notes" weekly drop                                                   |
+| `paywall`              | `PaywallScreen`       | **CTA calls `router.back()`** (`:130`)                                      |
+| `tools/*` (10 routes)  | Colour tools          | scan, compare, contrast, export, gradient, theme, import, activity, widgets |
+| `tools/spike-liveread` | dev probe             | 350 LOC, never run on device                                                |
 
 **Capture is a modal over the tabs**, pushed from the raised tab-bar button
 (`app/(tabs)/_layout.tsx:47`).
@@ -60,13 +60,13 @@ SDK. One `fetch` exists in the entire app: `features/trending/trendingRepository
 
 Everything the app persists, in full:
 
-| Entity            | File                | Shape                                                              |
-| ----------------- | ------------------- | ------------------------------------------------------------------ |
-| `Color`           | `palette.ts:48`     | hex · rgb · oklch · role · weight · locked. rgb validated against hex |
-| `Palette`         | `palette.ts:69`     | id · name · createdAt · capturedAt · source · colors[2..8] · tags · location · photoUri · deltaE · confidence · space · tuned · setIds · isPinned |
-| `PaletteSet`      | `palette.ts:116`    | id · name · timestamps · paletteIds · members · merged              |
-| `UserPreferences` | `preferences.ts:25` | haptics · notifications · reminderTime · language · **skin** · colorSpace · sound · ambientBackdrop · defaultExport · onboardingCompleted · activityReadAt |
-| `SubscriptionTier`| `entitlements.ts:20`| `free` \| `pro`                                                     |
+| Entity             | File                 | Shape                                                                                                                                                      |
+| ------------------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Color`            | `palette.ts:48`      | hex · rgb · oklch · role · weight · locked. rgb validated against hex                                                                                      |
+| `Palette`          | `palette.ts:69`      | id · name · createdAt · capturedAt · source · colors[2..8] · tags · location · photoUri · deltaE · confidence · space · tuned · setIds · isPinned          |
+| `PaletteSet`       | `palette.ts:116`     | id · name · timestamps · paletteIds · members · merged                                                                                                     |
+| `UserPreferences`  | `preferences.ts:25`  | haptics · notifications · reminderTime · language · **skin** · colorSpace · sound · ambientBackdrop · defaultExport · onboardingCompleted · activityReadAt |
+| `SubscriptionTier` | `entitlements.ts:20` | `free` \| `pro`                                                                                                                                            |
 
 `ColorRole = 'dominant' | 'support' | 'signal' | 'extra'`.
 `PaletteSource = 'live' | 'photo' | 'scan'` — note `'live'` is a value the schema
@@ -83,12 +83,12 @@ signal.
 
 One MMKV instance behind four repositories (`infrastructure/dependencies.ts`).
 
-| Key                          | Written by                     | Validation                    |
-| ---------------------------- | ------------------------------ | ----------------------------- |
-| `@chromawave/palettes:v1`    | `StoredPaletteRepository`      | `paletteListSchema.parse`     |
-| sets key                     | `StoredSetRepository`          | `setListSchema.parse`         |
-| preferences key              | `StoredPreferencesRepository`  | `userPreferencesSchema.parse` |
-| entitlements key             | `StoredEntitlements`           | —                             |
+| Key                       | Written by                    | Validation                    |
+| ------------------------- | ----------------------------- | ----------------------------- |
+| `@chromawave/palettes:v1` | `StoredPaletteRepository`     | `paletteListSchema.parse`     |
+| sets key                  | `StoredSetRepository`         | `setListSchema.parse`         |
+| preferences key           | `StoredPreferencesRepository` | `userPreferencesSchema.parse` |
+| entitlements key          | `StoredEntitlements`          | —                             |
 
 Every schema carries `schemaVersion: z.literal(1)`. `MmkvStorage.migrateFromAsyncStorage(LEGACY_KEYS)`
 already exists and runs on launch, so there is precedent for a migration step.
@@ -118,7 +118,7 @@ real; the transaction is not.
 **Code: none.** A case-insensitive scan for `music|spotify|deezer|song|track|
 pairing` across `apps/mobile/src` and `packages` returns only:
 
-- `collection.pairing*` localization keys — *contrast* pairings (`en.ts:249`);
+- `collection.pairing*` localization keys — _contrast_ pairings (`en.ts:249`);
 - `gapKinds: 'no-safe-pairing'` in `discovery.ts:239` — again contrast;
 - the explanatory comment in `entitlements.ts:11`.
 
@@ -163,17 +163,17 @@ it already produces exactly the structured signal a music intent needs.
 Per `archive/25`, and not re-verified here — no device pass has occurred in this
 session:
 
-| Item                  | State                                             |
-| --------------------- | ------------------------------------------------- |
-| Library archive       | Implemented, unseen. **And it was shipping a Swiss bug** (§11) |
-| Palette detail        | Implemented, unseen                               |
-| Capture result        | Implemented, unseen                               |
-| Working Sets merge    | Implemented, unseen                               |
-| Chromatic adaptation  | Implemented, unseen                               |
-| Hero transition       | Implemented, unseen — computed landing position   |
-| Swiss skin            | Implemented, unseen                               |
-| Live read             | **Does not exist.** Probe written, never run      |
-| Billing               | Does not exist                                    |
+| Item                 | State                                                          |
+| -------------------- | -------------------------------------------------------------- |
+| Library archive      | Implemented, unseen. **And it was shipping a Swiss bug** (§11) |
+| Palette detail       | Implemented, unseen                                            |
+| Capture result       | Implemented, unseen                                            |
+| Working Sets merge   | Implemented, unseen                                            |
+| Chromatic adaptation | Implemented, unseen                                            |
+| Hero transition      | Implemented, unseen — computed landing position                |
+| Swiss skin           | Implemented, unseen                                            |
+| Live read            | **Does not exist.** Probe written, never run                   |
+| Billing              | Does not exist                                                 |
 
 ## 10. Working-tree state
 
@@ -186,12 +186,12 @@ This pass has since modified `LibraryScreen.tsx` and restructured `docs/`.
 
 **Verified baseline at HEAD — the previous review was wrong:**
 
-| Check     | Claimed | Actual at HEAD              | After this pass |
-| --------- | ------- | --------------------------- | --------------- |
-| Typecheck | 0       | 0 ✓                         | 0               |
-| Tests     | 339 ✓   | **338 pass, 1 FAIL**        | **339 pass**    |
-| Lint      | 11      | **12** warnings             | 12              |
-| Format    | 8 files | 8 files ✓                   | 8 files         |
+| Check     | Claimed | Actual at HEAD       | After this pass |
+| --------- | ------- | -------------------- | --------------- |
+| Typecheck | 0       | 0 ✓                  | 0               |
+| Tests     | 339 ✓   | **338 pass, 1 FAIL** | **339 pass**    |
+| Lint      | 11      | **12** warnings      | 12              |
+| Format    | 8 files | 8 files ✓            | 8 files         |
 
 The failure: `no-appearance-leaks › imports no appearance token` — introduced by
 the most recent commit, `a7be7bb`. `LibraryScreen.tsx` imported `round` from
@@ -201,20 +201,20 @@ the boundary test exists to stop, and it would have rendered rounded bands on
 Swiss's paper ground. Fixed by reading `skin.round.full` from the active skin.
 
 **Test coverage shape:** 339 tests, none of which can look at a screen. Two
-regressions in the previous session were caught by *lint warnings*, not tests.
+regressions in the previous session were caught by _lint warnings_, not tests.
 Jest mocks Reanimated, so worklet bugs are structurally invisible. A two-skin
 product with no visual regression strategy is the gap that matters most as UI
 work begins — addressed in `14-verification-matrix.md`.
 
 ## 12. Migration risk for already-persisted user data
 
-| Risk                                                    | Severity | Note                                                                   |
-| ------------------------------------------------------- | -------- | ---------------------------------------------------------------------- |
-| `parse` on the whole list throws on one bad record       | **High** | Loses the entire library, not one item. Must move to per-record `safeParse` |
-| `schemaVersion: z.literal(1)` rejects any v2 record      | **High** | A v2 write followed by a downgrade bricks reads                        |
-| `photoUri` points into app documents; memories add a second asset path | Medium | Orphan cleanup already exists for palettes and must extend             |
-| `paletteSource` accepts `'live'` for a nonexistent feature | Low    | Harmless, but should not be carried into v2 unexamined                 |
-| Sets store a `merged` cache that is recomputed on write  | Low      | Already handled by `libraryStore.rewriteSets`                          |
+| Risk                                                                   | Severity | Note                                                                        |
+| ---------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------- |
+| `parse` on the whole list throws on one bad record                     | **High** | Loses the entire library, not one item. Must move to per-record `safeParse` |
+| `schemaVersion: z.literal(1)` rejects any v2 record                    | **High** | A v2 write followed by a downgrade bricks reads                             |
+| `photoUri` points into app documents; memories add a second asset path | Medium   | Orphan cleanup already exists for palettes and must extend                  |
+| `paletteSource` accepts `'live'` for a nonexistent feature             | Low      | Harmless, but should not be carried into v2 unexamined                      |
+| Sets store a `merged` cache that is recomputed on write                | Low      | Already handled by `libraryStore.rewriteSets`                               |
 
 ## 13. Performance findings confirmed
 

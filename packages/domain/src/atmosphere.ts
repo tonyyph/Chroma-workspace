@@ -217,10 +217,7 @@ export function readAtmosphere(colors: readonly Color[], deltaE = 0): Atmosphere
 
   // Weighted by area, so a warm sky occupying 60% of the frame outweighs a cool
   // accent occupying 4%. This is what the true area weights are *for*.
-  const warmth = colors.reduce(
-    (sum, color) => sum + hueWarmth(color.oklch.hue) * share(color),
-    0,
-  );
+  const warmth = colors.reduce((sum, color) => sum + hueWarmth(color.oklch.hue) * share(color), 0);
 
   const scalars: Scalars = {
     luminosity: round3(clamp01(metrics.meanLightness)),

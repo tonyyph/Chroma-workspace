@@ -67,9 +67,7 @@ describe('product code does not know which music provider is behind it', () => {
   it('reads no provider payload field', () => {
     const offenders = files.flatMap((file) => {
       const source = readFileSync(file, 'utf8');
-      const found = PROVIDER_FIELDS.filter((field) =>
-        new RegExp(`\\b${field}\\b`).test(source),
-      );
+      const found = PROVIDER_FIELDS.filter((field) => new RegExp(`\\b${field}\\b`).test(source));
       return found.length ? [`${file.replace(ROOT, '')}: ${found.join(', ')}`] : [];
     });
     expect(offenders).toEqual([]);
@@ -96,7 +94,10 @@ describe('persisted data carries no audio URL', () => {
    * nothing reintroduces one through a cast or a spread.
    */
   it('the domain track model declares no preview field', () => {
-    const model = readFileSync(join(ROOT, '..', '..', '..', 'packages', 'domain', 'src', 'music.ts'), 'utf8');
+    const model = readFileSync(
+      join(ROOT, '..', '..', '..', 'packages', 'domain', 'src', 'music.ts'),
+      'utf8',
+    );
     const reference = model.slice(
       model.indexOf('musicTrackReferenceSchema'),
       model.indexOf('export type MusicTrackReference'),

@@ -12,24 +12,24 @@ calling it "a music-and-memory app this one is no longer related to". Meanwhile
 `docs/` still described that music product across twelve files. The code and the
 documentation had drifted so far apart that they described two different
 companies. This pass restores the music-and-colour vision as the product
-direction, and does it by *adding a layer above* the colour engine rather than
+direction, and does it by _adding a layer above_ the colour engine rather than
 rewriting it.
 
 ## What is genuinely good and is being kept
 
 Verified by reading the source, not by trusting the previous review:
 
-| Asset                                    | Evidence                                                                             |
-| ---------------------------------------- | ------------------------------------------------------------------------------------ |
+| Asset                                       | Evidence                                                                                  |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | OKLab k-means extraction, true area weights | `packages/domain/src/color.ts:133` — linear-light accumulation, weights are cluster share |
-| CIEDE2000 (CIE 142-2001), not ΔE76       | `color.ts:470`                                                                        |
-| Gamut-mapped OKLCh inverse               | `color.ts:383` — binary-searches chroma, holds hue. Rare and correct.                 |
-| Semantic roles + weight invariant        | `palette.ts:93` — Zod `superRefine` enforces weights sum to 1                          |
-| Two-skin architecture with a boundary test | `__tests__/no-appearance-leaks.test.ts` — source scan, not a render test              |
-| EN/VI parity with expansion budgets      | `localization.test.ts` — 424 keys each side, per-control character budgets            |
-| MMKV + Zod persistence, orphan-free photos | `StoredPaletteRepository.ts`                                                          |
+| CIEDE2000 (CIE 142-2001), not ΔE76          | `color.ts:470`                                                                            |
+| Gamut-mapped OKLCh inverse                  | `color.ts:383` — binary-searches chroma, holds hue. Rare and correct.                     |
+| Semantic roles + weight invariant           | `palette.ts:93` — Zod `superRefine` enforces weights sum to 1                             |
+| Two-skin architecture with a boundary test  | `__tests__/no-appearance-leaks.test.ts` — source scan, not a render test                  |
+| EN/VI parity with expansion budgets         | `localization.test.ts` — 424 keys each side, per-control character budgets                |
+| MMKV + Zod persistence, orphan-free photos  | `StoredPaletteRepository.ts`                                                              |
 
-None of this is touched. The colour engine becomes the *input* to the music
+None of this is touched. The colour engine becomes the _input_ to the music
 pipeline instead of the product's endpoint.
 
 ## The three decisions that shape everything else
@@ -48,7 +48,7 @@ provision. See `07-music-provider-feasibility.md`.
 narrator.** The mapping from a weighted OKLCh palette to a `MusicIntent`
 (valence, energy, warmth, pace, texture, genres) is pure, testable, offline, and
 ships with no key. An LLM provider sits behind the same typed interface to add
-image captions and per-track explanations *when an endpoint is configured*. This
+image captions and per-track explanations _when an endpoint is configured_. This
 is not a downgrade — it is the only version that works offline, costs nothing per
 capture, is unit-testable, and cannot fabricate a catalogue.
 
@@ -86,22 +86,22 @@ standing risk and is unchanged by this document.
 
 ## Document map
 
-| File                                    | Answers                                        |
-| --------------------------------------- | ---------------------------------------------- |
-| `01-current-product-audit.md`            | What is actually in the repository             |
-| `02-restored-chromawave-vision.md`       | What the product is now                        |
-| `03-information-architecture.md`         | Navigation and screen hierarchy                |
-| `04-core-user-flows.md`                  | The seven flows, including failure paths       |
-| `05-domain-model.md`                     | `ChromaticMemory` and supporting entities      |
-| `06-ai-recommendation-architecture.md`   | Palette → `MusicIntent` → ranked candidates    |
-| `07-music-provider-feasibility.md`       | Provider matrix, legal constraints             |
-| `08-privacy-and-backend-decision.md`     | What leaves the device, and why                |
-| `09-persistence-migration-plan.md`       | v1 palettes → v2 memories, without data loss   |
-| `10-ui-ux-redesign-spec.md`              | Screen-by-screen, both skins                   |
-| `11-motion-and-audio-system.md`          | Motion grammar and the preview player          |
-| `12-implementation-plan.md`              | Phases 1–5 with exit criteria                  |
-| `13-risk-register.md`                    | Ranked risks and mitigations                   |
-| `14-verification-matrix.md`              | What must be seen running, on what input       |
+| File                                   | Answers                                      |
+| -------------------------------------- | -------------------------------------------- |
+| `01-current-product-audit.md`          | What is actually in the repository           |
+| `02-restored-chromawave-vision.md`     | What the product is now                      |
+| `03-information-architecture.md`       | Navigation and screen hierarchy              |
+| `04-core-user-flows.md`                | The seven flows, including failure paths     |
+| `05-domain-model.md`                   | `ChromaticMemory` and supporting entities    |
+| `06-ai-recommendation-architecture.md` | Palette → `MusicIntent` → ranked candidates  |
+| `07-music-provider-feasibility.md`     | Provider matrix, legal constraints           |
+| `08-privacy-and-backend-decision.md`   | What leaves the device, and why              |
+| `09-persistence-migration-plan.md`     | v1 palettes → v2 memories, without data loss |
+| `10-ui-ux-redesign-spec.md`            | Screen-by-screen, both skins                 |
+| `11-motion-and-audio-system.md`        | Motion grammar and the preview player        |
+| `12-implementation-plan.md`            | Phases 1–5 with exit criteria                |
+| `13-risk-register.md`                  | Ranked risks and mitigations                 |
+| `14-verification-matrix.md`            | What must be seen running, on what input     |
 
 `reference/` holds the still-authoritative BUILD KIT and brand-mark documents.
 `archive/` holds the superseded v1 docs and the UI-audit cycle notes, with a

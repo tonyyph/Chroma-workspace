@@ -53,13 +53,13 @@ export const chromaticMemorySchema = z.object({
 
 ### Why `palette` is nested rather than referenced
 
-A memory *is* its palette; there is no palette without a moment. Nesting keeps
+A memory _is_ its palette; there is no palette without a moment. Nesting keeps
 one record, one write, one validation, and no join to render a card. It also
 means the v1 migration is a pure widening — every field of `Palette` has a home.
 
 ```ts
 const memoryPaletteSchema = z.object({
-  colors: z.array(colorSchema).min(2).max(8),   // reused, unchanged
+  colors: z.array(colorSchema).min(2).max(8), // reused, unchanged
   deltaE: z.number().min(0).max(100),
   confidence: z.number().min(0).max(1),
   space: colorSpaceSchema,
@@ -108,8 +108,14 @@ export const atmosphereReadingSchema = z.object({
 });
 
 export const colourMoodSchema = z.enum([
-  'serene', 'tender', 'luminous', 'vivid',
-  'nocturnal', 'melancholy', 'earthy', 'stark',
+  'serene',
+  'tender',
+  'luminous',
+  'vivid',
+  'nocturnal',
+  'melancholy',
+  'earthy',
+  'stark',
 ]);
 ```
 
@@ -126,7 +132,7 @@ const visualAnalysisSchema = z.object({
   subjects: z.array(z.string().max(40)).max(6),
   scene: z.string().max(40).nullable(),
   lighting: z.string().max(40).nullable(),
-  timeOfDay: z.enum(['dawn','morning','midday','afternoon','dusk','night']).nullable(),
+  timeOfDay: z.enum(['dawn', 'morning', 'midday', 'afternoon', 'dusk', 'night']).nullable(),
   weather: z.string().max(40).nullable(),
   indoorOutdoor: z.enum(['indoor', 'outdoor']).nullable(),
   motion: z.enum(['still', 'gentle', 'active']).nullable(),
@@ -138,7 +144,7 @@ const visualAnalysisSchema = z.object({
 ```
 
 Every field nullable inside a nullable object: a vision provider that returns
-only a caption is a *partial success*, not a failure.
+only a caption is a _partial success_, not a failure.
 
 ### `musicPairing`
 
@@ -154,12 +160,12 @@ const musicPairingSchema = z.object({
 });
 
 export const recommendationStatusSchema = z.enum([
-  'unpaired',      // no attempt yet — a valid, complete memory
-  'pending',       // in flight (never persisted; runtime only)
-  'suggested',     // candidates exist, none chosen
-  'paired',        // a track is selected
-  'unavailable',   // chosen track no longer resolves in the catalogue
-  'failed',        // last attempt failed; retryable
+  'unpaired', // no attempt yet — a valid, complete memory
+  'pending', // in flight (never persisted; runtime only)
+  'suggested', // candidates exist, none chosen
+  'paired', // a track is selected
+  'unavailable', // chosen track no longer resolves in the catalogue
+  'failed', // last attempt failed; retryable
 ]);
 ```
 
@@ -246,7 +252,17 @@ export const musicRecommendationSchema = z.object({
 });
 
 export const musicRecommendationReasonSchema = z.object({
-  kind: z.enum(['warmth','energy','luminosity','pace','texture','genre','era','mood','contrast']),
+  kind: z.enum([
+    'warmth',
+    'energy',
+    'luminosity',
+    'pace',
+    'texture',
+    'genre',
+    'era',
+    'mood',
+    'contrast',
+  ]),
   /** -1..1: how strongly this dimension drove the match. */
   weight: z.number().min(-1).max(1),
 });
@@ -261,7 +277,7 @@ and generated without an LLM.
 ```ts
 export const musicFeedbackSchema = z.object({
   providerTrackId: z.string().max(64),
-  signal: z.enum(['selected','rejected','replaced','played-through','skipped-early']),
+  signal: z.enum(['selected', 'rejected', 'replaced', 'played-through', 'skipped-early']),
   at: z.iso.datetime(),
   /** Genres/eras carried forward so preference accrues without storing history. */
   genres: z.array(z.string().max(32)).max(5),
@@ -311,7 +327,7 @@ export interface ChromaticMemoryRepository {
 
 `listInvalid` exists because of the failure mode found in `01 §4`: today one bad
 record throws and the whole library disappears. v2 reads record-by-record with
-`safeParse`, keeps what is valid, and *reports* what is not.
+`safeParse`, keeps what is valid, and _reports_ what is not.
 
 `PaletteRepository` and `SetRepository` **stay**, backed by projections over
 memories, so `mergePalettes`, `paletteGaps` and all ten `tools/*` screens keep
@@ -321,17 +337,17 @@ compiling against the interfaces they already use.
 
 ## States the model must represent
 
-| State                                   | How                                                       |
-| --------------------------------------- | --------------------------------------------------------- |
-| Memory with no track yet                | `status: 'unpaired'`, `selectedTrack: null`               |
-| Recommendations loading                 | `'pending'` — runtime only, never persisted               |
-| AI analysis failed                      | `visualAnalysis: null`; atmosphere still present          |
-| Music provider failed                   | `'failed'` + `error`; retryable                           |
-| Preview unavailable                     | `previewAvailable: false`; card selectable                |
-| Offline with saved metadata             | Track fields are local; only preview needs network        |
-| Track later removed from catalogue      | `'unavailable'`; metadata retained                        |
-| Re-run recommendations                  | New `recommendationVersion`; feedback preserved           |
-| Manual search and select                | Same `selectedTrack` write path                           |
-| Replace a track                         | Old id → `feedback: 'replaced'`, new track set            |
-| Explicit + implicit feedback            | `musicFeedbackSchema.signal`                              |
-| Legacy palette migrated                 | `'unpaired'`, `visualAnalysis: null`, full colour data    |
+| State                              | How                                                    |
+| ---------------------------------- | ------------------------------------------------------ |
+| Memory with no track yet           | `status: 'unpaired'`, `selectedTrack: null`            |
+| Recommendations loading            | `'pending'` — runtime only, never persisted            |
+| AI analysis failed                 | `visualAnalysis: null`; atmosphere still present       |
+| Music provider failed              | `'failed'` + `error`; retryable                        |
+| Preview unavailable                | `previewAvailable: false`; card selectable             |
+| Offline with saved metadata        | Track fields are local; only preview needs network     |
+| Track later removed from catalogue | `'unavailable'`; metadata retained                     |
+| Re-run recommendations             | New `recommendationVersion`; feedback preserved        |
+| Manual search and select           | Same `selectedTrack` write path                        |
+| Replace a track                    | Old id → `feedback: 'replaced'`, new track set         |
+| Explicit + implicit feedback       | `musicFeedbackSchema.signal`                           |
+| Legacy palette migrated            | `'unpaired'`, `visualAnalysis: null`, full colour data |

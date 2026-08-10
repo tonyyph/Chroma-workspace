@@ -64,7 +64,9 @@ describe('the curation table', () => {
 describe('deriveIntent', () => {
   it('is deterministic for the same atmosphere and seed', () => {
     const a = atmosphere();
-    expect(deriveIntent({ atmosphere: a, seed: 3 })).toEqual(deriveIntent({ atmosphere: a, seed: 3 }));
+    expect(deriveIntent({ atmosphere: a, seed: 3 })).toEqual(
+      deriveIntent({ atmosphere: a, seed: 3 }),
+    );
   });
 
   it('produces a schema-valid intent for every mood and every extreme', () => {
@@ -73,7 +75,14 @@ describe('deriveIntent', () => {
         for (const saturation of [0, 0.5, 1]) {
           for (const warmth of [-1, 0, 1]) {
             const intent = deriveIntent({
-              atmosphere: atmosphere({ mood, luminosity, saturation, warmth, contrast: 1, spread: 1 }),
+              atmosphere: atmosphere({
+                mood,
+                luminosity,
+                saturation,
+                warmth,
+                contrast: 1,
+                spread: 1,
+              }),
             });
             expect(musicIntentSchema.safeParse(intent).success, mood).toBe(true);
           }

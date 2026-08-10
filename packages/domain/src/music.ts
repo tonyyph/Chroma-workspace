@@ -153,18 +153,55 @@ export const musicSearchQuerySchema = z.object({
 export type MusicSearchQuery = z.infer<typeof musicSearchQuerySchema>;
 
 /**
- * An intent becomes two or three searches, not one.
+ * A track, plus which of our genre queries surfaced it.
  *
- * The catalogues answer keywords, so a single query has to choose between being
- * specific enough to be right and broad enough to return anything. Issuing a
- * narrow query and a broad one in parallel and letting the ranker decide is both
- * cheaper and better than tuning one string: the narrow query supplies precision
- * when the catalogue has it, and the broad one guarantees the user is never
- * shown an empty screen.
+ * The provenance matters because provider genre taxonomies are coarse. iTunes
+ * files Slowdive and Cocteau Twins under "Alternative" and Tangerine Dream under
+ * "Electronic", so comparing an intent's `shoegaze` against a track's
+ * `primaryGenreName` almost never matches even when the track is exactly right.
  *
- * Kept in the domain rather than in an adapter because the *shape* of the search
+ * But we *know* it is right, because we asked for shoegaze and the catalogue
+ * answered with this. That is a real signal and it is the strongest one
+ * available, so it is carried rather than thrown away at the boundary.
+ *
+ * It is provenance, not provider data: `matchedGenre` is a term this app chose,
+ * which is why it can sit in the domain without leaking a provider's schema.
+ */
+export type MusicSearchResult = {
+  track: MusicTrackReference;
+  /** The genre term whose query returned this, when a genre query did. */
+  matchedGenre: string | null;
+};
+
+/**
+ * An intent becomes one search per genre — each a **bare genre term**.
+ *
+ * **This is measured, not assumed.** Against the live iTunes catalogue on
+ * 2026-08-10:
+ *
+ *   "shoegaze"          → Cocteau Twins · Slowdive · Mazzy Star · Massive Attack
+ *   "krautrock"         → Faust · Cluster & Eno · Pink Floyd · Tangerine Dream
+ *   "krautrock angular" → **zero results**
+ *   "mid tempo krautrock" → **zero results**
+ *
+ * The first version of this function issued exactly those compound queries. Two
+ * of its three searches returned nothing, and the survivor was the one query
+ * that happened to be a bare genre — so the product was ranking whatever filler
+ * a single accidental query returned and calling it a recommendation.
+ *
+ * The lesson generalises past iTunes: these catalogues match keywords against
+ * *title and artist text*, not against a semantic index. Adding a texture word
+ * does not narrow the genre, it demands that the word appear in the title. A
+ * genre name is the one term with enough curated weight behind it to return the
+ * records people actually mean.
+ *
+ * So texture, pace, instrumentation and mood stay where they are useful — in the
+ * intent, in the ranking, and in the sentence shown to the user — and out of the
+ * query string entirely.
+ *
+ * Kept in the domain rather than in an adapter because the shape of the search
  * follows from the intent, and every provider would otherwise reinvent it
- * slightly differently.
+ * slightly differently, badly, in the same way.
  */
 export function queriesForIntent(
   intent: MusicIntent,
@@ -172,42 +209,15 @@ export function queriesForIntent(
 ): readonly MusicSearchQuery[] {
   const market = options.market ?? null;
   const limit = options.limit ?? 25;
-  const [lead, second] = intent.genres;
-  const texture = intent.texture[0] ?? null;
-  const instrumental = intent.lyricalPreference === 'instrumental';
 
-  const queries: MusicSearchQuery[] = [];
-
-  // Narrow: the lead genre plus the strongest texture word, which is the most
-  // specific thing we can say that a keyword index will actually match on.
-  if (lead) {
-    queries.push({
-      terms: [lead, texture, instrumental ? 'instrumental' : null]
-        .filter((part): part is string => part !== null)
-        .join(' '),
-      genre: lead,
-      limit,
-      market,
-    });
-  }
-
-  // Broad: the second genre alone, so a thin catalogue for the lead genre does
-  // not leave the user with nothing.
-  if (second) {
-    queries.push({ terms: second, genre: second, limit, market });
-  }
-
-  // Mood-shaped: pace and mood words, which reach records the genre terms miss.
-  queries.push({
-    terms: [intent.pace === 'slow' ? 'slow' : intent.pace === 'fast' ? 'upbeat' : 'mid tempo',
-      lead ?? 'music',
-    ].join(' '),
-    genre: null,
+  // Three at most: enough breadth that a thin catalogue for the lead genre still
+  // fills a screen, few enough to stay well inside the provider's rate limit.
+  return intent.genres.slice(0, 3).map((genre) => ({
+    terms: genre,
+    genre,
     limit,
     market,
-  });
-
-  return queries;
+  }));
 }
 
 export const recommendationStatusSchema = z.enum([
@@ -281,7 +291,7 @@ export interface MusicProvider {
   search(
     queries: readonly MusicSearchQuery[],
     signal: AbortSignal,
-  ): Promise<readonly MusicTrackReference[]>;
+  ): Promise<readonly MusicSearchResult[]>;
   getTrack(providerTrackId: string, signal: AbortSignal): Promise<MusicTrackReference | null>;
   getPreview(track: MusicTrackReference, signal: AbortSignal): Promise<MusicPreview | null>;
   openExternal(track: MusicTrackReference): Promise<void>;
@@ -299,7 +309,7 @@ export interface MusicProvider {
 export class UnconfiguredMusicProvider implements MusicProvider {
   readonly id = 'none' as const;
   readonly attribution = '';
-  async search(): Promise<readonly MusicTrackReference[]> {
+  async search(): Promise<readonly MusicSearchResult[]> {
     return [];
   }
   async getTrack(): Promise<null> {

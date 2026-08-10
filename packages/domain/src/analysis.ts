@@ -19,14 +19,7 @@ import type { Language } from './preferences';
  * is allowed to originate a track.
  */
 
-export const timeOfDaySchema = z.enum([
-  'dawn',
-  'morning',
-  'midday',
-  'afternoon',
-  'dusk',
-  'night',
-]);
+export const timeOfDaySchema = z.enum(['dawn', 'morning', 'midday', 'afternoon', 'dusk', 'night']);
 
 /**
  * Every field nullable inside a nullable object.

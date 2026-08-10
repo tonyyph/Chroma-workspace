@@ -12,7 +12,7 @@ code went a different way and the documents were never retired.
 **The music vision in these files is not abandoned.** It is restored, verified
 against what providers actually permit in 2026, and re-specified in
 `docs/02-restored-chromawave-vision.md` onward. What is archived is the specific
-*shape* these documents proposed, not their intent.
+_shape_ these documents proposed, not their intent.
 
 Two are worth reading for their reasoning:
 

@@ -5,7 +5,7 @@
 `StoredPaletteRepository.list()` today:
 
 ```ts
-return paletteListSchema.parse(JSON.parse(raw))   // throws on ANY bad record
+return paletteListSchema.parse(JSON.parse(raw)); // throws on ANY bad record
 ```
 
 On failure it raises `DomainError('PERSISTED_DATA_INVALID')`. Not "skip the bad
@@ -22,13 +22,13 @@ Two rules follow, and everything else in this document is a consequence:
 
 ## Storage layout
 
-| Key                          | v1 (today)        | v2 (target)                      |
-| ---------------------------- | ----------------- | -------------------------------- |
-| `@chromawave/palettes:v1`    | `Palette[]`       | **retained, read-only, untouched** |
-| `@chromawave/memories:v2`    | —                 | `ChromaticMemory[]`              |
-| `@chromawave/migration:state`| —                 | `{ version, migratedAt, counts }`|
-| sets key                     | `PaletteSet[]`    | unchanged                        |
-| preferences key              | v1                | widened, defaults added          |
+| Key                           | v1 (today)     | v2 (target)                        |
+| ----------------------------- | -------------- | ---------------------------------- |
+| `@chromawave/palettes:v1`     | `Palette[]`    | **retained, read-only, untouched** |
+| `@chromawave/memories:v2`     | —              | `ChromaticMemory[]`                |
+| `@chromawave/migration:state` | —              | `{ version, migratedAt, counts }`  |
+| sets key                      | `PaletteSet[]` | unchanged                          |
+| preferences key               | v1             | widened, defaults added            |
 
 **The v1 key is not deleted, not rewritten, and not moved.** It is the rollback.
 Disk cost is a few hundred KB of JSON for a large library — trivially worth an
@@ -41,7 +41,7 @@ Runs once, on launch, from `infrastructure/dependencies.ts` next to the existing
 (`MmkvStorage.migrateFromAsyncStorage`).
 
 ```ts
-export async function migratePalettesToMemories(storage: KeyValueStorage): Promise<MigrationReport>
+export async function migratePalettesToMemories(storage: KeyValueStorage): Promise<MigrationReport>;
 ```
 
 ```
@@ -61,33 +61,33 @@ export async function migratePalettesToMemories(storage: KeyValueStorage): Promi
 ```
 
 Step 4 is the safety interlock: a migration that cannot produce valid output does
-not produce *any* output.
+not produce _any_ output.
 
 ## Field mapping
 
 Total. Nothing in a v1 palette is discarded.
 
-| v1 `Palette`      | v2 `ChromaticMemory`                                   |
-| ----------------- | ------------------------------------------------------ |
-| `id`              | `id` — **preserved**, so `palette/[id]` deep links work |
-| `createdAt`       | `createdAt`, `updatedAt`                                |
-| `capturedAt`      | `capturedAt`                                            |
-| `name`            | `personalContext.title`                                 |
-| `source`          | `palette.source`                                        |
-| `colors`          | `palette.colors` — byte-identical, same `colorSchema`   |
-| `deltaE`          | `palette.deltaE`                                        |
-| `confidence`      | `palette.confidence`                                    |
-| `space`           | `palette.space`                                         |
-| `tuned`           | `palette.tuned`                                         |
-| `tags`            | `personalContext.tags`                                  |
-| `location`        | `personalContext.location`                              |
-| `photoUri`        | `image.localUri`; `null` → `PALETTE_ONLY_IMAGE` sentinel |
-| `setIds`          | `collectionIds`                                         |
-| `isPinned`        | `isPinned`                                              |
-| —                 | `atmosphere` = `readAtmosphere(colors)` — **computed**  |
-| —                 | `visualAnalysis` = `null`                               |
-| —                 | `musicPairing` = `{ status: 'unpaired', … }`            |
-| —                 | `facets` = `deriveFacets(...)` — computed               |
+| v1 `Palette` | v2 `ChromaticMemory`                                     |
+| ------------ | -------------------------------------------------------- |
+| `id`         | `id` — **preserved**, so `palette/[id]` deep links work  |
+| `createdAt`  | `createdAt`, `updatedAt`                                 |
+| `capturedAt` | `capturedAt`                                             |
+| `name`       | `personalContext.title`                                  |
+| `source`     | `palette.source`                                         |
+| `colors`     | `palette.colors` — byte-identical, same `colorSchema`    |
+| `deltaE`     | `palette.deltaE`                                         |
+| `confidence` | `palette.confidence`                                     |
+| `space`      | `palette.space`                                          |
+| `tuned`      | `palette.tuned`                                          |
+| `tags`       | `personalContext.tags`                                   |
+| `location`   | `personalContext.location`                               |
+| `photoUri`   | `image.localUri`; `null` → `PALETTE_ONLY_IMAGE` sentinel |
+| `setIds`     | `collectionIds`                                          |
+| `isPinned`   | `isPinned`                                               |
+| —            | `atmosphere` = `readAtmosphere(colors)` — **computed**   |
+| —            | `visualAnalysis` = `null`                                |
+| —            | `musicPairing` = `{ status: 'unpaired', … }`             |
+| —            | `facets` = `deriveFacets(...)` — computed                |
 
 Two derived fields (`atmosphere`, `facets`) come from pure functions over data we
 already have, so migration needs no network and cannot partially fail.
@@ -155,16 +155,16 @@ restoration.
 
 ## Tests required before this ships
 
-| Test                                                            | Asserts                          |
-| --------------------------------------------------------------- | -------------------------------- |
-| Migrates a realistic v1 library of 50                            | count, ids, colours preserved    |
-| Round-trips every v1 field                                       | no data loss                     |
-| Palette with `photoUri: null`                                    | legacy colour-only memory        |
-| One corrupt record among valid ones                              | 49 migrate, 1 quarantined        |
-| All records corrupt                                              | abort, v1 intact, no v2 written  |
-| Runs twice                                                       | idempotent, no duplicates        |
-| Interrupted before state write                                   | re-runs cleanly next launch      |
-| Empty / absent v1 key                                            | clean new install                |
-| `memoryToPalette` over migrated data                             | tools keep working               |
-| Reading a memory list with one invalid record                    | rest still load; problem reported|
-| Serialised memory contains no audio URL                          | preview URLs never persisted     |
+| Test                                          | Asserts                           |
+| --------------------------------------------- | --------------------------------- |
+| Migrates a realistic v1 library of 50         | count, ids, colours preserved     |
+| Round-trips every v1 field                    | no data loss                      |
+| Palette with `photoUri: null`                 | legacy colour-only memory         |
+| One corrupt record among valid ones           | 49 migrate, 1 quarantined         |
+| All records corrupt                           | abort, v1 intact, no v2 written   |
+| Runs twice                                    | idempotent, no duplicates         |
+| Interrupted before state write                | re-runs cleanly next launch       |
+| Empty / absent v1 key                         | clean new install                 |
+| `memoryToPalette` over migrated data          | tools keep working                |
+| Reading a memory list with one invalid record | rest still load; problem reported |
+| Serialised memory contains no audio URL       | preview URLs never persisted      |

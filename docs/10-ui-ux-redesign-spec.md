@@ -17,22 +17,22 @@ dashboard, and a dashboard is the failure mode this spec exists to prevent.
 it is the one element in the product that can legitimately be four things at
 once:
 
-| Context             | The ribbon is…                                 |
-| ------------------- | ---------------------------------------------- |
-| Memories card       | the palette                                    |
-| Analysis            | colour lifting out of the photograph           |
-| Memory detail       | the photograph's edge                          |
-| **Playing**         | **the playback progress bar**                  |
-| Journey             | the timeline across several memories           |
+| Context       | The ribbon is…                       |
+| ------------- | ------------------------------------ |
+| Memories card | the palette                          |
+| Analysis      | colour lifting out of the photograph |
+| Memory detail | the photograph's edge                |
+| **Playing**   | **the playback progress bar**        |
+| Journey       | the timeline across several memories |
 
-Colour *is* the timeline. That is the product's gesture, and it is unavailable to
+Colour _is_ the timeline. That is the product's gesture, and it is unavailable to
 anyone who did not compute real area weights.
 
 ## Anti-patterns, explicitly
 
 Not a card dashboard · not a Spotify clone (no persistent bottom bar, no
 green-on-black, no infinite lists) · not a photo gallery (no uniform grid) · not
-neon cyberpunk · not glassmorphism-as-a-look (chroma's glass is a *material*
+neon cyberpunk · not glassmorphism-as-a-look (chroma's glass is a _material_
 already defined in tokens, used sparingly) · not disconnected gradients · not
 clinical.
 
@@ -74,7 +74,7 @@ type SkinMusic = {
 ```
 
 **No feature screen writes a colour.** `matchStrength[2]` in chroma is a warm
-violet; in Swiss it is the signal red at 100% — the same *meaning*, resolved by
+violet; in Swiss it is the signal red at 100% — the same _meaning_, resolved by
 the skin.
 
 ## Chroma — cinematic
@@ -83,7 +83,7 @@ The expressive default. An instrument in a dark room.
 
 - **Photography is lit, not framed.** Full-bleed with an ambient field that has
   taken the photograph's own colour (`useChromaticSurface` already does this).
-- Colour emerges *from* the image: the ribbon rises out of the photograph's foot
+- Colour emerges _from_ the image: the ribbon rises out of the photograph's foot
   on a shared-element transition, it does not appear beside it.
 - Album art sits in a chromatic field derived from the memory's palette, so
   arbitrary artwork is held by the moment's colour rather than clashing with it.
@@ -116,7 +116,7 @@ Not chroma with effects off. A different premise: a printed record sleeve note.
   place Swiss allows itself a voice.
 
 The test that Swiss is not chroma-with-effects-off: a Swiss screenshot and a
-chroma screenshot of the same memory should differ in *layout*, not only in
+chroma screenshot of the same memory should differ in _layout_, not only in
 palette. If they only differ in colour, the Swiss design has failed.
 
 ## Screens
@@ -160,7 +160,7 @@ works. Nothing here is a spinner over a blank screen.
 
 Full-height candidate cards in a horizontal pager (`ui/Carousel.tsx` exists, 320
 LOC). 3–5 cards, position indicated, ends hard-stopped — a finite choice that
-*feels* finite.
+_feels_ finite.
 
 Behind the cards: the memory's own chromatic field, still holding the
 photograph's colour. The user has not left their moment.

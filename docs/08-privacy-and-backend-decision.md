@@ -6,14 +6,14 @@ The previous position was **no backend, no account, no telemetry**
 (`archive/25 §1`), stated as a position rather than a gap. It is incompatible
 with two of the three things the restored vision wants.
 
-| Capability                       | Needs a secret? | Verdict                          |
-| -------------------------------- | --------------- | -------------------------------- |
-| Colour extraction, ΔE00, roles   | No              | Stays fully on device            |
-| Atmosphere reading, MusicIntent  | No              | Stays fully on device            |
-| iTunes Search: search + previews | **No**          | Direct from device               |
-| Deezer search + previews         | **No**          | Direct from device               |
-| Apple Music API                  | **Yes** (.p8)   | Needs a token endpoint           |
-| LLM image analysis / explanation | **Yes**         | Needs a proxy                    |
+| Capability                       | Needs a secret? | Verdict                |
+| -------------------------------- | --------------- | ---------------------- |
+| Colour extraction, ΔE00, roles   | No              | Stays fully on device  |
+| Atmosphere reading, MusicIntent  | No              | Stays fully on device  |
+| iTunes Search: search + previews | **No**          | Direct from device     |
+| Deezer search + previews         | **No**          | Direct from device     |
+| Apple Music API                  | **Yes** (.p8)   | Needs a token endpoint |
+| LLM image analysis / explanation | **Yes**         | Needs a proxy          |
 
 **So: "no backend" survives for the entire free, default product.** The core
 loop — capture → palette → atmosphere → intent → search → preview → save — runs
@@ -21,7 +21,7 @@ with no server, no account, and no secret in the bundle. That is the shipping
 configuration.
 
 A backend is required only for the two optional upgrades. It must therefore be
-*optional at runtime*, not a hard dependency, and its absence must be a
+_optional at runtime_, not a hard dependency, and its absence must be a
 first-class configuration rather than a broken app.
 
 ## The minimal secure boundary
@@ -60,18 +60,18 @@ all equivalent here). Requirements:
 
 ## What leaves the device, exactly
 
-| Data                    | Leaves?               | To whom            | Why                     |
-| ----------------------- | --------------------- | ------------------ | ----------------------- |
-| Original photograph     | **Never**             | —                  | —                       |
-| 1024px JPEG copy        | Only with consent, on | Our edge → model   | Caption and scene       |
-| EXIF                    | **Never** — stripped  | —                  | —                       |
-| GPS / precise location  | **Never**             | —                  | Not sent even if stored |
-| Palette hex values      | No                    | —                  | Intent is computed local|
-| Search terms (genre, mood words) | Yes         | Music provider     | Finding tracks          |
-| Device locale / market  | Yes                   | Music provider     | Regional catalogue      |
-| User note / title       | **Never**             | —                  | —                       |
-| Selected track ids      | **Never**             | —                  | Feedback stays local    |
-| Analytics               | Nothing               | —                  | Transport is a no-op    |
+| Data                             | Leaves?               | To whom          | Why                      |
+| -------------------------------- | --------------------- | ---------------- | ------------------------ |
+| Original photograph              | **Never**             | —                | —                        |
+| 1024px JPEG copy                 | Only with consent, on | Our edge → model | Caption and scene        |
+| EXIF                             | **Never** — stripped  | —                | —                        |
+| GPS / precise location           | **Never**             | —                | Not sent even if stored  |
+| Palette hex values               | No                    | —                | Intent is computed local |
+| Search terms (genre, mood words) | Yes                   | Music provider   | Finding tracks           |
+| Device locale / market           | Yes                   | Music provider   | Regional catalogue       |
+| User note / title                | **Never**             | —                | —                        |
+| Selected track ids               | **Never**             | —                | Feedback stays local     |
+| Analytics                        | Nothing               | —                | Transport is a no-op     |
 
 The search terms are the only unavoidable disclosure in the default
 configuration, and they are genre and mood words — "ambient instrumental calm" —
@@ -86,7 +86,7 @@ moment it would first run:
 > A 1024-pixel copy of this photo is sent to our analysis service and deleted
 > immediately. It is never stored, never linked to you, and location is never
 > sent. Colours and music work without this.
-> **[ Not now ]  [ Turn on ]**
+> **[ Not now ] [ Turn on ]**
 
 Stored as `preferences.imageAnalysisConsent: 'granted' | 'denied' | 'unasked'`.
 Revocable in You → Privacy, alongside a plain-language statement of what has been

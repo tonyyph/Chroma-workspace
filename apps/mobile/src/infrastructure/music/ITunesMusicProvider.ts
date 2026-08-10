@@ -3,6 +3,7 @@ import {
   type MusicPreview,
   type MusicProvider,
   type MusicSearchQuery,
+  type MusicSearchResult,
   type MusicTrackReference,
 } from '@chromawave/domain';
 import { Linking } from 'react-native';
@@ -76,18 +77,22 @@ export class ITunesMusicProvider implements MusicProvider {
   async search(
     queries: readonly MusicSearchQuery[],
     signal: AbortSignal,
-  ): Promise<readonly MusicTrackReference[]> {
+  ): Promise<readonly MusicSearchResult[]> {
     const settled = await Promise.allSettled(
       queries.slice(0, MAX_PARALLEL_QUERIES).map((query) => this.runQuery(query, signal)),
     );
 
     // Deduplicated across queries by provider id: two intent queries frequently
-    // surface the same record, and the ranker should see it once.
-    const byId = new Map<string, MusicTrackReference>();
+    // surface the same record, and the ranker should see it once. The first
+    // query to find it keeps the provenance, which is the most specific genre
+    // term that returned it since `queriesForIntent` orders them that way.
+    const byId = new Map<string, MusicSearchResult>();
     for (const outcome of settled) {
       if (outcome.status !== 'fulfilled') continue;
-      for (const track of outcome.value) {
-        if (!byId.has(track.providerTrackId)) byId.set(track.providerTrackId, track);
+      for (const result of outcome.value) {
+        if (!byId.has(result.track.providerTrackId)) {
+          byId.set(result.track.providerTrackId, result);
+        }
       }
     }
 
@@ -114,10 +119,7 @@ export class ITunesMusicProvider implements MusicProvider {
     return track ?? null;
   }
 
-  async getPreview(
-    track: MusicTrackReference,
-    signal: AbortSignal,
-  ): Promise<MusicPreview | null> {
+  async getPreview(track: MusicTrackReference, signal: AbortSignal): Promise<MusicPreview | null> {
     const known = this.previews.get(track.providerTrackId);
     if (known) {
       return {
@@ -151,7 +153,7 @@ export class ITunesMusicProvider implements MusicProvider {
   private async runQuery(
     query: MusicSearchQuery,
     signal: AbortSignal,
-  ): Promise<MusicTrackReference[]> {
+  ): Promise<MusicSearchResult[]> {
     const url = new URL(ENDPOINT);
     url.searchParams.set('media', 'music');
     url.searchParams.set('entity', 'song');
@@ -162,7 +164,8 @@ export class ITunesMusicProvider implements MusicProvider {
     const results = await this.request(url, signal);
     return results
       .map((result) => this.normalise(result))
-      .filter((track): track is MusicTrackReference => track !== null);
+      .filter((track): track is MusicTrackReference => track !== null)
+      .map((track) => ({ track, matchedGenre: query.genre }));
   }
 
   private async request(url: URL, signal: AbortSignal): Promise<ITunesResult[]> {

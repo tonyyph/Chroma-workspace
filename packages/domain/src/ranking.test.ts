@@ -19,10 +19,7 @@ const atmosphere = (overrides: Partial<AtmosphereReading> = {}): AtmosphereReadi
 
 const intent = deriveIntent({ atmosphere: atmosphere() });
 
-const track = (
-  id: string,
-  overrides: Partial<MusicTrackReference> = {},
-): MusicTrackReference => ({
+const track = (id: string, overrides: Partial<MusicTrackReference> = {}): MusicTrackReference => ({
   provider: 'itunes',
   providerTrackId: id,
   title: `Track ${id}`,
@@ -56,9 +53,7 @@ describe('rankCandidates', () => {
 
   it('is deterministic', () => {
     const candidates = [track('a'), track('b'), track('c'), track('d')];
-    expect(rankCandidates({ intent, candidates })).toEqual(
-      rankCandidates({ intent, candidates }),
-    );
+    expect(rankCandidates({ intent, candidates })).toEqual(rankCandidates({ intent, candidates }));
   });
 
   it('does not depend on the order the provider returned results in', () => {
@@ -188,10 +183,7 @@ describe('accumulatePreference', () => {
       [{ providerTrackId: 'a', signal: 'selected', at: quarterAgo, genres: ['jazz'] }],
       now,
     );
-    expect(stale.genreWeights.get('jazz')!).toBeCloseTo(
-      fresh.genreWeights.get('jazz')! / 2,
-      5,
-    );
+    expect(stale.genreWeights.get('jazz')!).toBeCloseTo(fresh.genreWeights.get('jazz')! / 2, 5);
   });
 
   it('treats a future timestamp as current rather than unboundedly important', () => {

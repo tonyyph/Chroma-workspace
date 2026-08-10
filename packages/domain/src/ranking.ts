@@ -4,6 +4,7 @@ import type { MusicIntent } from './intent';
 import type {
   MusicRecommendation,
   MusicRecommendationReason,
+  MusicSearchResult,
   MusicTrackReference,
 } from './music';
 
@@ -56,13 +57,25 @@ const paceDurationFit = (intent: MusicIntent, durationMs: number | null): number
 
 export type RankingInput = {
   intent: MusicIntent;
-  candidates: readonly MusicTrackReference[];
+  /**
+   * Accepts search results or bare tracks.
+   *
+   * A `MusicSearchResult` carries which genre query surfaced it, which is a far
+   * better genre signal than the provider's own taxonomy — iTunes files Slowdive
+   * under "Alternative", so comparing against `primaryGenreName` misses a match
+   * the search itself already proved. Bare tracks are still accepted, for
+   * re-ranking a stored set where that provenance is gone.
+   */
+  candidates: readonly (MusicSearchResult | MusicTrackReference)[];
   preference?: AccumulatedPreference;
   /** Which ids we could resolve a playable excerpt for. */
   previewAvailable?: ReadonlySet<string>;
   /** How many to return. The product shows a finite choice, not a catalogue. */
   limit?: number;
 };
+
+const asResult = (candidate: MusicSearchResult | MusicTrackReference): MusicSearchResult =>
+  'track' in candidate ? candidate : { track: candidate, matchedGenre: null };
 
 /**
  * Deterministic. Same input, same order, every time — which is what makes it
@@ -79,17 +92,23 @@ export function rankCandidates({
   const leadGenre = intent.genres[0]?.toLowerCase() ?? null;
   const intentGenres = new Set(intent.genres.map((genre) => genre.toLowerCase()));
 
-  const scored = candidates.map((track) => {
+  const scored = candidates.map(asResult).map(({ track, matchedGenre }) => {
     const trackGenres = track.genres.map((genre) => genre.toLowerCase());
-    const matchedGenres = trackGenres.filter((genre) => intentGenres.has(genre));
+    const surfacedBy = matchedGenre?.toLowerCase() ?? null;
+
+    // Two independent ways a candidate can be the right genre: the provider says
+    // so, or our own genre query returned it. The second is usually the reliable
+    // one, because provider taxonomies are far coarser than the intent's terms.
+    const taxonomyMatch = trackGenres.filter((genre) => intentGenres.has(genre));
+    const searchMatch = surfacedBy !== null && intentGenres.has(surfacedBy);
 
     let score = 0.5;
     const reasons: MusicRecommendationReason[] = [];
 
-    if (matchedGenres.length > 0) {
+    if (taxonomyMatch.length > 0 || searchMatch) {
       score += RANKING_WEIGHTS.genreMatch;
       reasons.push({ kind: 'genre', weight: 1 });
-      if (leadGenre !== null && matchedGenres.includes(leadGenre)) {
+      if (leadGenre !== null && (taxonomyMatch.includes(leadGenre) || surfacedBy === leadGenre)) {
         score += RANKING_WEIGHTS.leadGenreBonus;
       }
     }

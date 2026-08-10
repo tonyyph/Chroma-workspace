@@ -382,7 +382,10 @@ function rotate<T>(items: readonly T[], by: number): T[] {
  * Moves genres the user has chosen before toward the front of the curated list.
  * Order only — nothing is added and nothing is removed.
  */
-function preferGenres(genres: readonly string[], preference: AccumulatedPreference | null): string[] {
+function preferGenres(
+  genres: readonly string[],
+  preference: AccumulatedPreference | null,
+): string[] {
   if (!preference || preference.genreWeights.size === 0) return [...genres];
   return [...genres].sort(
     (left, right) =>

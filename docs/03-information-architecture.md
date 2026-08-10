@@ -29,13 +29,13 @@ Vietnamese labels and a 56pt raised action in the middle.
                             capture
 ```
 
-| Tab             | Route            | Was            | Holds                                                        |
-| --------------- | ---------------- | -------------- | ------------------------------------------------------------ |
-| **Today**       | `(tabs)/index`   | *new*          | On this day · continue an unpaired memory · a palette-and-sound journey · this week's field note |
-| **Memories**    | `(tabs)/memories`| Library        | The archive. Month bands, search, filters, paired/unpaired    |
-| **◉ Capture**   | `capture` modal  | unchanged      | Camera · import                                               |
-| **Collections** | `(tabs)/collections` | Sets       | Consumer collections; Working Set mode inside one             |
-| **You**         | `(tabs)/you`     | unchanged      | Preferences, skin, audio, privacy, Pro, colour tools index    |
+| Tab             | Route                | Was       | Holds                                                                                            |
+| --------------- | -------------------- | --------- | ------------------------------------------------------------------------------------------------ |
+| **Today**       | `(tabs)/index`       | _new_     | On this day · continue an unpaired memory · a palette-and-sound journey · this week's field note |
+| **Memories**    | `(tabs)/memories`    | Library   | The archive. Month bands, search, filters, paired/unpaired                                       |
+| **◉ Capture**   | `capture` modal      | unchanged | Camera · import                                                                                  |
+| **Collections** | `(tabs)/collections` | Sets      | Consumer collections; Working Set mode inside one                                                |
+| **You**         | `(tabs)/you`         | unchanged | Preferences, skin, audio, privacy, Pro, colour tools index                                       |
 
 **Explore is absorbed.** Its search and discovery filters move into Memories as a
 search field and filter rail, which is where users look for them. Its route
@@ -46,7 +46,7 @@ survives as a redirect so no deep link breaks.
 professional utilities; they should be findable and should not greet anyone.
 
 **Why Today is the first tab.** The capture flow is one button away from
-everywhere. What the app lacked was a reason to *open* it when you have no photo
+everywhere. What the app lacked was a reason to _open_ it when you have no photo
 to take. Today answers that with the user's own past — which is also the only
 engagement surface that does not require us to manufacture novelty.
 

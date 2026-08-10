@@ -21,7 +21,7 @@ Precedent: Spotify removed `preview_url` for new apps on 2024-11-27 and killed
 the obvious design for this product. iTunes or Deezer could do the same.
 
 **Mitigation:** `MusicProvider` abstraction from day one; three adapters mapped;
-`'none'` provider degrades honestly; memories store *metadata*, never preview
+`'none'` provider degrades honestly; memories store _metadata_, never preview
 URLs, so a provider change cannot break saved data — only new playback.
 **Residual:** medium, structurally contained. **Resolved by:** nothing; monitored.
 
@@ -42,7 +42,7 @@ not a build blocker.**
 
 Library, palette detail, capture result, Working Sets, chromatic adaptation, hero
 transition and the entire Swiss skin are Implemented and unverified. The hero
-transition's *computed* landing position is the specific worry. Building the
+transition's _computed_ landing position is the specific worry. Building the
 music UI on top multiplies the debugging surface.
 
 **Evidence this is real:** two regressions last session were caught by lint
@@ -55,7 +55,7 @@ shipping chroma's pill radius into Swiss.
 ## R5 · The match is unconvincing — **high, product-level**
 
 If recommendations feel arbitrary, no amount of engineering saves the product.
-Ranking is intent-to-*query* matching over keyword search; we cannot measure a
+Ranking is intent-to-_query_ matching over keyword search; we cannot measure a
 track's true valence or energy, because the endpoints that once exposed them are
 restricted (`06`).
 
@@ -83,7 +83,7 @@ search keystroke** (`01 §13`). Adding mood/colour/genre filters multiplies it.
 
 **Mitigation:** month signatures cached by membership hash; filtering on
 precomputed scalar `facets`, never colour maths; grouping memoised on filtered
-ids. Ships *before* the filters, per `12` Phase 2 item 9.
+ids. Ships _before_ the filters, per `12` Phase 2 item 9.
 **Residual:** low once done. **Measured by:** `14`.
 
 ## R8 · Swiss becomes chroma with the effects off — **medium**
@@ -92,7 +92,7 @@ The two-skin architecture is genuine, but music surfaces are new and the lazy
 path is to give Swiss the same layout in different colours. That would waste the
 architecture and produce a worse product than one skin.
 
-**Mitigation:** `10` specifies Swiss's music surfaces as *different forms* —
+**Mitigation:** `10` specifies Swiss's music surfaces as _different forms_ —
 specimen strip, record note, rule progress, pull quote. The stated test: two
 screenshots of the same memory must differ in layout, not only in palette.
 **Residual:** medium — this needs design judgment, which no test supplies.
@@ -143,7 +143,7 @@ Fifteen documents describe a large product. The failure mode is redesigning nine
 screens and discovering at the end that previews do not play.
 
 **Mitigation:** Phase 2 is one journey and explicitly forbids secondary screens;
-Phase 3 is gated on Phase 2 being *Verified*, not merely built.
+Phase 3 is gated on Phase 2 being _Verified_, not merely built.
 **Residual:** low if the gate is honoured.
 
 ## R14 · Paywall that cannot take money — **low, but it is a lie**

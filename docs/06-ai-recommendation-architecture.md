@@ -12,8 +12,8 @@ money per capture, fail offline, be untestable, and be structurally capable of
 inventing tracks. A deterministic core with an optional narrator is better on
 every axis that matters.
 
-What the LLM is genuinely good at, and is used for: reading *what is in the
-photograph* (a rainy street, a child asleep), and writing one sentence of English
+What the LLM is genuinely good at, and is used for: reading _what is in the
+photograph_ (a rainy street, a child asleep), and writing one sentence of English
 or Vietnamese that connects colour to sound. Neither is on the critical path.
 
 ## The pipeline
@@ -53,15 +53,15 @@ requires network and degrades to a defined state.
 
 `packages/domain/src/atmosphere.ts`. Pure function of a palette. No I/O.
 
-| Dimension    | Computed from                                                             |
-| ------------ | ------------------------------------------------------------------------- |
-| `luminosity` | Σ(weight × OKLCh lightness)                                               |
+| Dimension    | Computed from                                                                                                                            |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `luminosity` | Σ(weight × OKLCh lightness)                                                                                                              |
 | `warmth`     | Weighted circular hue position; warm poles 15°/45°, cool pole 230° — reuses the existing `temperatureForHue` geometry from `color.ts:76` |
-| `saturation` | Σ(weight × chroma) ÷ 0.37 (the practical sRGB OKLCh chroma ceiling), clamped |
-| `contrast`   | max `contrastRatio` over weighted colour pairs, mapped 1:1–21:1 → 0..1     |
-| `spread`     | mean `hexDeltaE00` between the three named roles ÷ 40, clamped            |
-| `coherence`  | `1 − min(1, deltaE / 10)` — reuses the extraction's own confidence basis  |
-| `mood`       | Decision table over the six scalars                                       |
+| `saturation` | Σ(weight × chroma) ÷ 0.37 (the practical sRGB OKLCh chroma ceiling), clamped                                                             |
+| `contrast`   | max `contrastRatio` over weighted colour pairs, mapped 1:1–21:1 → 0..1                                                                   |
+| `spread`     | mean `hexDeltaE00` between the three named roles ÷ 40, clamped                                                                           |
+| `coherence`  | `1 − min(1, deltaE / 10)` — reuses the extraction's own confidence basis                                                                 |
+| `mood`       | Decision table over the six scalars                                                                                                      |
 
 The mood table is a table, not a model — eight labels, explicit thresholds,
 unit-tested at its boundaries:
@@ -111,11 +111,11 @@ a test asserts it is unreachable in a production bundle.
 
 ```ts
 export const musicIntentSchema = z.object({
-  valence: z.number().min(0).max(1),      // sombre → bright
-  energy: z.number().min(0).max(1),       // still → driving
-  warmth: z.number().min(0).max(1),       // cool/electronic → warm/organic
-  intimacy: z.number().min(0).max(1),     // vast → close
-  tension: z.number().min(0).max(1),      // resolved → unresolved
+  valence: z.number().min(0).max(1), // sombre → bright
+  energy: z.number().min(0).max(1), // still → driving
+  warmth: z.number().min(0).max(1), // cool/electronic → warm/organic
+  intimacy: z.number().min(0).max(1), // vast → close
+  tension: z.number().min(0).max(1), // resolved → unresolved
   pace: z.enum(['slow', 'medium', 'fast']),
   texture: z.array(z.string().max(24)).max(5),
   genres: z.array(z.string().max(32)).min(1).max(5),
@@ -179,7 +179,7 @@ export interface RecommendationProvider {
 
   explain(input: {
     intent: MusicIntent;
-    candidates: readonly MusicTrackReference[];   // verified. The only tracks in scope.
+    candidates: readonly MusicTrackReference[]; // verified. The only tracks in scope.
     language: Language;
     signal: AbortSignal;
   }): Promise<readonly TrackExplanation[]>;
@@ -205,10 +205,10 @@ are built from genre + texture + era terms and issued in parallel:
 
 ```ts
 export type MusicSearchQuery = {
-  terms: string;              // "ambient instrumental calm"
+  terms: string; // "ambient instrumental calm"
   genre: string | null;
   limit: number;
-  market: string | null;      // ISO-3166-1 alpha-2, from device locale
+  market: string | null; // ISO-3166-1 alpha-2, from device locale
 };
 ```
 
@@ -232,7 +232,7 @@ Candidate axis estimates come from what the catalogue actually gives us — genr
 release year, duration, explicitness — plus the query that found it. We do **not**
 claim to know a track's valence and energy: where Spotify's audio-features
 endpoint would once have supplied them, that endpoint is also restricted for new
-apps (`07`). The honest statement is that ranking is *intent-to-query* matching
+apps (`07`). The honest statement is that ranking is _intent-to-query_ matching
 with a diversity and preference pass, and the reasons shown to the user cite only
 dimensions we actually measured — colour, light, atmosphere — never a fabricated
 audio feature.
@@ -242,15 +242,15 @@ without a preview is shown, marked, and remains selectable.
 
 ## Failure and caching
 
-| Failure                  | Behaviour                                                     |
-| ------------------------ | ------------------------------------------------------------- |
-| Vision timeout/invalid   | `visualAnalysis: null`; deterministic intent only             |
-| Refine timeout/invalid   | Baseline intent                                               |
-| Explain fails            | Reasons composed from structured `reasons[]` and localised     |
-| Provider search fails    | `status: 'failed'`; "Save colours only" offered               |
-| Zero results             | Broaden query once (drop texture terms), then `'failed'`       |
-| All previews missing     | Cards render with "Open in…"; selection still allowed          |
-| Offline                  | Skip stages 2–4 entirely; go straight to result                |
+| Failure                | Behaviour                                                  |
+| ---------------------- | ---------------------------------------------------------- |
+| Vision timeout/invalid | `visualAnalysis: null`; deterministic intent only          |
+| Refine timeout/invalid | Baseline intent                                            |
+| Explain fails          | Reasons composed from structured `reasons[]` and localised |
+| Provider search fails  | `status: 'failed'`; "Save colours only" offered            |
+| Zero results           | Broaden query once (drop texture terms), then `'failed'`   |
+| All previews missing   | Cards render with "Open in…"; selection still allowed      |
+| Offline                | Skip stages 2–4 entirely; go straight to result            |
 
 Caches, all MMKV, all bounded:
 

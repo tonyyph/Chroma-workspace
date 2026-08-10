@@ -160,7 +160,11 @@ describe('withSelectedTrack', () => {
   it('clears any previous failure', () => {
     const failed = {
       ...memory,
-      musicPairing: { ...memory.musicPairing, status: 'failed' as const, error: 'offline' as const },
+      musicPairing: {
+        ...memory.musicPairing,
+        status: 'failed' as const,
+        error: 'offline' as const,
+      },
     };
     expect(withSelectedTrack(failed, track).musicPairing.error).toBeNull();
   });

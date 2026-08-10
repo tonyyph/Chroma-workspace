@@ -8,7 +8,7 @@ A flow is not designed until its failure paths are designed.
 ## A. First-time onboarding
 
 **Today:** five static slides, camera permission on slide 5, time-to-value ≈ 90s
-(`features/onboarding/OnboardingScreen.tsx`). It explains *tuning* and *sharing*
+(`features/onboarding/OnboardingScreen.tsx`). It explains _tuning_ and _sharing_
 before the user has anything to tune or share.
 
 **Target: one screen, then the user's own first memory. Time-to-value < 30s.**
@@ -50,14 +50,14 @@ later" surfaced in Today.
 
 ## B. Capture
 
-The premise is *capturing an atmosphere*, not sampling a colour chip.
+The premise is _capturing an atmosphere_, not sampling a colour chip.
 
 - **Camera** — full-bleed viewfinder, minimal chrome, one shutter. Existing
   `ViewfinderScreen` shutter/haptic/sound path is kept.
 - **Import** — photo library, existing `tools/import` picker logic reused.
 - **No live palette hints.** `usePhotoRead.ts:9` documents that Vision Camera's
   worklets do not compile against RN 0.83's prebuilt React pods. Until that is
-  fixed and *run on a physical device*, the viewfinder makes no live-read claim.
+  fixed and _run on a physical device_, the viewfinder makes no live-read claim.
   `PaletteSource = 'live'` stays in the schema but is never written.
 - Cancel returns without a pending capture; retry re-enters the viewfinder.
 - Permission denial shows recovery copy with a Settings deep link.
@@ -71,13 +71,13 @@ hero — the same image, same position (`11`).
 
 Four named stages, each with real work behind it. No indefinite spinner.
 
-| Stage                     | Work                                     | Typical | Fails to                    |
-| ------------------------- | ---------------------------------------- | ------- | --------------------------- |
-| Reading colour            | Skia downscale + OKLab k-means + ΔE00    | <300ms  | hard stop — retake          |
-| Reading atmosphere        | palette → `AtmosphereReading`            | <5ms    | cannot fail (deterministic) |
-| ⤷ optional: image caption | LLM vision call, if configured           | 1–4s    | skipped, stage still passes |
-| Finding music             | intent → provider search → normalise     | 0.4–2s  | palette-only memory offered |
-| Preparing previews        | HEAD/validate preview URLs, warm first   | <1s     | card marked "no preview"    |
+| Stage                     | Work                                   | Typical | Fails to                    |
+| ------------------------- | -------------------------------------- | ------- | --------------------------- |
+| Reading colour            | Skia downscale + OKLab k-means + ΔE00  | <300ms  | hard stop — retake          |
+| Reading atmosphere        | palette → `AtmosphereReading`          | <5ms    | cannot fail (deterministic) |
+| ⤷ optional: image caption | LLM vision call, if configured         | 1–4s    | skipped, stage still passes |
+| Finding music             | intent → provider search → normalise   | 0.4–2s  | palette-only memory offered |
+| Preparing previews        | HEAD/validate preview URLs, warm first | <1s     | card marked "no preview"    |
 
 **Progressive disclosure is mandatory.** The palette appears the instant stage 1
 finishes — the user watches colours lift out of their photograph while stages 3
@@ -85,12 +85,12 @@ and 4 run. Nothing waits on the network.
 
 **Partial success is the design centre, not an edge case:**
 
-| What failed          | What the user gets                                                   |
-| -------------------- | -------------------------------------------------------------------- |
-| LLM caption          | Everything, minus the prose caption. Reasons fall back to computed.   |
-| Provider search      | Palette + atmosphere + "Add music later". Memory saves as unpaired.   |
-| All previews missing | Cards with metadata and "Open in Apple Music". Selectable, unplayable.|
-| Offline entirely     | Straight to result. Save. Today surfaces it for pairing later.        |
+| What failed          | What the user gets                                                     |
+| -------------------- | ---------------------------------------------------------------------- |
+| LLM caption          | Everything, minus the prose caption. Reasons fall back to computed.    |
+| Provider search      | Palette + atmosphere + "Add music later". Memory saves as unpaired.    |
+| All previews missing | Cards with metadata and "Open in Apple Music". Selectable, unplayable. |
+| Offline entirely     | Straight to result. Save. Today surfaces it for pairing later.         |
 
 Timeouts: 8s image analysis, 6s provider search, 4s preview validation. Each
 abortable, each with one retry on a 5xx or network error, none on a 4xx.
@@ -99,7 +99,7 @@ abortable, each with one retry on a 5xx or network error, none on a 4xx.
 
 ## D. Recommendation and preview
 
-3–5 candidates. Never an endless list — this is a *choice*, not a catalogue.
+3–5 candidates. Never an endless list — this is a _choice_, not a catalogue.
 
 Each card carries **only verified provider metadata**: artwork, track, artist,
 album, preview availability and length, provider attribution, plus a computed
@@ -158,7 +158,7 @@ Replace track · Add to collection · Share · Delete
 ```
 
 The palette ribbon doubling as the playback progress bar is the product's
-signature gesture: colour *is* the timeline. Reduce Motion keeps the ribbon and
+signature gesture: colour _is_ the timeline. Reduce Motion keeps the ribbon and
 draws a static playhead.
 
 **Unpaired memory:** the track block becomes a single "Find music for this
@@ -166,7 +166,7 @@ moment" action. It is the same pairing screen, seeded from the stored palette
 and atmosphere — no re-analysis of the photograph needed.
 
 **Stale track:** if the stored track no longer resolves, the block shows the
-saved metadata (which we own, offline) marked *unavailable*, with "Find a
+saved metadata (which we own, offline) marked _unavailable_, with "Find a
 replacement". Saved metadata is never deleted because the catalogue changed.
 
 ---
@@ -181,14 +181,14 @@ recently played · favourites · legacy colour-only items.
 
 **Performance is a precondition, not a follow-up.** `01 §13` measured ~10⁶ ΔE00
 calls per recompute on a 500-memory library, on every keystroke. Filters
-multiply that. The fix ships *before* the filters:
+multiply that. The fix ships _before_ the filters:
 
 1. `MonthSignature` cached by `(monthKey, memberIds hash)` and recomputed only
    when membership changes — the same treatment `PaletteSet.merged` already gets.
 2. Filtering operates on precomputed scalar facets stored on the memory
    (`dominantHue`, `energy`, `warmth`, `paired`), never on colour comparison.
-3. Search debounced (`useDebounced` exists), grouping memoised on the *filtered
-   id list*, not the object array.
+3. Search debounced (`useDebounced` exists), grouping memoised on the _filtered
+   id list_, not the object array.
 
 ---
 
@@ -216,6 +216,6 @@ not a placeholder grid.
 Reached from a Collection's overflow ("Colour system") and from You.
 
 Unchanged capability: merged system, gap analysis, ΔE00 compare matrix, export.
-It now operates over the palettes *of memories* rather than over standalone
+It now operates over the palettes _of memories_ rather than over standalone
 palettes — the same records, reached through the new aggregate. `mergePalettes`,
 `paletteGaps` and every `tools/*` screen keep their current inputs (`09`).
