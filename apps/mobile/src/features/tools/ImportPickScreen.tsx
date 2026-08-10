@@ -1,4 +1,4 @@
-import { round, space, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import { makeColor, type Color, type ExtractionResult } from '@chromawave/domain';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -7,8 +7,8 @@ import { StyleSheet, View } from 'react-native';
 import { useImageSampler } from '@/hooks';
 import { hapticsService } from '@/infrastructure/dependencies';
 import { readPalette } from '@/lib';
-import { usePreferences } from '@/providers';
-import { Card, Chip, NavBar, Pressable, Screen, Slider, Text } from '@/ui';
+import { usePreferences, useSkin } from '@/providers';
+import { Card, Chip, NavBar, Pressable, Screen, Slider, Text, useStyles } from '@/ui';
 
 const MODES = ['AUTO', 'MANUAL', 'EDGES'] as const;
 const MAX_POINTS = 8;
@@ -30,6 +30,7 @@ export function ImportPickScreen({
   /** The photo travels with the colours — the result sheet and card both show it. */
   onExtract: (colors: readonly Color[], photoUri: string | null) => void;
 }) {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   const [uri, setUri] = useState<string | null>(null);
   const [points, setPoints] = useState<readonly Point[]>([]);
@@ -301,48 +302,49 @@ export function ImportPickScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  canvasWrap: { paddingHorizontal: space.gutter, paddingTop: space.md },
-  canvas: {
-    height: 400,
-    borderRadius: round.media,
-    backgroundColor: ui.bg.media,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  point: { position: 'absolute', borderWidth: 3, borderColor: '#FFFFFF' },
-  canvasHint: {
-    position: 'absolute',
-    right: space.cardGap,
-    bottom: space.cardGap,
-    backgroundColor: ui.scrim.strong,
-    borderRadius: 11,
-    paddingHorizontal: space.xs,
-    paddingVertical: 8,
-  },
-  controls: { paddingHorizontal: space.gutter, paddingTop: space.md + 2, gap: space.sm },
-  controlHead: { flexDirection: 'row', justifyContent: 'space-between' },
-  modes: { flexDirection: 'row', gap: space.xs },
-  preview: {
-    flexDirection: 'row',
-    gap: space.xs,
-    paddingHorizontal: space.gutter,
-    paddingTop: space.gutter,
-  },
-  swatch: {
-    flex: 1,
-    height: 56,
-    borderRadius: round.control,
-    justifyContent: 'flex-end',
-    padding: space.xs,
-  },
-  swatchLabel: { color: 'rgba(255,255,255,.9)' },
-  swatchEmpty: {
-    backgroundColor: 'rgba(237,234,227,.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(237,234,227,.28)',
-    borderStyle: 'dashed',
-  },
-  hint: { marginHorizontal: space.gutter, marginTop: space.md },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    canvasWrap: { paddingHorizontal: space.gutter, paddingTop: space.md },
+    canvas: {
+      height: 400,
+      borderRadius: skin.round.media,
+      backgroundColor: skin.ui.bg.media,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+    },
+    point: { position: 'absolute', borderWidth: 3, borderColor: '#FFFFFF' },
+    canvasHint: {
+      position: 'absolute',
+      right: space.cardGap,
+      bottom: space.cardGap,
+      backgroundColor: skin.ui.scrim.strong,
+      borderRadius: 11,
+      paddingHorizontal: space.xs,
+      paddingVertical: 8,
+    },
+    controls: { paddingHorizontal: space.gutter, paddingTop: space.md + 2, gap: space.sm },
+    controlHead: { flexDirection: 'row', justifyContent: 'space-between' },
+    modes: { flexDirection: 'row', gap: space.xs },
+    preview: {
+      flexDirection: 'row',
+      gap: space.xs,
+      paddingHorizontal: space.gutter,
+      paddingTop: space.gutter,
+    },
+    swatch: {
+      flex: 1,
+      height: 56,
+      borderRadius: skin.round.control,
+      justifyContent: 'flex-end',
+      padding: space.xs,
+    },
+    swatchLabel: { color: 'rgba(255,255,255,.9)' },
+    swatchEmpty: {
+      backgroundColor: skin.ui.fill.chipGhost,
+      borderWidth: 1,
+      borderColor: skin.ui.border.control,
+      borderStyle: 'dashed',
+    },
+    hint: { marginHorizontal: space.gutter, marginTop: space.md },
+  });

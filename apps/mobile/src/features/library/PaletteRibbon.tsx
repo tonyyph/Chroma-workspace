@@ -1,11 +1,10 @@
-import { space, ui, uiMotion } from '@chromawave/design-tokens';
+import { space, uiMotion } from '@chromawave/design-tokens';
 import { shortAge, type Palette } from '@chromawave/domain';
-import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useCallback, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { usePreferences } from '@/providers';
+import { usePreferences, useSkin } from '@/providers';
 import { useHeroStore } from '@/store/heroStore';
-import { Meta, Pressable, Text } from '@/ui';
+import { Gradient, Meta, Pressable, Text } from '@/ui';
 import { PalettePhoto } from './PalettePhoto';
 
 /**
@@ -39,6 +38,7 @@ export const PaletteRibbon = memo(function PaletteRibbon({
   onOpen: (palette: Palette) => void;
 }) {
   const { t } = usePreferences();
+  const skin = useSkin();
   const band = useRef<View>(null);
   const begin = useHeroStore((state) => state.begin);
 
@@ -62,12 +62,16 @@ export const PaletteRibbon = memo(function PaletteRibbon({
       accessibilityLabel={`${palette.name}, ${t('palette.colourCount', { count: palette.colors.length })}`}
       accessibilityRole="button"
       onPress={open}
-      style={({ pressed }) => [styles.row, pressed && { opacity: uiMotion.listPress.opacity }]}
+      style={({ pressed }) => [
+        styles.row,
+        { borderBottomColor: skin.ui.border.hairlineStrong },
+        pressed && { opacity: uiMotion.listPress.opacity },
+      ]}
     >
       <View
         accessibilityLabel={palette.colors.map((color) => color.hex).join(', ')}
         ref={band}
-        style={styles.band}
+        style={[styles.band, { backgroundColor: skin.ui.bg.media }]}
       >
         {palette.colors.map((color, index) => (
           <View
@@ -78,15 +82,15 @@ export const PaletteRibbon = memo(function PaletteRibbon({
           />
         ))}
 
-        <LinearGradient
-          colors={['rgba(8,7,14,0)', 'rgba(8,7,14,.78)']}
-          locations={[0.42, 1]}
-          pointerEvents="none"
-          style={StyleSheet.absoluteFill}
-        />
+        <Gradient role={skin.effects.scrimBottom('medium')} />
 
         <View style={styles.copy}>
-          <View style={styles.thumb}>
+          <View
+            style={[
+              styles.thumb,
+              { backgroundColor: skin.ui.bg.media, borderRadius: skin.round.swatch },
+            ]}
+          >
             <PalettePhoto palette={palette} style={StyleSheet.absoluteFill} />
           </View>
           <View style={styles.label}>
@@ -109,13 +113,8 @@ export const PaletteRibbon = memo(function PaletteRibbon({
 const styles = StyleSheet.create({
   /** A hairline, not a gap: the ribbon is continuous and the rule is what
    *  separates one reading from the next without breaking the material. */
-  row: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: ui.border.hairlineStrong },
-  band: {
-    height: 172,
-    flexDirection: 'row',
-    backgroundColor: ui.bg.media,
-    justifyContent: 'flex-end',
-  },
+  row: { borderBottomWidth: StyleSheet.hairlineWidth },
+  band: { height: 172, flexDirection: 'row', justifyContent: 'flex-end' },
   copy: {
     position: 'absolute',
     left: space.gutter,
@@ -128,9 +127,7 @@ const styles = StyleSheet.create({
   thumb: {
     width: 26,
     height: 26,
-    borderRadius: 7,
     overflow: 'hidden',
-    backgroundColor: ui.bg.media,
   },
   label: { flex: 1, gap: 1 },
   meta: { fontSize: 9, letterSpacing: 1 },

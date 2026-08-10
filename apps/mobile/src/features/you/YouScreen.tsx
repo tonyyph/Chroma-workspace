@@ -1,4 +1,4 @@
-import { elevation, glass, round, space, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import {
   exportTargetSchema,
   shortAge,
@@ -14,12 +14,13 @@ import { useMemo } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { unreadActivityCount } from '@/features/tools/activity';
 import { usePalettes } from '@/hooks';
-import { usePreferences } from '@/providers';
+import { usePreferences, useSkin } from '@/providers';
 import {
   BandCanvas,
   Card,
   CardGroup,
   Chip,
+  Gradient,
   Gutter,
   Icon,
   Meta,
@@ -29,6 +30,7 @@ import {
   SwatchStrip,
   Text,
   Toggle,
+  useStyles,
 } from '@/ui';
 import {
   byRecency,
@@ -66,6 +68,8 @@ const EXPORT_TARGETS = exportTargetSchema.options;
  * grouped surface. Nothing is a card just because the thing above it was.
  */
 export function YouScreen() {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const { palettes } = usePalettes();
   const router = useRouter();
   const {
@@ -141,7 +145,7 @@ export function YouScreen() {
               <SwatchStrip
                 colors={palette.colors}
                 height={38}
-                radius={round.swatch}
+                radius={skin.round.swatch}
                 style={styles.recentStrip}
               />
               <View style={styles.recentCopy}>
@@ -155,7 +159,7 @@ export function YouScreen() {
                   })}
                 </Meta>
               </View>
-              <Icon color={ui.text.tertiary} name="forward" scale="inline" />
+              <Icon color={skin.ui.text.tertiary} name="forward" scale="inline" />
             </Card>
           ))
         ) : (
@@ -296,6 +300,8 @@ export function YouScreen() {
  * than as a picture with a caption.
  */
 function SignatureHero({ palettes }: { palettes: readonly Palette[] }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   const { width } = useWindowDimensions();
   const signature = useMemo(() => signatureColors(palettes), [palettes]);
@@ -306,15 +312,16 @@ function SignatureHero({ palettes }: { palettes: readonly Palette[] }) {
     <View style={styles.hero}>
       <View style={styles.heroArt}>
         <BandCanvas colors={colors} height={HERO_HEIGHT} width={width} />
-        <LinearGradient
-          colors={['rgba(8,7,14,.15)', 'rgba(8,7,14,.9)']}
-          style={StyleSheet.absoluteFill}
-        />
+        <Gradient role={skin.effects.scrimBottom('soft')} />
       </View>
 
       <View style={styles.identity}>
         <View style={styles.identityGlass}>
-          <BlurView intensity={glass.shell.intensity} style={StyleSheet.absoluteFill} tint="dark" />
+          <BlurView
+            intensity={skin.glass.shell.intensity}
+            style={StyleSheet.absoluteFill}
+            tint="dark"
+          />
           <View style={styles.identityRow}>
             <View accessibilityLabel={t('you.signature.label')} style={styles.avatar}>
               {colors.slice(0, 3).map((hex, index) => (
@@ -361,6 +368,7 @@ function StatsRail({
   thisMonth: number;
   onOpenLibrary: (params?: { mood?: ColorMood; style?: VisualStyle }) => void;
 }) {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
 
   return (
@@ -404,6 +412,8 @@ function TasteSection({
   palettes: readonly Palette[];
   onPick: (params: { mood?: ColorMood; style?: VisualStyle }) => void;
 }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   const moods = useMemo(() => moodTaste(palettes).slice(0, 3), [palettes]);
   const styleRanks = useMemo(() => styleTaste(palettes).slice(0, 3), [palettes]);
@@ -427,7 +437,7 @@ function TasteSection({
                   key={entry.value}
                   style={{
                     flex: entry.count,
-                    backgroundColor: MOOD_INK[entry.value],
+                    backgroundColor: moodInk(skin)[entry.value],
                   }}
                 />
               ))}
@@ -466,13 +476,16 @@ function TasteSection({
  * They are the system's own accents rather than new values — warm is the warm
  * accent, cool is info, vibrant is the signal, and so on.
  */
-const MOOD_INK: Record<ColorMood, string> = {
-  warm: ui.accent.warm,
-  cool: ui.accent.info,
-  pastel: '#F1E7D6',
-  monochrome: 'rgba(237,234,227,.45)',
-  vibrant: ui.accent.signal,
-};
+const moodInk = (skin: Skin): Record<ColorMood, string> => ({
+  warm: skin.ui.accent.warm,
+  cool: skin.ui.accent.info,
+  // Pastel and monochrome had no accent of their own and were written as a
+  // bone tint and a bone at 45% — both of which describe chroma's ink and
+  // nothing else. They take the skin's own quiet tones instead.
+  pastel: skin.ui.text.secondary,
+  monochrome: skin.ui.text.tertiary,
+  vibrant: skin.ui.accent.signal,
+});
 
 function CompactStat({
   label,
@@ -487,6 +500,7 @@ function CompactStat({
   accent?: boolean;
   divided?: boolean;
 }) {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   const body = (
     <>
@@ -540,9 +554,11 @@ function Row({
   onPress?: () => void;
   icon?: React.ComponentProps<typeof Icon>['name'];
 }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const body = (
     <View style={styles.row}>
-      {icon ? <Icon color={ui.text.tertiary} name={icon} scale="control" /> : null}
+      {icon ? <Icon color={skin.ui.text.tertiary} name={icon} scale="control" /> : null}
       <Text style={styles.rowLabel}>{label}</Text>
       {trailing ?? (
         <View style={styles.rowValue}>
@@ -551,7 +567,7 @@ function Row({
           </Text>
           {/* The chevron belongs to rows that go somewhere, so it is drawn from
               the handler rather than concatenated into every value string. */}
-          {onPress ? <Icon color={ui.text.tertiary} name="forward" scale="inline" /> : null}
+          {onPress ? <Icon color={skin.ui.text.tertiary} name="forward" scale="inline" /> : null}
         </View>
       )}
     </View>
@@ -566,174 +582,175 @@ function Row({
   );
 }
 
-const styles = StyleSheet.create({
-  hero: {
-    marginBottom: space.sm,
-  },
-  heroArt: {
-    height: HERO_HEIGHT,
-    backgroundColor: ui.bg.media,
-    overflow: 'hidden',
-  },
-  identity: {
-    paddingHorizontal: space.gutter,
-    // The overlap is the layering: the card sits on the join rather than under it.
-    marginTop: -round.sheet * 1.55,
-  },
-  identityGlass: {
-    borderRadius: round.sheet,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: elevation.floating.borderColor,
-    backgroundColor: glass.shell.tint,
-    padding: space.sm + 2,
-    gap: space.xs + 2,
-  },
-  identityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.xs + 4,
-  },
-  avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: round.media,
-    overflow: 'hidden',
-  },
-  identityCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  identityMeta: {
-    color: ui.text.tertiary,
-  },
-  identityBody: {
-    paddingTop: 1,
-  },
-  identityEyebrow: {
-    color: ui.text.quaternary,
-  },
-  signatureStrip: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  signatureChip: {
-    flex: 1,
-    height: 8,
-    borderRadius: 4,
-  },
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    hero: {
+      marginBottom: space.sm,
+    },
+    heroArt: {
+      height: HERO_HEIGHT,
+      backgroundColor: skin.ui.bg.media,
+      overflow: 'hidden',
+    },
+    identity: {
+      paddingHorizontal: space.gutter,
+      // The overlap is the layering: the card sits on the join rather than under it.
+      marginTop: -skin.round.sheet * 1.55,
+    },
+    identityGlass: {
+      borderRadius: skin.round.sheet,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: skin.elevation.floating.borderColor,
+      backgroundColor: skin.glass.shell.tint,
+      padding: space.sm + 2,
+      gap: space.xs + 2,
+    },
+    identityRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space.xs + 4,
+    },
+    avatar: {
+      width: 46,
+      height: 46,
+      borderRadius: skin.round.media,
+      overflow: 'hidden',
+    },
+    identityCopy: {
+      flex: 1,
+      gap: 2,
+    },
+    identityMeta: {
+      color: skin.ui.text.tertiary,
+    },
+    identityBody: {
+      paddingTop: 1,
+    },
+    identityEyebrow: {
+      color: skin.ui.text.quaternary,
+    },
+    signatureStrip: {
+      flexDirection: 'row',
+      gap: 4,
+    },
+    signatureChip: {
+      flex: 1,
+      height: 8,
+      borderRadius: 4,
+    },
 
-  statsSection: {
-    paddingTop: space.xs,
-    borderRadius: round.card,
-  },
-  statsRail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: round.control,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: ui.border.hairline,
-    backgroundColor: 'rgba(255,255,255,.018)',
-  },
-  compactStat: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 72,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: space.xxs,
-    paddingVertical: space.xs,
-    gap: 2,
-  },
-  compactStatDivided: {
-    borderLeftWidth: StyleSheet.hairlineWidth,
-    borderColor: ui.border.hairline,
-  },
-  compactStatValue: {
-    color: ui.text.primary,
-  },
-  compactStatValueAccent: {
-    color: ui.action.link,
-  },
-  compactStatLabel: {
-    color: ui.text.tertiary,
-    fontSize: 8.5,
-    letterSpacing: 0.8,
-    textAlign: 'center',
-  },
-  tilePressed: {
-    opacity: 0.75,
-  },
+    statsSection: {
+      paddingTop: space.xs,
+      borderRadius: skin.round.card,
+    },
+    statsRail: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: skin.round.control,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: skin.ui.border.hairline,
+      backgroundColor: 'rgba(255,255,255,.018)',
+    },
+    compactStat: {
+      flex: 1,
+      minWidth: 0,
+      minHeight: 72,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: space.xxs,
+      paddingVertical: space.xs,
+      gap: 2,
+    },
+    compactStatDivided: {
+      borderLeftWidth: StyleSheet.hairlineWidth,
+      borderColor: skin.ui.border.hairline,
+    },
+    compactStatValue: {
+      color: skin.ui.text.primary,
+    },
+    compactStatValueAccent: {
+      color: skin.ui.action.link,
+    },
+    compactStatLabel: {
+      color: skin.ui.text.tertiary,
+      fontSize: 8.5,
+      letterSpacing: 0.8,
+      textAlign: 'center',
+    },
+    tilePressed: {
+      opacity: 0.75,
+    },
 
-  sectionHead: {
-    paddingTop: space.sectionGap,
-  },
-  taste: {
-    paddingTop: space.sm,
-    gap: space.sm,
-  },
-  tasteBar: {
-    flexDirection: 'row',
-    height: 8,
-    borderRadius: 4,
-    overflow: 'hidden',
-    backgroundColor: ui.fill.track,
-  },
-  tasteChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
+    sectionHead: {
+      paddingTop: space.sectionGap,
+    },
+    taste: {
+      paddingTop: space.sm,
+      gap: space.sm,
+    },
+    tasteBar: {
+      flexDirection: 'row',
+      height: 8,
+      borderRadius: 4,
+      overflow: 'hidden',
+      backgroundColor: skin.ui.fill.track,
+    },
+    tasteChips: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
 
-  setMeta: {
-    fontSize: 9,
-    letterSpacing: 1,
-  },
+    setMeta: {
+      fontSize: 9,
+      letterSpacing: 1,
+    },
 
-  recent: {
-    paddingTop: space.sm,
-    gap: 8,
-  },
-  recentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    paddingHorizontal: 13,
-    paddingVertical: 10,
-  },
-  recentStrip: {
-    width: 60,
-  },
-  recentCopy: {
-    flex: 1,
-    gap: 3,
-  },
+    recent: {
+      paddingTop: space.sm,
+      gap: 8,
+    },
+    recentRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space.sm,
+      paddingHorizontal: 13,
+      paddingVertical: 10,
+    },
+    recentStrip: {
+      width: 60,
+    },
+    recentCopy: {
+      flex: 1,
+      gap: 3,
+    },
 
-  group: {
-    paddingTop: space.sm,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: space.sm,
-    minHeight: 24,
-  },
-  rowLabel: {
-    flex: 1,
-    fontSize: 14,
-  },
-  rowValue: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  languageSwitch: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.xs,
-  },
-  footer: {
-    paddingTop: space.gutter,
-  },
-});
+    group: {
+      paddingTop: space.sm,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: space.sm,
+      minHeight: 24,
+    },
+    rowLabel: {
+      flex: 1,
+      fontSize: 14,
+    },
+    rowValue: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    languageSwitch: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space.xs,
+    },
+    footer: {
+      paddingTop: space.gutter,
+    },
+  });

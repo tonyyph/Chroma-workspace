@@ -1,8 +1,8 @@
-import { space, tint, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import { hexDeltaE00, type Palette } from '@chromawave/domain';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { usePreferences } from '@/providers';
+import { usePreferences, useSkin } from '@/providers';
 import {
   ActionSheet,
   Button,
@@ -16,6 +16,7 @@ import {
   ScreenHeader,
   SwatchStrip,
   Text,
+  useStyles,
   type MenuAction,
 } from '@/ui';
 
@@ -42,6 +43,8 @@ export function CompareScreen({
   onSwap: () => void;
   onMerge: () => void;
 }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   const [picking, setPicking] = useState(false);
   const rows = first.colors.slice(0, 3);
@@ -154,9 +157,9 @@ export function CompareScreen({
 
       {closestRow && closestColumn ? (
         <Gutter style={styles.findings}>
-          <Card style={[styles.finding, tint.infoSubtle]}>
+          <Card style={[styles.finding, skin.tint.infoSubtle]}>
             <View style={styles.findingCopy}>
-              <Text style={{ color: tint.infoSubtle.color }} variant="cardTitle">
+              <Text style={{ color: skin.tint.infoSubtle.color }} variant="cardTitle">
                 {t('compare.closest')}
               </Text>
               {/* The card's own title already says these two are a pair, so the
@@ -174,7 +177,7 @@ export function CompareScreen({
               <Text tone="secondary" variant="chip">
                 {t('compare.swap')}
               </Text>
-              <Icon color={ui.text.secondary} name="swap" scale="inline" />
+              <Icon color={skin.ui.text.secondary} name="swap" scale="inline" />
             </Pressable>
           </Card>
           <Card style={styles.finding}>
@@ -210,6 +213,7 @@ function PaletteTile({
   label: string;
   onPress?: (() => void) | undefined;
 }) {
+  const styles = useStyles(makeStyles);
   return (
     <Card
       accessibilityLabel={onPress ? `${palette.name}. ${label}` : palette.name}
@@ -238,30 +242,31 @@ function describeTemperature(palette: Palette): string {
   return warm ? 'warm 2700K' : 'cool 4200K';
 }
 
-const styles = StyleSheet.create({
-  head: { paddingTop: space.cardGap },
-  cards: { paddingTop: space.md + 2, flexDirection: 'row', gap: space.sm },
-  tile: { flex: 1, overflow: 'hidden' },
-  tileSelected: { borderWidth: 1.5, borderColor: ui.action.primary },
-  tileCopy: { paddingHorizontal: space.sm, paddingVertical: 11, gap: 3 },
-  tileMeta: { fontSize: 9, letterSpacing: 1 },
-  matrixWrap: { paddingTop: space.gutter },
-  matrix: { gap: space.sm },
-  matrixHeader: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-  matrixRow: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-  matrixCorner: { width: 34 },
-  matrixSwatch: { flex: 1, height: 22, borderRadius: 6 },
-  matrixCell: { flex: 1, alignItems: 'center' },
-  findings: { paddingTop: space.md, gap: 10 },
-  finding: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: space.cardGap,
-    paddingVertical: space.cardGap,
-  },
-  findingCopy: { gap: 3 },
-  swap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  flex: { flex: 1 },
-  wide: { flex: 1.3 },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    head: { paddingTop: space.cardGap },
+    cards: { paddingTop: space.md + 2, flexDirection: 'row', gap: space.sm },
+    tile: { flex: 1, overflow: 'hidden' },
+    tileSelected: { borderWidth: 1.5, borderColor: skin.ui.action.primary },
+    tileCopy: { paddingHorizontal: space.sm, paddingVertical: 11, gap: 3 },
+    tileMeta: { fontSize: 9, letterSpacing: 1 },
+    matrixWrap: { paddingTop: space.gutter },
+    matrix: { gap: space.sm },
+    matrixHeader: { flexDirection: 'row', gap: 6, alignItems: 'center' },
+    matrixRow: { flexDirection: 'row', gap: 6, alignItems: 'center' },
+    matrixCorner: { width: 34 },
+    matrixSwatch: { flex: 1, height: 22, borderRadius: 6 },
+    matrixCell: { flex: 1, alignItems: 'center' },
+    findings: { paddingTop: space.md, gap: 10 },
+    finding: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: space.cardGap,
+      paddingVertical: space.cardGap,
+    },
+    findingCopy: { gap: 3 },
+    swap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    flex: { flex: 1 },
+    wide: { flex: 1.3 },
+  });

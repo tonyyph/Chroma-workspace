@@ -1,11 +1,11 @@
-import { round, space, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import type { Palette } from '@chromawave/domain';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { gradientSvg, renderGradientPng, shareFile } from '@/lib';
-import { usePreferences } from '@/providers';
+import { usePreferences, useSkin } from '@/providers';
 import {
   Card,
   Chip,
@@ -16,6 +16,7 @@ import {
   Slider,
   Text,
   Toggle,
+  useStyles,
   type GradientKind,
   type Interpolation,
 } from '@/ui';
@@ -38,6 +39,7 @@ export function GradientScreen({
   onClose: () => void;
   onSave: () => void;
 }) {
+  const styles = useStyles(makeStyles);
   const { width } = useWindowDimensions();
   const router = useRouter();
   const { t } = usePreferences();
@@ -213,39 +215,40 @@ export function GradientScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  canvasWrap: { paddingHorizontal: space.gutter, paddingTop: space.md },
-  canvas: { height: 250, borderRadius: round.media, overflow: 'hidden' },
-  handle: {
-    position: 'absolute',
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-  },
-  kinds: {
-    flexDirection: 'row',
-    gap: space.xs,
-    paddingHorizontal: space.gutter,
-    paddingTop: space.md + 2,
-  },
-  controls: {
-    marginHorizontal: space.gutter,
-    marginTop: space.md + 2,
-    gap: space.md,
-    paddingVertical: 18,
-  },
-  control: { gap: 2 },
-  controlHead: { flexDirection: 'row', justifyContent: 'space-between' },
-  interpolations: { flexDirection: 'row', gap: space.xs, paddingTop: space.xs },
-  grainRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  grainLabel: { fontSize: 14, color: ui.text.primary },
-  error: { paddingHorizontal: space.gutter, paddingTop: space.md },
-  exports: {
-    flexDirection: 'row',
-    gap: space.xs,
-    paddingHorizontal: space.gutter,
-    paddingTop: space.gutter,
-  },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    canvasWrap: { paddingHorizontal: space.gutter, paddingTop: space.md },
+    canvas: { height: 250, borderRadius: skin.round.media, overflow: 'hidden' },
+    handle: {
+      position: 'absolute',
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      borderWidth: 3,
+      borderColor: '#FFFFFF',
+    },
+    kinds: {
+      flexDirection: 'row',
+      gap: space.xs,
+      paddingHorizontal: space.gutter,
+      paddingTop: space.md + 2,
+    },
+    controls: {
+      marginHorizontal: space.gutter,
+      marginTop: space.md + 2,
+      gap: space.md,
+      paddingVertical: 18,
+    },
+    control: { gap: 2 },
+    controlHead: { flexDirection: 'row', justifyContent: 'space-between' },
+    interpolations: { flexDirection: 'row', gap: space.xs, paddingTop: space.xs },
+    grainRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    grainLabel: { fontSize: 14, color: skin.ui.text.primary },
+    error: { paddingHorizontal: space.gutter, paddingTop: space.md },
+    exports: {
+      flexDirection: 'row',
+      gap: space.xs,
+      paddingHorizontal: space.gutter,
+      paddingTop: space.gutter,
+    },
+  });

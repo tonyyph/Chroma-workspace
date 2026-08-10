@@ -1,4 +1,3 @@
-import { ui } from '@chromawave/design-tokens';
 import {
   IBMPlexMono_400Regular,
   IBMPlexMono_500Medium,
@@ -26,6 +25,7 @@ import {
   PreferencesProvider,
   SkinProvider,
   usePreferences,
+  useSkin,
 } from '@/providers';
 import { BackdropDriver, HeroOverlay } from '@/ui';
 
@@ -81,6 +81,7 @@ export default function RootLayout() {
 
 function AppNavigator() {
   const { preferences } = usePreferences();
+  const skin = useSkin();
 
   // Inside the navigator, because it navigates: a router call from above the
   // Stack has nothing mounted to act on.
@@ -108,7 +109,7 @@ function AppNavigator() {
           // Opaque. A transparent stack lets the outgoing screen show through
           // the incoming one for the whole transition — the backdrop is painted
           // inside each screen instead, so nothing here needs to see past it.
-          contentStyle: { backgroundColor: ui.bg.base },
+          contentStyle: { backgroundColor: skin.ui.bg.base },
           // The platform push: the new screen covers the old one, and iOS keeps
           // its interactive back-swipe, which a fade throws away.
           animation: 'default',

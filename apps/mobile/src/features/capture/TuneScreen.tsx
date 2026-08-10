@@ -1,10 +1,10 @@
-import { brandBands, brandColors, round, space, tint, ui } from '@chromawave/design-tokens';
+import { brandBands, brandColors, space, type Skin } from '@chromawave/design-tokens';
 import { contrastRatio, makeColor, type ColorRole, type Palette } from '@chromawave/domain';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { hapticsService } from '@/infrastructure/dependencies';
-import { usePreferences } from '@/providers';
-import { BandCanvas, Card, Chip, Meta, NavBar, Screen, Slider, Text } from '@/ui';
+import { usePreferences, useSkin } from '@/providers';
+import { BandCanvas, Card, Chip, Meta, NavBar, Screen, Slider, Text, useStyles } from '@/ui';
 
 /** Only the three named roles are tunable — 'extra' has no band. */
 const ROLES = ['dominant', 'support', 'signal'] as const satisfies readonly ColorRole[];
@@ -28,6 +28,8 @@ export function TuneScreen({
   onCancel: () => void;
   onApply: (next: Palette) => void;
 }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const { width } = useWindowDimensions();
   const { t } = usePreferences();
   const [role, setRole] = useState<ColorRole>('dominant');
@@ -71,7 +73,7 @@ export function TuneScreen({
 
       <View style={styles.preview}>
         <BandCanvas
-          background={ui.bg.media}
+          background={skin.ui.bg.media}
           blur={13}
           colors={bandColors.length >= 3 ? bandColors : brandBands}
           height={190}
@@ -156,9 +158,9 @@ export function TuneScreen({
           <Text variant="cardTitle">{t('tune.contrast.title')}</Text>
           <Meta>{`signal on ink · ${ratio.toFixed(1)}:1 · ${verdict}`}</Meta>
         </View>
-        <View style={[styles.verdict, verdict === 'FAIL' ? tint.danger : tint.info]}>
+        <View style={[styles.verdict, verdict === 'FAIL' ? skin.tint.danger : skin.tint.info]}>
           <Text
-            style={{ color: verdict === 'FAIL' ? tint.danger.color : tint.info.color }}
+            style={{ color: verdict === 'FAIL' ? skin.tint.danger.color : skin.tint.info.color }}
             variant="chip"
           >
             {t(verdict === 'FAIL' ? 'tune.contrast.fail' : 'tune.contrast.pass')}
@@ -178,6 +180,7 @@ function Labelled({
   value: string;
   children: React.ReactNode;
 }) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.labelled}>
       <View style={styles.labelledHead}>
@@ -243,51 +246,52 @@ function applyAdjust(hex: string, adjust: Adjust): string {
     .toUpperCase()}`;
 }
 
-const styles = StyleSheet.create({
-  preview: {
-    marginHorizontal: space.gutter,
-    marginTop: space.md,
-    height: 190,
-    borderRadius: round.media,
-    overflow: 'hidden',
-    backgroundColor: ui.bg.media,
-  },
-  previewChips: {
-    position: 'absolute',
-    right: space.cardGap,
-    top: space.sm,
-    flexDirection: 'row',
-    gap: 6,
-  },
-  roleRow: {
-    flexDirection: 'row',
-    gap: space.xs,
-    paddingHorizontal: space.gutter,
-    paddingTop: space.gutter,
-  },
-  sliders: {
-    marginHorizontal: space.gutter,
-    marginTop: space.cardGap,
-    gap: space.md,
-    paddingVertical: 18,
-  },
-  labelled: { gap: 2 },
-  labelledHead: { flexDirection: 'row', justifyContent: 'space-between' },
-  presets: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: space.xs,
-    paddingHorizontal: space.gutter,
-    paddingTop: space.cardGap,
-  },
-  contrast: {
-    marginHorizontal: space.gutter,
-    marginTop: 'auto',
-    marginBottom: space.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  contrastCopy: { gap: 3 },
-  verdict: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8 },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    preview: {
+      marginHorizontal: space.gutter,
+      marginTop: space.md,
+      height: 190,
+      borderRadius: skin.round.media,
+      overflow: 'hidden',
+      backgroundColor: skin.ui.bg.media,
+    },
+    previewChips: {
+      position: 'absolute',
+      right: space.cardGap,
+      top: space.sm,
+      flexDirection: 'row',
+      gap: 6,
+    },
+    roleRow: {
+      flexDirection: 'row',
+      gap: space.xs,
+      paddingHorizontal: space.gutter,
+      paddingTop: space.gutter,
+    },
+    sliders: {
+      marginHorizontal: space.gutter,
+      marginTop: space.cardGap,
+      gap: space.md,
+      paddingVertical: 18,
+    },
+    labelled: { gap: 2 },
+    labelledHead: { flexDirection: 'row', justifyContent: 'space-between' },
+    presets: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: space.xs,
+      paddingHorizontal: space.gutter,
+      paddingTop: space.cardGap,
+    },
+    contrast: {
+      marginHorizontal: space.gutter,
+      marginTop: 'auto',
+      marginBottom: space.lg,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    contrastCopy: { gap: 3 },
+    verdict: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8 },
+  });

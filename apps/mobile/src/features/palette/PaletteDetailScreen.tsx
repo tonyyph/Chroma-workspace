@@ -1,8 +1,7 @@
-import { round, space, tint, ui } from '@chromawave/design-tokens';
+import { space } from '@chromawave/design-tokens';
 import { readableOn, roledColors, shortAge, type Palette } from '@chromawave/domain';
 import * as Clipboard from 'expo-clipboard';
 import * as Crypto from 'expo-crypto';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
@@ -11,7 +10,7 @@ import { PalettePhoto } from '@/features/library/PalettePhoto';
 import { ToolFallback } from '@/features/tools/ToolFallback';
 import { useAccent, useChromaticSurface, usePalettes } from '@/hooks';
 import { persistPhoto, renderShareCard, shareFile } from '@/lib';
-import { useEntitlement, usePreferences } from '@/providers';
+import { useEntitlement, usePreferences, useSkin } from '@/providers';
 import {
   ActionSheet,
   Button,
@@ -19,6 +18,7 @@ import {
   Chip,
   ColorRow,
   ConfirmSheet,
+  Gradient,
   Gutter,
   Icon,
   InlineError,
@@ -40,6 +40,7 @@ export function PaletteDetailScreen() {
   const router = useRouter();
   const { t, feedback } = usePreferences();
   const watermarkFree = useEntitlement('watermark_free_share');
+  const skin = useSkin();
   const { palettes, loading, save: savePalette, remove: removePalette } = usePalettes();
   const [menuOpen, setMenuOpen] = useState(false);
   const [prompt, setPrompt] = useState<Prompt>(null);
@@ -161,8 +162,8 @@ export function PaletteDetailScreen() {
    * clears AA against the darkest band the scrim leaves showing.
    */
   const titleInk = readableOn(
-    roledColors(palette)[0]?.hex ?? ui.text.primary,
-    palette.colors[0]?.hex ?? ui.bg.base,
+    roledColors(palette)[0]?.hex ?? skin.ui.text.primary,
+    palette.colors[0]?.hex ?? skin.ui.bg.base,
     3,
   );
   const heroLabel = palette.colors.map((swatch) => swatch.hex).join(', ');
@@ -207,7 +208,7 @@ export function PaletteDetailScreen() {
           onPress={router.back}
           style={styles.navButton}
         >
-          <Icon color={ui.text.secondary} name="back" scale="inline" />
+          <Icon color={skin.ui.text.secondary} name="back" scale="inline" />
           <Text tone="secondary" variant="mono">
             {t('palette.back')}
           </Text>
@@ -218,7 +219,7 @@ export function PaletteDetailScreen() {
           hitSlop={12}
           onPress={() => setMenuOpen(true)}
         >
-          <Icon color={ui.text.secondary} name="more" />
+          <Icon color={skin.ui.text.secondary} name="more" />
         </Pressable>
       </Gutter>
 
@@ -235,7 +236,10 @@ export function PaletteDetailScreen() {
           The name sits *on* it, in a colour derived from the palette itself and
           held to AA against the band behind it, so the title and its subject
           are one object instead of a caption under a picture. */}
-      <View accessibilityLabel={heroLabel} style={styles.hero}>
+      <View
+        accessibilityLabel={heroLabel}
+        style={[styles.hero, { backgroundColor: skin.ui.bg.media }]}
+      >
         {palette.photoUri ? (
           <PalettePhoto palette={palette} style={StyleSheet.absoluteFill} />
         ) : null}
@@ -244,17 +248,12 @@ export function PaletteDetailScreen() {
             <View key={swatch.hex} style={{ flex: swatch.weight, backgroundColor: swatch.hex }} />
           ))}
         </View>
-        <LinearGradient
-          colors={['rgba(8,7,14,0)', 'rgba(8,7,14,.35)', 'rgba(8,7,14,.88)']}
-          locations={[0, 0.45, 1]}
-          pointerEvents="none"
-          style={StyleSheet.absoluteFill}
-        />
+        <Gradient role={skin.effects.scrimBottom('strong')} />
         <View style={styles.heroCopy}>
           <Text numberOfLines={3} style={{ color: titleInk }} variant="hero">
             {palette.name}
           </Text>
-          <Meta style={styles.heroMeta}>{meta}</Meta>
+          <Meta tone="secondary">{meta}</Meta>
         </View>
       </View>
 
@@ -353,7 +352,7 @@ export function PaletteDetailScreen() {
         <Pressable
           accessibilityLabel={t('common.cancel')}
           onPress={() => setSharing(false)}
-          style={styles.shareBackdrop}
+          style={[styles.shareBackdrop, { backgroundColor: skin.ui.scrim.strong }]}
         />
         <View style={styles.shareSheet}>
           <ShareSheet
@@ -429,6 +428,7 @@ function ToolRow({
   onPress: () => void;
   locked?: boolean;
 }) {
+  const skinFor = useSkin();
   return (
     <Pressable
       accessibilityLabel={label}
@@ -440,13 +440,13 @@ function ToolRow({
         {label}
       </Text>
       {locked ? (
-        <View style={[styles.pro, tint.pro]}>
-          <Text style={{ color: tint.pro.color }} variant="chip">
+        <View style={[styles.pro, skinFor.tint.pro, { borderRadius: skinFor.round.chip }]}>
+          <Text style={{ color: skinFor.tint.pro.color }} variant="chip">
             PRO
           </Text>
         </View>
       ) : null}
-      <Icon color={ui.text.tertiary} name="forward" scale="inline" />
+      <Icon color={skinFor.ui.text.tertiary} name="forward" scale="inline" />
     </Pressable>
   );
 }
@@ -474,13 +474,12 @@ const styles = StyleSheet.create({
     // Shared with the flight overlay, which computes its destination rather
     // than measuring this — see `HeroTransition`.
     height: HERO_HEIGHT,
-    backgroundColor: ui.bg.media,
     justifyContent: 'flex-end',
   },
   /** Behind the scrim and over the photo — the palette as the ground it came from. */
   heroBands: { ...StyleSheet.absoluteFillObject, flexDirection: 'row', opacity: 0.94 },
   heroCopy: { paddingHorizontal: space.gutter, paddingBottom: space.gutter, gap: space.xs },
-  heroMeta: { color: 'rgba(237,234,227,.72)' },
+
   tags: {
     paddingTop: space.md,
     flexDirection: 'row',
@@ -490,15 +489,12 @@ const styles = StyleSheet.create({
   /** A reference table on the ground, not a raised card competing with the hero. */
   list: { paddingTop: space.sectionGap },
   listRow: { paddingVertical: 13 },
-  listDivider: { borderBottomWidth: 1, borderBottomColor: ui.border.hairline },
+  listDivider: { borderBottomWidth: 1 },
   sectionHead: { paddingTop: space.sectionGap, paddingBottom: space.xs },
   toolRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   toolLabel: { flex: 1 },
-  pro: { borderWidth: 1, borderRadius: round.chip, paddingHorizontal: 8, paddingVertical: 4 },
-  shareBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: ui.scrim.strong,
-  },
+  pro: { borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4 },
+  shareBackdrop: StyleSheet.absoluteFillObject,
   shareSheet: {
     marginTop: 'auto',
   },

@@ -1,10 +1,10 @@
-import { round, space, ui, uiMotion } from '@chromawave/design-tokens';
+import { space, uiMotion, type Skin } from '@chromawave/design-tokens';
 import { shortAge } from '@chromawave/domain';
 import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { type TrendingItem } from '@/data';
-import { usePreferences } from '@/providers';
-import { Card, Chip, Meta, Pressable, SwatchStrip, Text } from '@/ui';
+import { usePreferences, useSkin } from '@/providers';
+import { Card, Chip, Meta, Pressable, SwatchStrip, Text, useStyles } from '@/ui';
 
 /**
  * A feed entry, in the two densities it is read at.
@@ -50,6 +50,8 @@ export const TrendingCard = memo(function TrendingCard({
   /** Fixed width for the horizontal rail; omitted the card fills its column. */
   width?: number;
 }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   const open = useCallback(() => onPress(item), [onPress, item]);
   const save = useCallback(() => onSave?.(item), [onSave, item]);
@@ -123,7 +125,7 @@ export const TrendingCard = memo(function TrendingCard({
         style={styles.row}
       >
         <View style={styles.rowArt}>
-          <SwatchStrip colors={item.colors} height={52} radius={round.swatch} />
+          <SwatchStrip colors={item.colors} height={52} radius={skin.round.swatch} />
         </View>
         <View style={styles.rowCopy}>
           <Text numberOfLines={1} variant="cardTitle">
@@ -191,73 +193,74 @@ export const TrendingCard = memo(function TrendingCard({
   );
 });
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    paddingHorizontal: 13,
-    paddingVertical: 11,
-  },
-  rowArt: { width: 72 },
-  rowCopy: { flex: 1, gap: 3 },
-  blurb: { fontSize: 12, lineHeight: 17 },
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space.sm,
+      paddingHorizontal: 13,
+      paddingVertical: 11,
+    },
+    rowArt: { width: 72 },
+    rowCopy: { flex: 1, gap: 3 },
+    blurb: { fontSize: 12, lineHeight: 17 },
 
-  entry: { paddingBottom: space.lg },
-  /** Full bleed and tall enough that a 6% signal is a band, not a line. */
-  entryArt: { height: 190, flexDirection: 'row', backgroundColor: ui.bg.media },
-  entryCopy: { paddingHorizontal: space.gutter, paddingTop: space.cardGap, gap: 6 },
-  entryMeta: { fontSize: 9, letterSpacing: 1.2 },
-  /** A reading measure, not a caption: this is the only prose in the app. */
-  entryBlurb: { fontSize: 15, lineHeight: 24, maxWidth: 520 },
-  entryAction: { paddingHorizontal: space.gutter, paddingTop: space.sm, flexDirection: 'row' },
+    entry: { paddingBottom: space.lg },
+    /** Full bleed and tall enough that a 6% signal is a band, not a line. */
+    entryArt: { height: 190, flexDirection: 'row', backgroundColor: skin.ui.bg.media },
+    entryCopy: { paddingHorizontal: space.gutter, paddingTop: space.cardGap, gap: 6 },
+    entryMeta: { fontSize: 9, letterSpacing: 1.2 },
+    /** A reading measure, not a caption: this is the only prose in the app. */
+    entryBlurb: { fontSize: 15, lineHeight: 24, maxWidth: 520 },
+    entryAction: { paddingHorizontal: space.gutter, paddingTop: space.sm, flexDirection: 'row' },
 
-  tile: {
-    borderRadius: round.card,
-    overflow: 'hidden',
-    backgroundColor: ui.fill.card,
-    borderWidth: 1,
-    borderColor: ui.border.hairline,
-  },
-  tileFlex: {
-    flex: 1,
-  },
-  tileArt: {
-    height: 104,
-    flexDirection: 'row',
-    backgroundColor: ui.bg.media,
-  },
-  tileCategory: {
-    position: 'absolute',
-    left: 8,
-    bottom: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: round.chip,
-    backgroundColor: ui.scrim.panel,
-  },
-  categoryLabel: {
-    color: ui.text.primary,
-  },
-  tileSaved: {
-    position: 'absolute',
-    right: 8,
-    top: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: round.chip,
-    backgroundColor: ui.action.contrast,
-  },
-  savedLabel: {
-    color: ui.action.onContrast,
-  },
-  tileCopy: {
-    paddingHorizontal: space.sm,
-    paddingVertical: 11,
-    gap: 3,
-  },
-  tileMeta: {
-    fontSize: 9,
-    letterSpacing: 1,
-  },
-});
+    tile: {
+      borderRadius: skin.round.card,
+      overflow: 'hidden',
+      backgroundColor: skin.ui.fill.card,
+      borderWidth: 1,
+      borderColor: skin.ui.border.hairline,
+    },
+    tileFlex: {
+      flex: 1,
+    },
+    tileArt: {
+      height: 104,
+      flexDirection: 'row',
+      backgroundColor: skin.ui.bg.media,
+    },
+    tileCategory: {
+      position: 'absolute',
+      left: 8,
+      bottom: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      borderRadius: skin.round.chip,
+      backgroundColor: skin.ui.scrim.panel,
+    },
+    categoryLabel: {
+      color: skin.ui.text.primary,
+    },
+    tileSaved: {
+      position: 'absolute',
+      right: 8,
+      top: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      borderRadius: skin.round.chip,
+      backgroundColor: skin.ui.action.contrast,
+    },
+    savedLabel: {
+      color: skin.ui.action.onContrast,
+    },
+    tileCopy: {
+      paddingHorizontal: space.sm,
+      paddingVertical: 11,
+      gap: 3,
+    },
+    tileMeta: {
+      fontSize: 9,
+      letterSpacing: 1,
+    },
+  });

@@ -1,12 +1,11 @@
-import { round, space, ui } from '@chromawave/design-tokens';
+import { space } from '@chromawave/design-tokens';
 import { readStability, type Color, type Palette } from '@chromawave/domain';
 import * as Clipboard from 'expo-clipboard';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { PalettePhoto } from '@/features/library/PalettePhoto';
-import { usePreferences } from '@/providers';
-import { Button, ButtonRow, Card, ColorRow, Icon, Meta, Sheet, Text } from '@/ui';
+import { usePreferences, useSkin } from '@/providers';
+import { Button, ButtonRow, Card, ColorRow, Gradient, Icon, Meta, Sheet, Text } from '@/ui';
 
 /**
  * B2 · RESULT SHEET — what was read, and what it was read from.
@@ -39,28 +38,34 @@ export function ResultScreen({
 }) {
   const router = useRouter();
   const { t } = usePreferences();
+  const skin = useSkin();
+  // Chips floating over a photograph: the skin decides what a control ground is
+  // over arbitrary content, and both skins answer with their own scrim.
+  const chipSurface = {
+    backgroundColor: skin.ui.scrim.control,
+    borderColor: skin.ui.border.control,
+    borderRadius: skin.round.full,
+  };
   const named = palette.colors.filter((color) => color.role !== 'extra');
   const extras = palette.colors.filter((color) => color.role === 'extra');
   const stability = readStability(palette.deltaE);
 
   return (
-    <View style={styles.root}>
-      <View accessibilityLabel={t('result.capture')} style={styles.capture}>
+    <View style={[styles.root, { backgroundColor: skin.ui.bg.base }]}>
+      <View
+        accessibilityLabel={t('result.capture')}
+        style={[styles.capture, { backgroundColor: skin.ui.bg.media }]}
+      >
         <PalettePhoto palette={palette} style={StyleSheet.absoluteFill} />
         {/* Top scrim only. The bottom of the frame carries the bands, and a
             scrim there would mute the very colours being reported. */}
-        <LinearGradient
-          colors={['rgba(8,7,14,.62)', 'rgba(8,7,14,0)']}
-          locations={[0, 0.42]}
-          pointerEvents="none"
-          style={StyleSheet.absoluteFill}
-        />
+        <Gradient role={skin.effects.scrimTop('soft')} />
 
         <View style={styles.captureChrome}>
           <Card
             accessibilityLabel={t('result.close')}
             onPress={() => router.back()}
-            style={styles.captureChip}
+            style={[styles.captureChip, chipSurface]}
           >
             <Icon name="close" scale="inline" />
             <Text variant="chip">{t('result.close')}</Text>
@@ -68,7 +73,7 @@ export function ResultScreen({
           <Card
             accessibilityLabel={t('result.retake')}
             onPress={onRetake}
-            style={styles.captureChip}
+            style={[styles.captureChip, chipSurface]}
           >
             <Text variant="chip">{t('result.retake')}</Text>
           </Card>
@@ -107,7 +112,7 @@ export function ResultScreen({
 
         <View style={styles.rows}>
           {named.map((color) => (
-            <Card key={color.hex} style={styles.row}>
+            <Card key={color.hex} style={[styles.row, { borderRadius: skin.round.control }]}>
               <ColorRow color={roleLabelled(color)} onCopy={copy} />
             </Card>
           ))}
@@ -120,9 +125,14 @@ export function ResultScreen({
                   accessibilityLabel={t('result.copyLabel', { hex: color.hex })}
                   key={color.hex}
                   onPress={() => copy(color.hex)}
-                  style={styles.extra}
+                  style={[styles.extra, { borderRadius: skin.round.control }]}
                 >
-                  <View style={[styles.extraSwatch, { backgroundColor: color.hex }]} />
+                  <View
+                    style={[
+                      styles.extraSwatch,
+                      { backgroundColor: color.hex, borderRadius: skin.round.swatch },
+                    ]}
+                  />
                   <Text tone="secondary" variant="monoSmall">
                     {`${color.hex.slice(1)}\n${Math.round(color.weight * 100)}%`}
                   </Text>
@@ -159,13 +169,13 @@ function roleLabelled(color: Color) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: ui.bg.base },
+  root: { flex: 1 },
   /**
    * Flexes rather than sitting at a fixed 392. The sheet below sizes to its
    * content, so a three-colour palette leaves room the photograph can use and a
    * six-colour one takes it back.
    */
-  capture: { flex: 1, minHeight: 300, backgroundColor: ui.bg.media },
+  capture: { flex: 1, minHeight: 300 },
   captureChrome: {
     position: 'absolute',
     top: 64,
@@ -178,11 +188,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: ui.scrim.control,
-    borderColor: ui.border.control,
     paddingHorizontal: space.sm,
     paddingVertical: 9,
-    borderRadius: round.full,
   },
   readout: {
     position: 'absolute',
@@ -197,7 +204,7 @@ const styles = StyleSheet.create({
   verdict: { gap: space.xs, paddingBottom: space.md },
   verdictMeta: { gap: 3 },
   rows: { gap: space.xs },
-  row: { paddingHorizontal: 13, paddingVertical: 11, borderRadius: round.control },
+  row: { paddingHorizontal: 13, paddingVertical: 11 },
   extras: { flexDirection: 'row', gap: space.xs },
   extra: {
     flex: 1,
@@ -206,9 +213,8 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: space.sm,
     paddingVertical: 10,
-    borderRadius: round.control,
   },
-  extraSwatch: { width: 28, height: 28, borderRadius: 9 },
+  extraSwatch: { width: 28, height: 28 },
   actions: { marginTop: 'auto', paddingTop: space.md },
   tune: { flex: 1 },
   save: { flex: 1.4 },

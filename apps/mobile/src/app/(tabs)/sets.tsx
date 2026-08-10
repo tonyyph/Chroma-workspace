@@ -1,10 +1,20 @@
-import { elevation, space, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import { paletteGaps, type PaletteSet } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useSets } from '@/hooks';
-import { usePreferences } from '@/providers';
-import { Button, Card, EmptyGlyph, Gutter, Meta, Screen, ScreenHeader, Text } from '@/ui';
+import { usePreferences, useSkin } from '@/providers';
+import {
+  Button,
+  Card,
+  EmptyGlyph,
+  Gutter,
+  Meta,
+  Screen,
+  ScreenHeader,
+  Text,
+  useStyles,
+} from '@/ui';
 
 /**
  * C3 entry · the list of projects.
@@ -16,6 +26,7 @@ import { Button, Card, EmptyGlyph, Gutter, Meta, Screen, ScreenHeader, Text } fr
  * opening today and another one finished.
  */
 export default function SetsScreen() {
+  const styles = useStyles(makeStyles);
   const router = useRouter();
   const { t } = usePreferences();
   const { sets, refreshing, refresh } = useSets();
@@ -56,6 +67,7 @@ export default function SetsScreen() {
 }
 
 function ProjectRow({ set, onPress }: { set: PaletteSet; onPress: () => void }) {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   const system = set.merged ?? [];
   const gaps = paletteGaps(system);
@@ -92,22 +104,23 @@ function ProjectRow({ set, onPress }: { set: PaletteSet; onPress: () => void }) 
   );
 }
 
-const styles = StyleSheet.create({
-  head: { paddingTop: space.cardGap },
-  body: { alignItems: 'center', gap: space.md, paddingTop: space.xl },
-  copy: { textAlign: 'center' },
-  rows: { paddingTop: space.md, gap: space.cardGap },
-  row: { overflow: 'hidden' },
-  band: {
-    flexDirection: 'row',
-    height: 76,
-    borderBottomWidth: 1,
-    borderBottomColor: elevation.raised.borderColor,
-  },
-  bandEmpty: { backgroundColor: ui.bg.media },
-  rowCopy: { padding: space.cardGap, gap: 3 },
-  rowTitle: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  name: { flex: 1 },
-  rowMeta: { fontSize: 9, letterSpacing: 1 },
-  action: { paddingTop: space.gutter },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    head: { paddingTop: space.cardGap },
+    body: { alignItems: 'center', gap: space.md, paddingTop: space.xl },
+    copy: { textAlign: 'center' },
+    rows: { paddingTop: space.md, gap: space.cardGap },
+    row: { overflow: 'hidden' },
+    band: {
+      flexDirection: 'row',
+      height: 76,
+      borderBottomWidth: 1,
+      borderBottomColor: skin.elevation.raised.borderColor,
+    },
+    bandEmpty: { backgroundColor: skin.ui.bg.media },
+    rowCopy: { padding: space.cardGap, gap: 3 },
+    rowTitle: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+    name: { flex: 1 },
+    rowMeta: { fontSize: 9, letterSpacing: 1 },
+    action: { paddingTop: space.gutter },
+  });

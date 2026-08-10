@@ -1,10 +1,10 @@
-import { brandBands, space, ui } from '@chromawave/design-tokens';
+import { brandBands, space, type Skin } from '@chromawave/design-tokens';
 import { shortAge, type Palette } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { usePreferences } from '@/providers';
-import { Card, Chip, Gutter, Meta, Screen, ScreenHeader, SwatchStrip, Text } from '@/ui';
+import { usePreferences, useSkin } from '@/providers';
+import { Card, Chip, Gutter, Meta, Screen, ScreenHeader, SwatchStrip, Text, useStyles } from '@/ui';
 import { unreadActivity } from './activity';
 
 /**
@@ -23,6 +23,7 @@ export function ActivityScreen({
   refreshing?: boolean;
   onRefresh?: () => void;
 }) {
+  const styles = useStyles(makeStyles);
   const { t, preferences, markActivityRead } = usePreferences();
   const router = useRouter();
   const recap = useMemo(() => buildRecap(palettes), [palettes]);
@@ -164,19 +165,20 @@ function buildRecap(palettes: readonly Palette[]) {
 
 const cap = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
 
-const styles = StyleSheet.create({
-  head: { paddingTop: space.cardGap },
-  notice: { paddingTop: space.md + 2 },
-  noticeCard: { gap: space.xs },
-  feed: { gap: 10 },
-  feedRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  feedStrip: { width: 56 },
-  feedCopy: { flex: 1, gap: 3 },
-  feedMeta: { fontSize: 9, letterSpacing: 1 },
-  sectionLabel: { paddingTop: space.sectionGap },
-  recapWrap: { paddingTop: space.cardGap },
-  recap: { gap: space.cardGap, padding: 18 },
-  recapHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 5, height: 78 },
-  bar: { flex: 1, borderRadius: 5, minHeight: 8, backgroundColor: ui.fill.track },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    head: { paddingTop: space.cardGap },
+    notice: { paddingTop: space.md + 2 },
+    noticeCard: { gap: space.xs },
+    feed: { gap: 10 },
+    feedRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+    feedStrip: { width: 56 },
+    feedCopy: { flex: 1, gap: 3 },
+    feedMeta: { fontSize: 9, letterSpacing: 1 },
+    sectionLabel: { paddingTop: space.sectionGap },
+    recapWrap: { paddingTop: space.cardGap },
+    recap: { gap: space.cardGap, padding: 18 },
+    recapHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+    chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 5, height: 78 },
+    bar: { flex: 1, borderRadius: 5, minHeight: 8, backgroundColor: skin.ui.fill.track },
+  });

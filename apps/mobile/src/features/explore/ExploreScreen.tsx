@@ -1,4 +1,4 @@
-import { round, space, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import { emptyQuery, queryPalettes } from '@chromawave/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -8,7 +8,7 @@ import { TrendingCard } from '@/features/trending/TrendingCard';
 import { useTrending } from '@/features/trending/useTrending';
 import { useTrendingSave } from '@/features/trending/useTrendingSave';
 import { useDebounced, usePalettes } from '@/hooks';
-import { usePreferences } from '@/providers';
+import { usePreferences, useSkin } from '@/providers';
 import {
   BandCanvas,
   Card,
@@ -22,6 +22,7 @@ import {
   Shimmer,
   SwatchStrip,
   Text,
+  useStyles,
 } from '@/ui';
 
 const BANNER_HEIGHT = 186;
@@ -44,6 +45,8 @@ const NOTHING_EXCLUDED: ReadonlySet<string> = new Set();
  * colours are already in the library, which is the property the two share.
  */
 export function ExploreScreen() {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const { q } = useLocalSearchParams<{ q?: string }>();
   const router = useRouter();
   const [query, setQuery] = useState(q ?? '');
@@ -128,7 +131,7 @@ export function ExploreScreen() {
                   clipped on a 375pt phone and left a strip of bare ground on a
                   430pt one. */}
               <BandCanvas
-                background={ui.bg.media}
+                background={skin.ui.bg.media}
                 blur={13}
                 colors={featured.colors.map((color) => color.hex)}
                 height={BANNER_HEIGHT}
@@ -231,56 +234,57 @@ export function ExploreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  head: {
-    paddingTop: space.cardGap,
-  },
-  search: {
-    paddingTop: space.cardGap,
-  },
-  bannerWrap: {
-    paddingTop: space.md + 2,
-  },
-  banner: {
-    height: BANNER_HEIGHT,
-    borderRadius: round.media,
-    overflow: 'hidden',
-    backgroundColor: ui.bg.media,
-    justifyContent: 'flex-end',
-  },
-  bannerScrim: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(8,7,14,.45)',
-  },
-  bannerCopy: {
-    padding: space.md,
-    gap: 6,
-  },
-  sectionHead: {
-    paddingTop: space.gutter,
-  },
-  error: {
-    paddingTop: space.md,
-  },
-  rows: {
-    paddingTop: space.cardGap,
-    gap: 10,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    paddingHorizontal: 13,
-    paddingVertical: 11,
-  },
-  rowStrip: {
-    width: 74,
-  },
-  emptyCard: {
-    paddingVertical: space.md,
-  },
-  rowCopy: {
-    flex: 1,
-    gap: 3,
-  },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    head: {
+      paddingTop: space.cardGap,
+    },
+    search: {
+      paddingTop: space.cardGap,
+    },
+    bannerWrap: {
+      paddingTop: space.md + 2,
+    },
+    banner: {
+      height: BANNER_HEIGHT,
+      borderRadius: skin.round.media,
+      overflow: 'hidden',
+      backgroundColor: skin.ui.bg.media,
+      justifyContent: 'flex-end',
+    },
+    bannerScrim: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: skin.ui.overlay,
+    },
+    bannerCopy: {
+      padding: space.md,
+      gap: 6,
+    },
+    sectionHead: {
+      paddingTop: space.gutter,
+    },
+    error: {
+      paddingTop: space.md,
+    },
+    rows: {
+      paddingTop: space.cardGap,
+      gap: 10,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space.sm,
+      paddingHorizontal: 13,
+      paddingVertical: 11,
+    },
+    rowStrip: {
+      width: 74,
+    },
+    emptyCard: {
+      paddingVertical: space.md,
+    },
+    rowCopy: {
+      flex: 1,
+      gap: 3,
+    },
+  });

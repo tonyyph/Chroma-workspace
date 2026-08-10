@@ -1,6 +1,6 @@
-import { ui } from '@chromawave/design-tokens';
 import { readableOn, type Color } from '@chromawave/domain';
 import { useMemo } from 'react';
+import { useSkin } from '@/providers';
 import { accentTint } from '@/ui/chroma';
 
 export type Accent = {
@@ -26,12 +26,13 @@ export type Accent = {
  * to keep the brand's own violet rather than invent something.
  */
 export function useAccent(colors: readonly Color[] | null): Accent | null {
+  const skin = useSkin();
   return useMemo(() => {
     if (!colors?.length) return null;
     const signal = colors.find((color) => color.role === 'signal');
     const source = signal ?? colors[colors.length - 1] ?? colors[0];
     if (!source) return null;
-    const color = readableOn(source.hex, ui.bg.base, 4.5);
+    const color = readableOn(source.hex, skin.ui.bg.base, 4.5);
     return { color, tint: accentTint(color) };
-  }, [colors]);
+  }, [colors, skin]);
 }

@@ -1,4 +1,4 @@
-import { brandColors, round, space, tint, ui } from '@chromawave/design-tokens';
+import { brandColors, space, type Skin } from '@chromawave/design-tokens';
 import {
   contrastRatio,
   simulateVisionHex,
@@ -7,8 +7,19 @@ import {
 } from '@chromawave/domain';
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { usePreferences } from '@/providers';
-import { Button, Card, Chip, Gutter, Icon, Meta, Screen, ScreenHeader, Text } from '@/ui';
+import { usePreferences, useSkin } from '@/providers';
+import {
+  Button,
+  Card,
+  Chip,
+  Gutter,
+  Icon,
+  Meta,
+  Screen,
+  ScreenHeader,
+  Text,
+  useStyles,
+} from '@/ui';
 
 type Verdict = 'AAA' | 'AA' | 'FAIL';
 
@@ -38,6 +49,8 @@ export function ContrastScreen({
   /** Writes the suggested colour back onto the palette. Absent when read-only. */
   onApplyFix?: (from: string, to: string) => void;
 }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   const [simulation, setSimulation] = useState<Simulation>(null);
 
@@ -112,10 +125,12 @@ export function ContrastScreen({
               {`${check.ratio.toFixed(1)}:1`}
             </Text>
             {/* Verdicts are text, per the accessibility gate — never colour alone. */}
-            <View style={[styles.verdict, check.verdict === 'FAIL' ? tint.danger : tint.info]}>
+            <View
+              style={[styles.verdict, check.verdict === 'FAIL' ? skin.tint.danger : skin.tint.info]}
+            >
               <Text
                 style={{
-                  color: check.verdict === 'FAIL' ? tint.danger.color : tint.info.color,
+                  color: check.verdict === 'FAIL' ? skin.tint.danger.color : skin.tint.info.color,
                 }}
                 variant="chip"
               >
@@ -134,7 +149,7 @@ export function ContrastScreen({
             </Text>
             <View style={styles.fixRow}>
               <View style={[styles.fixSwatch, { backgroundColor: shown(failing.foreground) }]} />
-              <Icon color={ui.text.tertiary} name="arrowRight" />
+              <Icon color={skin.ui.text.tertiary} name="arrowRight" />
               <View style={[styles.fixSwatch, { backgroundColor: shown(fix.hex) }]} />
               <View style={styles.fixCopy}>
                 <Text tone="secondary" variant="mono">
@@ -245,37 +260,38 @@ function hslToHex(hue: number, saturation: number, lightness: number): string {
     .toUpperCase()}`;
 }
 
-const styles = StyleSheet.create({
-  head: { paddingTop: space.cardGap },
-  samplesWrap: { paddingTop: space.md + 2 },
-  samples: {
-    borderRadius: round.media - 2,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: ui.border.hairlineStrong,
-  },
-  sample: { padding: space.gutter, gap: 4 },
-  sampleTitle: { fontSize: 21, lineHeight: 25, fontWeight: '600', color: '#FFFFFF' },
-  sampleBody: { fontSize: 13.5, lineHeight: 20, color: 'rgba(255,255,255,.9)' },
-  sampleBodyMuted: { fontSize: 13.5, lineHeight: 20, color: 'rgba(237,234,227,.75)' },
-  checks: { paddingTop: space.md + 2, gap: 9 },
-  check: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    paddingHorizontal: space.cardGap,
-    paddingVertical: 12,
-    borderRadius: round.control,
-  },
-  checkFail: { backgroundColor: 'rgba(255,107,90,.08)', borderColor: 'rgba(255,107,90,.32)' },
-  checkSwatch: { width: 24, height: 24, borderRadius: 8 },
-  ratio: { flex: 1, textAlign: 'right', fontSize: 13 },
-  verdict: { borderWidth: 1, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 7 },
-  fixWrap: { paddingTop: space.md + 2 },
-  fix: { gap: space.sm },
-  fixRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  fixSwatch: { width: 44, height: 44, borderRadius: round.control - 2 },
-  fixCopy: { flex: 1, gap: 3 },
-  simulations: { paddingTop: space.md + 2, flexDirection: 'row', gap: space.xs },
-  simulationNote: { paddingTop: space.xs },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    head: { paddingTop: space.cardGap },
+    samplesWrap: { paddingTop: space.md + 2 },
+    samples: {
+      borderRadius: skin.round.media - 2,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: skin.ui.border.hairlineStrong,
+    },
+    sample: { padding: space.gutter, gap: 4 },
+    sampleTitle: { fontSize: 21, lineHeight: 25, fontWeight: '600', color: '#FFFFFF' },
+    sampleBody: { fontSize: 13.5, lineHeight: 20, color: 'rgba(255,255,255,.9)' },
+    sampleBodyMuted: { fontSize: 13.5, lineHeight: 20, color: 'rgba(237,234,227,.75)' },
+    checks: { paddingTop: space.md + 2, gap: 9 },
+    check: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space.sm,
+      paddingHorizontal: space.cardGap,
+      paddingVertical: 12,
+      borderRadius: skin.round.control,
+    },
+    checkFail: { backgroundColor: 'rgba(255,107,90,.08)', borderColor: 'rgba(255,107,90,.32)' },
+    checkSwatch: { width: 24, height: 24, borderRadius: 8 },
+    ratio: { flex: 1, textAlign: 'right', fontSize: 13 },
+    verdict: { borderWidth: 1, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 7 },
+    fixWrap: { paddingTop: space.md + 2 },
+    fix: { gap: space.sm },
+    fixRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+    fixSwatch: { width: 44, height: 44, borderRadius: skin.round.control - 2 },
+    fixCopy: { flex: 1, gap: 3 },
+    simulations: { paddingTop: space.md + 2, flexDirection: 'row', gap: space.xs },
+    simulationNote: { paddingTop: space.xs },
+  });

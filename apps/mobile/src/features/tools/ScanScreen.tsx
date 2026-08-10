@@ -1,4 +1,4 @@
-import { round, space, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import { makeColor, type Color } from '@chromawave/domain';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -11,8 +11,8 @@ import {
 } from 'react-native-vision-camera';
 import { usePhotoRead } from '@/hooks';
 import { analytics, hapticsService } from '@/infrastructure/dependencies';
-import { usePreferences } from '@/providers';
-import { Button, Card, Chip, Icon, LiveReadPulse, Pressable, Text } from '@/ui';
+import { usePreferences, useSkin } from '@/providers';
+import { Button, Card, Chip, Icon, LiveReadPulse, Pressable, Text, useStyles } from '@/ui';
 
 const MAX_PINS = 7;
 
@@ -30,6 +30,7 @@ export function ScanScreen({
   onExit: () => void;
   onBuild: (colors: readonly Color[]) => void;
 }) {
+  const styles = useStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const { t } = usePreferences();
   const [pins, setPins] = useState<readonly string[]>([]);
@@ -168,57 +169,62 @@ export function ScanScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: ui.bg.media },
-  sceneLabel: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: space.gutter,
-    paddingTop: space.cardGap,
-  },
-  exitChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: ui.scrim.control,
-    borderColor: ui.border.control,
-    paddingHorizontal: space.sm,
-    paddingVertical: 10,
-    borderRadius: round.full,
-  },
-  scene: { flex: 1 },
-  marker: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 9 },
-  markerDot: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  markerLabel: {
-    backgroundColor: ui.scrim.strong,
-    borderRadius: 9,
-    paddingHorizontal: space.xs,
-    paddingVertical: 6,
-  },
-  bottom: { paddingHorizontal: space.gutter, gap: space.cardGap },
-  panel: {
-    backgroundColor: 'rgba(8,7,14,.66)',
-    borderWidth: 1,
-    borderColor: ui.border.hairlineStrong,
-    borderRadius: round.media - 2,
-    padding: space.cardGap,
-    gap: 11,
-  },
-  panelHead: { flexDirection: 'row', justifyContent: 'space-between' },
-  pinRow: { flexDirection: 'row', gap: 7 },
-  pin: { flex: 1, height: 38, borderRadius: 10 },
-  pinEmpty: {
-    backgroundColor: 'rgba(237,234,227,.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(237,234,227,.3)',
-    borderStyle: 'dashed',
-  },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    root: { flex: 1, backgroundColor: skin.ui.bg.media },
+    sceneLabel: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    topRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: space.gutter,
+      paddingTop: space.cardGap,
+    },
+    exitChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: skin.ui.scrim.control,
+      borderColor: skin.ui.border.control,
+      paddingHorizontal: space.sm,
+      paddingVertical: 10,
+      borderRadius: skin.round.full,
+    },
+    scene: { flex: 1 },
+    marker: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 9 },
+    markerDot: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      borderWidth: 2,
+      borderColor: '#FFFFFF',
+    },
+    markerLabel: {
+      backgroundColor: skin.ui.scrim.strong,
+      borderRadius: 9,
+      paddingHorizontal: space.xs,
+      paddingVertical: 6,
+    },
+    bottom: { paddingHorizontal: space.gutter, gap: space.cardGap },
+    panel: {
+      backgroundColor: skin.ui.scrim.panel,
+      borderWidth: 1,
+      borderColor: skin.ui.border.hairlineStrong,
+      borderRadius: skin.round.media - 2,
+      padding: space.cardGap,
+      gap: 11,
+    },
+    panelHead: { flexDirection: 'row', justifyContent: 'space-between' },
+    pinRow: { flexDirection: 'row', gap: 7 },
+    pin: { flex: 1, height: 38, borderRadius: 10 },
+    pinEmpty: {
+      backgroundColor: skin.ui.fill.chipGhost,
+      borderWidth: 1,
+      borderColor: skin.ui.border.control,
+      borderStyle: 'dashed',
+    },
+  });

@@ -1,6 +1,6 @@
-import { ui } from '@chromawave/design-tokens';
 import { Tabs, useRouter } from 'expo-router';
 import { TabBar, type TabKey } from '@/ui';
+import { useSkin } from '@/providers';
 
 /**
  * Tab key to route name. Typed as the literal names so `navigate` accepts it
@@ -29,6 +29,7 @@ const tabForRoute: Record<string, TabKey> = {
  */
 export default function TabLayout() {
   const router = useRouter();
+  const skin = useSkin();
 
   return (
     <Tabs
@@ -36,7 +37,7 @@ export default function TabLayout() {
         headerShown: false,
         // Opaque, like the stack: each tab's own `Screen` paints the backdrop,
         // so a scene never needs to see the one it is replacing.
-        sceneStyle: { backgroundColor: ui.bg.base },
+        sceneStyle: { backgroundColor: skin.ui.bg.base },
         // Four tabs stay mounted once visited, each with a backdrop of its own.
         // Frozen, the three in the background cost nothing per frame.
         freezeOnBlur: true,

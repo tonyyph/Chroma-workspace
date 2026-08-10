@@ -1,10 +1,10 @@
-import { round, space, tint, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import type { Palette } from '@chromawave/domain';
 import { Image } from 'expo-image';
 import { useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
-import { usePreferences } from '@/providers';
-import { Button, ButtonRow, Card, Sheet, SwatchStrip, Text, Toggle } from '@/ui';
+import { usePreferences, useSkin } from '@/providers';
+import { Button, ButtonRow, Card, Sheet, SwatchStrip, Text, Toggle, useStyles } from '@/ui';
 
 /** The four ratios the social templates ship in. */
 const FORMATS = [
@@ -41,6 +41,7 @@ export function ShareSheet({
   onShare: (options: ShareOptions) => void;
   onSaveImage: (options: ShareOptions) => void;
 }) {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   const [format, setFormat] = useState<ShareFormat>(FORMATS[0].key);
   const [includePhoto, setIncludePhoto] = useState(true);
@@ -125,6 +126,8 @@ function OptionRow({
   onChange?: (value: boolean) => void;
   locked?: boolean;
 }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   return (
     <Card style={styles.option}>
@@ -132,8 +135,8 @@ function OptionRow({
         {label}
       </Text>
       {locked ? (
-        <View style={[styles.pro, tint.pro]}>
-          <Text style={{ color: tint.pro.color }} variant="chip">
+        <View style={[styles.pro, skin.tint.pro]}>
+          <Text style={{ color: skin.tint.pro.color }} variant="chip">
             {t('common.pro')}
           </Text>
         </View>
@@ -151,30 +154,31 @@ const RATIOS: Record<ShareFormat, ViewStyle> = {
   '9x16': { height: 132 },
 };
 
-const styles = StyleSheet.create({
-  sheet: { flex: 0, paddingHorizontal: space.gutter, gap: space.md },
-  formats: { flexDirection: 'row', gap: 10 },
-  format: { flex: 1, overflow: 'hidden', paddingBottom: space.xs },
-  formatSelected: { borderColor: ui.action.primary, borderWidth: 2 },
-  formatPreview: {
-    backgroundColor: ui.bg.media,
-    justifyContent: 'flex-end',
-    paddingBottom: space.sm,
-    overflow: 'hidden',
-  },
-  formatHex: { textAlign: 'center', paddingTop: 5, color: 'rgba(237,234,227,.72)' },
-  formatLabel: { textAlign: 'center', paddingTop: space.xs },
-  options: { gap: 9 },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: space.cardGap,
-    paddingVertical: 13,
-    borderRadius: round.control,
-  },
-  optionLabel: { fontSize: 14 },
-  pro: { borderWidth: 1, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 7 },
-  half: { flex: 1 },
-  wide: { flex: 1.3 },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    sheet: { flex: 0, paddingHorizontal: space.gutter, gap: space.md },
+    formats: { flexDirection: 'row', gap: 10 },
+    format: { flex: 1, overflow: 'hidden', paddingBottom: space.xs },
+    formatSelected: { borderColor: skin.ui.action.primary, borderWidth: 2 },
+    formatPreview: {
+      backgroundColor: skin.ui.bg.media,
+      justifyContent: 'flex-end',
+      paddingBottom: space.sm,
+      overflow: 'hidden',
+    },
+    formatHex: { textAlign: 'center', paddingTop: 5, color: 'rgba(237,234,227,.72)' },
+    formatLabel: { textAlign: 'center', paddingTop: space.xs },
+    options: { gap: 9 },
+    option: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: space.cardGap,
+      paddingVertical: 13,
+      borderRadius: skin.round.control,
+    },
+    optionLabel: { fontSize: 14 },
+    pro: { borderWidth: 1, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 7 },
+    half: { flex: 1 },
+    wide: { flex: 1.3 },
+  });

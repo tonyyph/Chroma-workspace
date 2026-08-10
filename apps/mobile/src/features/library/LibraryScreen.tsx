@@ -1,4 +1,4 @@
-import { size, space, ui } from '@chromawave/design-tokens';
+import { size, space, type Skin } from '@chromawave/design-tokens';
 import {
   colorMoods,
   libraryFilters,
@@ -17,7 +17,7 @@ import { seedPalettes } from '@/data';
 import { useTrending } from '@/features/trending/useTrending';
 import { usePalettes, useSets } from '@/hooks';
 import { analytics } from '@/infrastructure/dependencies';
-import { usePreferences } from '@/providers';
+import { usePreferences, useSkin } from '@/providers';
 import {
   BandRefreshControl,
   Button,
@@ -31,6 +31,7 @@ import {
   Screen,
   Shimmer,
   Text,
+  useStyles,
 } from '@/ui';
 import { reportBackdropScroll } from '@/ui/backdropMotion';
 import { useDiscoveryFilters } from '../discovery/useDiscoveryFilters';
@@ -66,6 +67,8 @@ import { PaletteRibbon } from './PaletteRibbon';
  * `SectionList` or a nested scroller would cost more than the grouping is worth.
  */
 export function LibraryScreen() {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const router = useRouter();
   const { palettes, loading, refreshing, refresh, save } = usePalettes();
   const { sets } = useSets();
@@ -168,7 +171,7 @@ export function LibraryScreen() {
             // this one — `push` left a duplicate tab bar behind it.
             onPress={() => router.navigate('/explore')}
           >
-            <Icon color={ui.text.secondary} name="search" scale="action" />
+            <Icon color={skin.ui.text.secondary} name="search" scale="action" />
           </Pressable>
         </View>
         <Text accessibilityRole="header" variant="hero">
@@ -300,6 +303,7 @@ function EmptyLibrary({
   addingExamples: boolean;
   filtered: boolean;
 }) {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   return (
     <View style={styles.empty}>
@@ -333,31 +337,32 @@ function EmptyLibrary({
   );
 }
 
-const styles = StyleSheet.create({
-  masthead: { paddingTop: space.sm, gap: 6 },
-  mastheadTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    minHeight: 28,
-  },
-  hero: { paddingTop: space.lg },
-  rail: { paddingTop: space.gutter },
-  count: { paddingTop: space.sm },
-  list: { paddingTop: space.md },
-  /** Air above a chapter, none below it: the rule belongs to the month it
-   *  opens, and an even gap would leave it floating between two of them. */
-  month: { paddingTop: space.xl, paddingBottom: space.sm },
-  monthCopy: { gap: 2, paddingBottom: space.xs },
-  monthBand: { height: 3, flexDirection: 'row', marginHorizontal: space.gutter },
-  loading: { paddingTop: space.md },
-  empty: {
-    alignItems: 'center',
-    gap: space.md,
-    paddingTop: space.xl,
-    paddingHorizontal: space.lg,
-  },
-  emptyBody: {
-    textAlign: 'center',
-  },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    masthead: { paddingTop: space.sm, gap: 6 },
+    mastheadTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      minHeight: 28,
+    },
+    hero: { paddingTop: space.lg },
+    rail: { paddingTop: space.gutter },
+    count: { paddingTop: space.sm },
+    list: { paddingTop: space.md },
+    /** Air above a chapter, none below it: the rule belongs to the month it
+     *  opens, and an even gap would leave it floating between two of them. */
+    month: { paddingTop: space.xl, paddingBottom: space.sm },
+    monthCopy: { gap: 2, paddingBottom: space.xs },
+    monthBand: { height: 3, flexDirection: 'row', marginHorizontal: space.gutter },
+    loading: { paddingTop: space.md },
+    empty: {
+      alignItems: 'center',
+      gap: space.md,
+      paddingTop: space.xl,
+      paddingHorizontal: space.lg,
+    },
+    emptyBody: {
+      textAlign: 'center',
+    },
+  });

@@ -1,4 +1,4 @@
-import { brandBands, duration, round, size, space, ui } from '@chromawave/design-tokens';
+import { brandBands, duration, size, space, type Skin } from '@chromawave/design-tokens';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -13,8 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCameraPermission } from 'react-native-vision-camera';
 import { BrandMark } from '@/components';
 import { analytics } from '@/infrastructure/dependencies';
-import { usePreferences } from '@/providers';
-import { Button, Card, InlineError, SwatchStrip, Text } from '@/ui';
+import { usePreferences, useSkin } from '@/providers';
+import { Button, Card, InlineError, SwatchStrip, Text, useStyles } from '@/ui';
 const welcomePhoto: number = require('../../../assets/brand/library/harbour-dusk.jpg');
 const steps = [1, 2, 3, 4, 5] as const;
 type Step = (typeof steps)[number];
@@ -22,6 +22,7 @@ type Destination = '/(tabs)' | '/tools/import';
 
 /** Five-step first-launch flow: value, model, tune, share, then permission. */
 export function OnboardingScreen() {
+  const styles = useStyles(makeStyles);
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [completing, setCompleting] = useState(false);
@@ -126,6 +127,7 @@ export function OnboardingScreen() {
 }
 
 function Welcome() {
+  const styles = useStyles(makeStyles);
   const { height } = useWindowDimensions();
   const { t } = usePreferences();
   const visualHeight = Math.max(210, Math.min(330, height * 0.36));
@@ -159,6 +161,7 @@ function Welcome() {
 }
 
 function HowItWorks() {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   const roles = [
     {
@@ -199,6 +202,8 @@ function HowItWorks() {
 
 /** New slide 3: makes the tune controls familiar before the first capture. */
 function TuneIntroduction() {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   return (
     <View style={styles.body}>
@@ -207,7 +212,7 @@ function TuneIntroduction() {
         <SwatchStrip
           colors={brandBands.map((hex, index) => ({ hex, weight: [0.46, 0.32, 0.22][index] ?? 0 }))}
           height={64}
-          radius={round.swatch}
+          radius={skin.round.swatch}
         />
         <PreviewSlider label={t('tune.hue')} position="72%" />
         <PreviewSlider label={t('tune.saturation')} position="46%" />
@@ -219,6 +224,7 @@ function TuneIntroduction() {
 
 /** New slide 4: shows that a saved palette stays tied to its photograph. */
 function ShareIntroduction() {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   return (
     <View style={styles.body}>
@@ -248,6 +254,7 @@ function ShareIntroduction() {
 }
 
 function CameraPermission() {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   const reasons = [
     t('onboarding.permission.reason1'),
@@ -280,6 +287,7 @@ function CameraPermission() {
 }
 
 function SlideCopy({ title, body }: { title: string; body?: string }) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.copy}>
       <Text variant="headline">{title}</Text>
@@ -293,6 +301,7 @@ function SlideCopy({ title, body }: { title: string; body?: string }) {
 }
 
 function PreviewSlider({ label, position }: { label: string; position: `${number}%` }) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.previewControl}>
       <Text tone="tertiary" variant="eyebrow">
@@ -307,6 +316,7 @@ function PreviewSlider({ label, position }: { label: string; position: `${number
 }
 
 function Dots({ active }: { active: Step }) {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   return (
     <View
@@ -327,81 +337,87 @@ function Dots({ active }: { active: Step }) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: ui.bg.base },
-  animatedBody: { flex: 1, minHeight: 0 },
-  body: { flex: 1, minHeight: 0 },
-  heroPhoto: {
-    marginHorizontal: space.sectionGap,
-    marginTop: space.cardGap,
-    borderRadius: round.media,
-    backgroundColor: ui.bg.media,
-    overflow: 'hidden',
-  },
-  photoScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(8,7,14,.18)' },
-  photoLabel: {
-    position: 'absolute',
-    top: space.md,
-    left: space.md,
-    color: ui.text.primary,
-  },
-  heroStrip: {
-    position: 'absolute',
-    left: space.md,
-    right: space.md,
-    bottom: space.md,
-  },
-  copy: { paddingHorizontal: space.sectionGap, paddingTop: space.lg, gap: space.sm },
-  roleList: {
-    paddingHorizontal: space.sectionGap,
-    paddingTop: space.sectionGap,
-    gap: space.cardGap,
-  },
-  roleCard: { flexDirection: 'row', alignItems: 'center', gap: space.cardGap },
-  roleSwatch: { width: 52, height: 52, borderRadius: round.control },
-  roleCopy: { flex: 1, gap: 3 },
-  featureCard: {
-    marginHorizontal: space.sectionGap,
-    marginTop: space.lg,
-    gap: space.sm,
-  },
-  previewControl: { gap: space.xs },
-  previewTrack: {
-    height: size.sliderTrack,
-    borderRadius: round.full,
-    backgroundColor: ui.fill.track,
-  },
-  previewFill: {
-    height: size.sliderTrack,
-    borderRadius: round.full,
-    backgroundColor: ui.action.primary,
-  },
-  previewKnob: {
-    position: 'absolute',
-    top: -(size.sliderThumb - size.sliderTrack) / 2,
-    width: size.sliderThumb,
-    height: size.sliderThumb,
-    marginLeft: -size.sliderThumb / 2,
-    borderRadius: round.full,
-    backgroundColor: ui.text.primary,
-  },
-  sharePreview: {
-    marginHorizontal: space.sectionGap,
-    marginTop: space.lg,
-    overflow: 'hidden',
-  },
-  sharePhoto: { height: 190, backgroundColor: ui.bg.media },
-  shareCopy: { padding: space.md, gap: space.xs },
-  permissionCopy: { paddingHorizontal: space.sectionGap, paddingTop: space.lg, gap: space.sm },
-  reasons: { marginHorizontal: space.sectionGap, marginTop: space.lg, gap: space.sm },
-  reasonRow: { flexDirection: 'row', gap: space.sm },
-  reasonText: { flex: 1 },
-  footer: {
-    paddingHorizontal: space.sectionGap,
-    paddingTop: space.sm,
-    gap: space.cardGap,
-  },
-  dots: { flexDirection: 'row', gap: 7, justifyContent: 'center', paddingBottom: 2 },
-  dot: { width: 5, height: 5, borderRadius: round.full, backgroundColor: ui.text.quaternary },
-  dotActive: { width: 22 },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    root: { flex: 1, backgroundColor: skin.ui.bg.base },
+    animatedBody: { flex: 1, minHeight: 0 },
+    body: { flex: 1, minHeight: 0 },
+    heroPhoto: {
+      marginHorizontal: space.sectionGap,
+      marginTop: space.cardGap,
+      borderRadius: skin.round.media,
+      backgroundColor: skin.ui.bg.media,
+      overflow: 'hidden',
+    },
+    photoScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(8,7,14,.18)' },
+    photoLabel: {
+      position: 'absolute',
+      top: space.md,
+      left: space.md,
+      color: skin.ui.text.primary,
+    },
+    heroStrip: {
+      position: 'absolute',
+      left: space.md,
+      right: space.md,
+      bottom: space.md,
+    },
+    copy: { paddingHorizontal: space.sectionGap, paddingTop: space.lg, gap: space.sm },
+    roleList: {
+      paddingHorizontal: space.sectionGap,
+      paddingTop: space.sectionGap,
+      gap: space.cardGap,
+    },
+    roleCard: { flexDirection: 'row', alignItems: 'center', gap: space.cardGap },
+    roleSwatch: { width: 52, height: 52, borderRadius: skin.round.control },
+    roleCopy: { flex: 1, gap: 3 },
+    featureCard: {
+      marginHorizontal: space.sectionGap,
+      marginTop: space.lg,
+      gap: space.sm,
+    },
+    previewControl: { gap: space.xs },
+    previewTrack: {
+      height: size.sliderTrack,
+      borderRadius: skin.round.full,
+      backgroundColor: skin.ui.fill.track,
+    },
+    previewFill: {
+      height: size.sliderTrack,
+      borderRadius: skin.round.full,
+      backgroundColor: skin.ui.action.primary,
+    },
+    previewKnob: {
+      position: 'absolute',
+      top: -(size.sliderThumb - size.sliderTrack) / 2,
+      width: size.sliderThumb,
+      height: size.sliderThumb,
+      marginLeft: -size.sliderThumb / 2,
+      borderRadius: skin.round.full,
+      backgroundColor: skin.ui.text.primary,
+    },
+    sharePreview: {
+      marginHorizontal: space.sectionGap,
+      marginTop: space.lg,
+      overflow: 'hidden',
+    },
+    sharePhoto: { height: 190, backgroundColor: skin.ui.bg.media },
+    shareCopy: { padding: space.md, gap: space.xs },
+    permissionCopy: { paddingHorizontal: space.sectionGap, paddingTop: space.lg, gap: space.sm },
+    reasons: { marginHorizontal: space.sectionGap, marginTop: space.lg, gap: space.sm },
+    reasonRow: { flexDirection: 'row', gap: space.sm },
+    reasonText: { flex: 1 },
+    footer: {
+      paddingHorizontal: space.sectionGap,
+      paddingTop: space.sm,
+      gap: space.cardGap,
+    },
+    dots: { flexDirection: 'row', gap: 7, justifyContent: 'center', paddingBottom: 2 },
+    dot: {
+      width: 5,
+      height: 5,
+      borderRadius: skin.round.full,
+      backgroundColor: skin.ui.text.quaternary,
+    },
+    dotActive: { width: 22 },
+  });

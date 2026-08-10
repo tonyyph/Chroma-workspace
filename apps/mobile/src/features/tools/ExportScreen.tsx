@@ -1,13 +1,13 @@
 import type { ExportFormat } from '@chromawave/analytics';
-import { round, space, tint, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import { rgbToDisplayP3, type Palette } from '@chromawave/domain';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { analytics } from '@/infrastructure/dependencies';
-import { usePreferences } from '@/providers';
-import { Button, Card, Chip, InlineError, NavBar, Screen, Text, Toggle } from '@/ui';
+import { usePreferences, useSkin } from '@/providers';
+import { Button, Card, Chip, InlineError, NavBar, Screen, Text, Toggle, useStyles } from '@/ui';
 
 const TARGETS = ['CSS', 'TAILWIND', 'SWIFT', 'JSON'] as const;
 type Target = (typeof TARGETS)[number];
@@ -28,6 +28,7 @@ export function ExportScreen({
   isPro: boolean;
   onClose: () => void;
 }) {
+  const styles = useStyles(makeStyles);
   const { t, preferences } = usePreferences();
   // D2's "DEFAULT EXPORT" row decides which target this opens on — that setting
   // has no other effect, and a preference that changes nothing is not one.
@@ -151,14 +152,16 @@ function Option({
   onChange?: (value: boolean) => void;
   locked?: boolean;
 }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   return (
     <Card style={styles.option}>
       <Text style={styles.optionLabel} tone={locked ? 'secondary' : 'primary'}>
         {label}
       </Text>
       {locked ? (
-        <View style={[styles.pro, tint.pro]}>
-          <Text style={{ color: tint.pro.color }} variant="chip">
+        <View style={[styles.pro, skin.tint.pro]}>
+          <Text style={{ color: skin.tint.pro.color }} variant="chip">
             PRO
           </Text>
         </View>
@@ -229,34 +232,40 @@ function generate(palette: Palette, target: Target, options: Options): string {
 const camel = (value: string) =>
   value.replace(/-([a-z0-9])/g, (_, character: string) => character.toUpperCase());
 
-const styles = StyleSheet.create({
-  targets: { flexDirection: 'row', gap: 7, paddingHorizontal: space.gutter, paddingTop: space.md },
-  codeWrap: { paddingHorizontal: space.gutter, paddingTop: space.md },
-  code: {
-    backgroundColor: ui.bg.base === '#08070E' ? '#0C0B18' : ui.bg.base,
-    borderWidth: 1,
-    borderColor: ui.border.hairlineStrong,
-    borderRadius: round.card,
-    maxHeight: 220,
-  },
-  codeText: { padding: space.md, lineHeight: 21, color: 'rgba(237,234,227,.82)' },
-  options: { paddingHorizontal: space.gutter, paddingTop: space.md + 2, gap: 10 },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: space.cardGap,
-    paddingVertical: 13,
-    borderRadius: round.control,
-  },
-  optionLabel: { fontSize: 14 },
-  pro: { borderWidth: 1, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 7 },
-  destinations: {
-    flexDirection: 'row',
-    gap: 10,
-    paddingHorizontal: space.gutter,
-    paddingTop: space.md + 2,
-  },
-  destination: { flex: 1, gap: space.xs },
-  error: { paddingHorizontal: space.gutter, paddingTop: space.md },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    targets: {
+      flexDirection: 'row',
+      gap: 7,
+      paddingHorizontal: space.gutter,
+      paddingTop: space.md,
+    },
+    codeWrap: { paddingHorizontal: space.gutter, paddingTop: space.md },
+    code: {
+      backgroundColor: skin.ui.bg.base === '#08070E' ? '#0C0B18' : skin.ui.bg.base,
+      borderWidth: 1,
+      borderColor: skin.ui.border.hairlineStrong,
+      borderRadius: skin.round.card,
+      maxHeight: 220,
+    },
+    codeText: { padding: space.md, lineHeight: 21, color: 'rgba(237,234,227,.82)' },
+    options: { paddingHorizontal: space.gutter, paddingTop: space.md + 2, gap: 10 },
+    option: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: space.cardGap,
+      paddingVertical: 13,
+      borderRadius: skin.round.control,
+    },
+    optionLabel: { fontSize: 14 },
+    pro: { borderWidth: 1, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 7 },
+    destinations: {
+      flexDirection: 'row',
+      gap: 10,
+      paddingHorizontal: space.gutter,
+      paddingTop: space.md + 2,
+    },
+    destination: { flex: 1, gap: space.xs },
+    error: { paddingHorizontal: space.gutter, paddingTop: space.md },
+  });

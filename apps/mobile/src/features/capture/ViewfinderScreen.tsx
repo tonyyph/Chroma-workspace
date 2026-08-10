@@ -1,4 +1,4 @@
-import { round, size, space, ui, uiMotion } from '@chromawave/design-tokens';
+import { size, space, uiMotion, type Skin } from '@chromawave/design-tokens';
 import { readStability, type Color } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -15,7 +15,7 @@ import {
 import { BrandMark } from '@/components';
 import { usePhotoRead } from '@/hooks';
 import { hapticsService, soundService } from '@/infrastructure/dependencies';
-import { usePreferences } from '@/providers';
+import { usePreferences, useSkin } from '@/providers';
 import { useCaptureStore } from '@/store';
 import {
   Button,
@@ -28,6 +28,7 @@ import {
   ScanSweep,
   Text,
   useCaptureSequence,
+  useStyles,
 } from '@/ui';
 
 /** The three viewfinder modes, each with its own message key. */
@@ -61,6 +62,7 @@ const RATIOS = [
  * front of the lens. The 620ms scan sweep is the Skia layer the kit specifies.
  */
 export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
+  const styles = useStyles(makeStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -359,6 +361,7 @@ function PermissionGate({
   onRequest: () => void;
   onCancel: () => void;
 }) {
+  const styles = useStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const { t } = usePreferences();
   return (
@@ -383,88 +386,89 @@ function PermissionGate({
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: ui.bg.media },
-  noDevice: { alignItems: 'center', justifyContent: 'center' },
-  flash: { backgroundColor: '#FFFFFF' },
-  sweepLayer: { position: 'absolute', left: 0, right: 0, top: '30%' },
-  chrome: { flex: 1 },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: space.gutter,
-    paddingTop: space.cardGap,
-  },
-  close: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: ui.scrim.control,
-    borderWidth: 1,
-    borderColor: ui.border.control,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  topChips: { flexDirection: 'row', gap: space.xs },
-  reticleWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  reticle: {
-    width: 236,
-    height: 236,
-    borderRadius: 64,
-    borderWidth: 2,
-    borderColor: 'rgba(237,234,227,.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  reticleDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFFFFF' },
-  bottom: { paddingHorizontal: space.gutter, gap: space.cardGap },
-  readPanel: {
-    backgroundColor: ui.scrim.panel,
-    borderWidth: 1,
-    borderColor: ui.border.hairlineStrong,
-    borderRadius: round.media - 2,
-    padding: space.cardGap,
-    gap: space.sm,
-    minHeight: 108,
-  },
-  readHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  readRow: { flexDirection: 'row', gap: space.xs },
-  readItem: { flex: 1, gap: 6 },
-  readSwatch: { height: 44, borderRadius: 10 },
-  shutterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 6,
-  },
-  sideButton: {
-    width: 56,
-    height: 56,
-    borderRadius: round.control,
-    backgroundColor: ui.scrim.control,
-    borderWidth: 1,
-    borderColor: ui.border.control,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  shutter: {
-    width: size.shutter,
-    height: size.shutter,
-    borderRadius: size.shutter / 2,
-    borderWidth: 3,
-    borderColor: ui.text.primary,
-    backgroundColor: 'rgba(237,234,227,.14)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modes: { flexDirection: 'row', gap: 18, justifyContent: 'center' },
-  mode: { paddingBottom: 5 },
-  modeActive: { borderBottomWidth: 2, borderBottomColor: ui.action.primary },
-  gate: { alignItems: 'center', gap: space.md, paddingHorizontal: space.sectionGap },
-  gateTitle: { textAlign: 'center' },
-  gateBody: { textAlign: 'center' },
-  gateCard: { alignSelf: 'stretch' },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    root: { flex: 1, backgroundColor: skin.ui.bg.media },
+    noDevice: { alignItems: 'center', justifyContent: 'center' },
+    flash: { backgroundColor: '#FFFFFF' },
+    sweepLayer: { position: 'absolute', left: 0, right: 0, top: '30%' },
+    chrome: { flex: 1 },
+    topRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: space.gutter,
+      paddingTop: space.cardGap,
+    },
+    close: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: skin.ui.scrim.control,
+      borderWidth: 1,
+      borderColor: skin.ui.border.control,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    topChips: { flexDirection: 'row', gap: space.xs },
+    reticleWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    reticle: {
+      width: 236,
+      height: 236,
+      borderRadius: 64,
+      borderWidth: 2,
+      borderColor: 'rgba(237,234,227,.5)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    reticleDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFFFFF' },
+    bottom: { paddingHorizontal: space.gutter, gap: space.cardGap },
+    readPanel: {
+      backgroundColor: skin.ui.scrim.panel,
+      borderWidth: 1,
+      borderColor: skin.ui.border.hairlineStrong,
+      borderRadius: skin.round.media - 2,
+      padding: space.cardGap,
+      gap: space.sm,
+      minHeight: 108,
+    },
+    readHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    readRow: { flexDirection: 'row', gap: space.xs },
+    readItem: { flex: 1, gap: 6 },
+    readSwatch: { height: 44, borderRadius: 10 },
+    shutterRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 6,
+    },
+    sideButton: {
+      width: 56,
+      height: 56,
+      borderRadius: skin.round.control,
+      backgroundColor: skin.ui.scrim.control,
+      borderWidth: 1,
+      borderColor: skin.ui.border.control,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    shutter: {
+      width: size.shutter,
+      height: size.shutter,
+      borderRadius: size.shutter / 2,
+      borderWidth: 3,
+      borderColor: skin.ui.text.primary,
+      backgroundColor: 'rgba(237,234,227,.14)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modes: { flexDirection: 'row', gap: 18, justifyContent: 'center' },
+    mode: { paddingBottom: 5 },
+    modeActive: { borderBottomWidth: 2, borderBottomColor: skin.ui.action.primary },
+    gate: { alignItems: 'center', gap: space.md, paddingHorizontal: space.sectionGap },
+    gateTitle: { textAlign: 'center' },
+    gateBody: { textAlign: 'center' },
+    gateCard: { alignSelf: 'stretch' },
+  });
 
 export const shutterPressScale = uiMotion.shutterPress.scale;

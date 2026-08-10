@@ -1,12 +1,22 @@
-import { round, space, tint, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import type { Palette } from '@chromawave/domain';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { memo, useMemo } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { type TrendingItem } from '@/data';
-import { usePreferences } from '@/providers';
-import { BandCanvas, Button, Carousel, Icon, Meta, Pressable, Text } from '@/ui';
+import { usePreferences, useSkin } from '@/providers';
+import {
+  BandCanvas,
+  Button,
+  Carousel,
+  Gradient,
+  Icon,
+  Meta,
+  Pressable,
+  Text,
+  useStyles,
+} from '@/ui';
 import { HERO_HEIGHT, HERO_PEEK } from './heroMetrics';
 
 /**
@@ -132,6 +142,8 @@ export const HeroCarousel = memo(function HeroCarousel({
 const AUTOPLAY_MS = 6200;
 
 function HeroCard({ slide }: { slide: HeroSlide }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const { width } = useWindowDimensions();
   const artWidth = width - space.gutter * 2;
 
@@ -150,18 +162,16 @@ function HeroCard({ slide }: { slide: HeroSlide }) {
       {/* Two scrims, not one: a flat overlay at the strength body copy needs
           would grey out the artwork it is sitting on. The gradient keeps the top
           of the card fully saturated and only darkens where the text lands. */}
-      <LinearGradient
-        colors={['rgba(8,7,14,0)', 'rgba(8,7,14,.58)', 'rgba(8,7,14,.92)']}
-        locations={[0, 0.45, 1]}
-        style={StyleSheet.absoluteFill}
-      />
+      <Gradient role={skin.effects.scrimBottom('full')} />
 
       {slide.badge ? (
         <View
           style={[styles.badge, slide.badge.tone === 'pro' ? styles.badgePro : styles.badgeInfo]}
         >
           <Text
-            style={{ color: slide.badge.tone === 'pro' ? tint.pro.color : tint.info.color }}
+            style={{
+              color: slide.badge.tone === 'pro' ? skin.tint.pro.color : skin.tint.info.color,
+            }}
             variant="chip"
           >
             {slide.badge.label}
@@ -180,7 +190,7 @@ function HeroCard({ slide }: { slide: HeroSlide }) {
         <View style={styles.actions}>
           <Button label={slide.cta} onPress={slide.onPress} size="xxs" variant="contrast" />
           <View style={styles.arrow}>
-            <Icon color={ui.text.tertiary} name="arrowRight" scale="control" />
+            <Icon color={skin.ui.text.tertiary} name="arrowRight" scale="control" />
           </View>
         </View>
       </View>
@@ -207,10 +217,12 @@ function HeroArt({
   height: number;
   width: number;
 }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   if (art === 'gradient') {
     return (
       <LinearGradient
-        colors={gradientStops(colors)}
+        colors={gradientStops(colors, skin)}
         end={{ x: 1, y: 1 }}
         start={{ x: 0, y: 0 }}
         style={StyleSheet.absoluteFill}
@@ -241,7 +253,7 @@ function HeroArt({
 
   return (
     <BandCanvas
-      background={ui.bg.media}
+      background={skin.ui.bg.media}
       colors={colors}
       height={height}
       style={StyleSheet.absoluteFill}
@@ -250,64 +262,70 @@ function HeroArt({
   );
 }
 
-/** `LinearGradient` needs at least two stops, and takes a mutable tuple. */
-function gradientStops(colors: readonly string[]): [string, string, ...string[]] {
-  const [first = ui.bg.media, second = ui.action.primary, ...rest] = colors;
+/**
+ * `LinearGradient` needs at least two stops, and takes a mutable tuple.
+ *
+ * Takes the skin rather than reading one: this is a plain helper, and the two
+ * fallbacks are only reached by a palette carrying fewer than two colours.
+ */
+function gradientStops(colors: readonly string[], skin: Skin): [string, string, ...string[]] {
+  const [first = skin.ui.bg.media, second = skin.ui.action.primary, ...rest] = colors;
   return [first, second, ...rest];
 }
 
-const styles = StyleSheet.create({
-  card: {
-    height: HERO_HEIGHT,
-    borderRadius: round.media,
-    overflow: 'hidden',
-    backgroundColor: ui.bg.media,
-    justifyContent: 'flex-end',
-  },
-  copy: {
-    padding: space.md,
-    gap: 5,
-  },
-  eyebrow: {
-    color: ui.accent.infoText,
-  },
-  body: {
-    paddingBottom: 4,
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-  },
-  arrow: {
-    opacity: 0.8,
-  },
-  badge: {
-    position: 'absolute',
-    top: space.sm,
-    right: space.sm,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: round.chip,
-    borderWidth: 1,
-  },
-  badgePro: {
-    backgroundColor: tint.pro.backgroundColor,
-    borderColor: tint.pro.borderColor,
-  },
-  badgeInfo: {
-    backgroundColor: tint.info.backgroundColor,
-    borderColor: tint.info.borderColor,
-  },
-  columns: {
-    ...StyleSheet.absoluteFillObject,
-    flexDirection: 'row',
-    gap: 6,
-    padding: 10,
-    backgroundColor: ui.bg.media,
-  },
-  column: {
-    flex: 1,
-    borderRadius: round.swatch,
-  },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    card: {
+      height: HERO_HEIGHT,
+      borderRadius: skin.round.media,
+      overflow: 'hidden',
+      backgroundColor: skin.ui.bg.media,
+      justifyContent: 'flex-end',
+    },
+    copy: {
+      padding: space.md,
+      gap: 5,
+    },
+    eyebrow: {
+      color: skin.ui.accent.infoText,
+    },
+    body: {
+      paddingBottom: 4,
+    },
+    actions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space.sm,
+    },
+    arrow: {
+      opacity: 0.8,
+    },
+    badge: {
+      position: 'absolute',
+      top: space.sm,
+      right: space.sm,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: skin.round.chip,
+      borderWidth: 1,
+    },
+    badgePro: {
+      backgroundColor: skin.tint.pro.backgroundColor,
+      borderColor: skin.tint.pro.borderColor,
+    },
+    badgeInfo: {
+      backgroundColor: skin.tint.info.backgroundColor,
+      borderColor: skin.tint.info.borderColor,
+    },
+    columns: {
+      ...StyleSheet.absoluteFillObject,
+      flexDirection: 'row',
+      gap: 6,
+      padding: 10,
+      backgroundColor: skin.ui.bg.media,
+    },
+    column: {
+      flex: 1,
+      borderRadius: skin.round.swatch,
+    },
+  });

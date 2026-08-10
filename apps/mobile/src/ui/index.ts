@@ -33,6 +33,7 @@ export { Sheet, SheetGrabber } from './Sheet';
 export { Slider } from './Slider';
 export { HERO_HEIGHT, HeroOverlay } from './HeroTransition';
 export { Card, CardGroup, Gutter, Screen } from './Surface';
+export { useStyles } from './useStyles';
 export { ColorRow, SwatchStrip, type SwatchEntry } from './Swatch';
 export { TabBar, type TabKey } from './TabBar';
 export { Meta, Text, type TextTone, type TextVariant } from './Text';

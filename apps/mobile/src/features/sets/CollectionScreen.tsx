@@ -1,4 +1,4 @@
-import { elevation, round, space, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import {
   contrastRatio,
   paletteGaps,
@@ -13,7 +13,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { PalettePhoto } from '@/features/library/PalettePhoto';
 import { useAccent, useChromaticSurface } from '@/hooks';
-import { usePreferences } from '@/providers';
+import { usePreferences, useSkin } from '@/providers';
 import {
   Button,
   Card,
@@ -28,6 +28,7 @@ import {
   PromptSheet,
   Screen,
   Text,
+  useStyles,
 } from '@/ui';
 
 /**
@@ -72,6 +73,8 @@ export function CollectionScreen({
   onRemovePalette: (paletteId: string) => void;
   onDelete: () => void;
 }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const { t, feedback } = usePreferences();
   const members = set.members.length;
   const [editing, setEditing] = useState(false);
@@ -249,7 +252,7 @@ export function CollectionScreen({
                 onPress={() => onRemovePalette(palette.id)}
                 style={styles.remove}
               >
-                <Icon color={ui.status.dangerText} name="remove" scale="inline" />
+                <Icon color={skin.ui.status.dangerText} name="remove" scale="inline" />
               </Pressable>
             ) : null}
           </Card>
@@ -299,6 +302,7 @@ const AA = 4.5;
  * A row that fails still renders, because seeing why it fails is the point.
  */
 function Pairings({ colors }: { colors: readonly Color[] }) {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
 
   const rows = useMemo(
@@ -356,51 +360,61 @@ function Pairings({ colors }: { colors: readonly Color[] }) {
   );
 }
 
-const styles = StyleSheet.create({
-  head: { paddingTop: space.md, gap: space.xs },
-  eyebrow: { paddingBottom: space.xs },
-  systemWrap: { paddingTop: space.sectionGap },
-  system: {
-    flexDirection: 'row',
-    height: 132,
-    borderRadius: round.media,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: elevation.raised.borderColor,
-  },
-  systemMeta: { paddingTop: space.xs, color: ui.text.tertiary },
-  systemEmpty: { gap: space.xs },
-  gapWrap: { paddingTop: space.cardGap },
-  gap: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  gapCopy: { flex: 1 },
-  actions: { paddingTop: space.sectionGap, flexDirection: 'row', gap: space.xs },
-  membersHead: { paddingTop: space.sectionGap },
-  pairings: { paddingTop: space.xs, gap: 6 },
-  pairing: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: space.md,
-    paddingVertical: space.sm,
-    borderRadius: round.control,
-  },
-  pairingSample: { letterSpacing: 0 },
-  pairingMeta: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
-  ratio: { borderRadius: round.full, paddingHorizontal: 9, paddingVertical: 4 },
-  ratioPass: { backgroundColor: ui.scrim.strong },
-  ratioFail: { backgroundColor: ui.scrim.strong, borderWidth: 1, borderColor: ui.status.danger },
-  ratioText: { color: ui.text.primary },
-  rows: { paddingTop: space.xs, gap: 10 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.sm },
-  rowThumb: { width: 44, height: 44, borderRadius: round.control, backgroundColor: ui.bg.media },
-  rowCopy: { flex: 1, gap: 3 },
-  rowMeta: { fontSize: 9, letterSpacing: 1 },
-  remove: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,107,90,.16)',
-  },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    head: { paddingTop: space.md, gap: space.xs },
+    eyebrow: { paddingBottom: space.xs },
+    systemWrap: { paddingTop: space.sectionGap },
+    system: {
+      flexDirection: 'row',
+      height: 132,
+      borderRadius: skin.round.media,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: skin.elevation.raised.borderColor,
+    },
+    systemMeta: { paddingTop: space.xs, color: skin.ui.text.tertiary },
+    systemEmpty: { gap: space.xs },
+    gapWrap: { paddingTop: space.cardGap },
+    gap: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+    gapCopy: { flex: 1 },
+    actions: { paddingTop: space.sectionGap, flexDirection: 'row', gap: space.xs },
+    membersHead: { paddingTop: space.sectionGap },
+    pairings: { paddingTop: space.xs, gap: 6 },
+    pairing: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: space.md,
+      paddingVertical: space.sm,
+      borderRadius: skin.round.control,
+    },
+    pairingSample: { letterSpacing: 0 },
+    pairingMeta: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+    ratio: { borderRadius: skin.round.full, paddingHorizontal: 9, paddingVertical: 4 },
+    ratioPass: { backgroundColor: skin.ui.scrim.strong },
+    ratioFail: {
+      backgroundColor: skin.ui.scrim.strong,
+      borderWidth: 1,
+      borderColor: skin.ui.status.danger,
+    },
+    ratioText: { color: skin.ui.text.primary },
+    rows: { paddingTop: space.xs, gap: 10 },
+    row: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.sm },
+    rowThumb: {
+      width: 44,
+      height: 44,
+      borderRadius: skin.round.control,
+      backgroundColor: skin.ui.bg.media,
+    },
+    rowCopy: { flex: 1, gap: 3 },
+    rowMeta: { fontSize: 9, letterSpacing: 1 },
+    remove: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: skin.tint.danger.backgroundColor,
+    },
+  });

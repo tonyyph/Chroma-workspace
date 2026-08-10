@@ -1,4 +1,4 @@
-import { round, space, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import { extractPaletteFromRgba } from '@chromawave/domain';
 import { useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -11,7 +11,8 @@ import {
   usePhotoOutput,
   type CameraRef,
 } from 'react-native-vision-camera';
-import { Button, Card, Meta, Screen, Text } from '@/ui';
+import { Button, Card, Meta, Screen, Text, useStyles } from '@/ui';
+import { useSkin } from '@/providers';
 
 /**
  * THROUGHPUT PROBE — not a product screen. Delete before release.
@@ -109,6 +110,7 @@ const percentile = (values: readonly number[], fraction: number): number => {
 };
 
 export default function LiveReadSpikeRoute() {
+  const styles = useStyles(makeStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const camera = useRef<CameraRef>(null);
@@ -324,25 +326,26 @@ export default function LiveReadSpikeRoute() {
   );
 }
 
-const styles = StyleSheet.create({
-  centred: { alignItems: 'center', justifyContent: 'center', flex: 1, gap: space.sm },
-  head: { paddingHorizontal: space.gutter, gap: 4 },
-  preview: {
-    height: 220,
-    marginHorizontal: space.gutter,
-    marginTop: space.md,
-    borderRadius: round.media,
-    backgroundColor: ui.bg.media,
-    overflow: 'hidden',
-  },
-  controls: { paddingHorizontal: space.gutter, paddingTop: space.md, gap: space.xs },
-  body: { paddingHorizontal: space.gutter, paddingTop: space.cardGap },
-  report: { gap: space.xs },
-  reportHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  table: { paddingTop: space.xs, gap: 3 },
-  tableRow: { flexDirection: 'row', alignItems: 'center' },
-  stage: { flex: 1 },
-  number: { width: 64, textAlign: 'right' },
-  swatches: { flexDirection: 'row', gap: 4, paddingTop: space.xs },
-  swatch: { flex: 1, height: 24, borderRadius: 6 },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    centred: { alignItems: 'center', justifyContent: 'center', flex: 1, gap: space.sm },
+    head: { paddingHorizontal: space.gutter, gap: 4 },
+    preview: {
+      height: 220,
+      marginHorizontal: space.gutter,
+      marginTop: space.md,
+      borderRadius: skin.round.media,
+      backgroundColor: skin.ui.bg.media,
+      overflow: 'hidden',
+    },
+    controls: { paddingHorizontal: space.gutter, paddingTop: space.md, gap: space.xs },
+    body: { paddingHorizontal: space.gutter, paddingTop: space.cardGap },
+    report: { gap: space.xs },
+    reportHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+    table: { paddingTop: space.xs, gap: 3 },
+    tableRow: { flexDirection: 'row', alignItems: 'center' },
+    stage: { flex: 1 },
+    number: { width: 64, textAlign: 'right' },
+    swatches: { flexDirection: 'row', gap: 4, paddingTop: space.xs },
+    swatch: { flex: 1, height: 24, borderRadius: 6 },
+  });

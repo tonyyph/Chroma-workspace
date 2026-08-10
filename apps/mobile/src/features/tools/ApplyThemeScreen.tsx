@@ -1,9 +1,9 @@
-import { round, space, ui } from '@chromawave/design-tokens';
+import { space, type Skin } from '@chromawave/design-tokens';
 import { contrastRatio, safeForegroundFor, type Palette } from '@chromawave/domain';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { usePreferences } from '@/providers';
-import { Button, Card, Chip, Gutter, Screen, ScreenHeader, Text } from '@/ui';
+import { usePreferences, useSkin } from '@/providers';
+import { Button, Card, Chip, Gutter, Screen, ScreenHeader, Text, useStyles } from '@/ui';
 
 const SURFACES = ['APP UI', 'WEB', 'POSTER', 'SLIDE'] as const;
 
@@ -22,6 +22,7 @@ export function ApplyThemeScreen({
   palette: Palette;
   onExport: () => void;
 }) {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   const [surface, setSurface] = useState<(typeof SURFACES)[number]>('APP UI');
 
@@ -103,6 +104,7 @@ type Roles = {
 
 /** The design's own preview: header, stat tiles, a chart and an action row. */
 function AppUiPreview({ roles }: { roles: Roles }) {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   return (
     <>
@@ -154,6 +156,7 @@ function AppUiPreview({ roles }: { roles: Roles }) {
 
 /** A marketing page: nav, headline, body, call to action — long-form text on the ground. */
 function WebPreview({ roles }: { roles: Roles }) {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   return (
     <>
@@ -184,6 +187,7 @@ function WebPreview({ roles }: { roles: Roles }) {
 
 /** Type at poster scale on a full bleed — the hardest test of a palette's contrast. */
 function PosterPreview({ roles }: { roles: Roles }) {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   return (
     <View style={styles.poster}>
@@ -199,6 +203,7 @@ function PosterPreview({ roles }: { roles: Roles }) {
 
 /** A presentation slide: eyebrow, title, and a swatch row as the footer. */
 function SlidePreview({ roles }: { roles: Roles }) {
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   return (
     <View style={styles.slide}>
@@ -226,6 +231,7 @@ function Stat({
   border?: string;
   textColor?: string;
 }) {
+  const styles = useStyles(makeStyles);
   const color = textColor ?? safeForegroundFor(background);
   return (
     <View
@@ -241,59 +247,60 @@ function Stat({
   );
 }
 
-const styles = StyleSheet.create({
-  head: { paddingTop: space.cardGap },
-  surfaces: { paddingTop: space.md, flexDirection: 'row', gap: space.xs },
-  previewWrap: { paddingTop: space.md + 2 },
-  preview: {
-    borderRadius: round.media,
-    borderWidth: 1,
-    borderColor: ui.border.hairlineStrong,
-    padding: 18,
-    gap: space.cardGap,
-  },
-  previewHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  previewTitle: { fontSize: 17, fontWeight: '600' },
-  previewGlyph: { width: 30, height: 30, borderRadius: 10 },
-  stats: { flexDirection: 'row', gap: 10 },
-  stat: { flex: 1, borderRadius: round.control, padding: space.sm, gap: 5 },
-  chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 80 },
-  bar: { flex: 1, borderRadius: 5 },
-  previewActions: { flexDirection: 'row', gap: 10, alignItems: 'center' },
-  previewButton: {
-    flex: 1,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  previewGhost: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, opacity: 0.3 },
-  webNav: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  webLogo: { width: 22, height: 22, borderRadius: 7 },
-  webNavItem: { height: 6, borderRadius: 3, opacity: 0.55 },
-  webHeadline: { fontSize: 24, lineHeight: 28, fontWeight: '600', letterSpacing: -0.4 },
-  webLine: { height: 7, borderRadius: 4, opacity: 0.5 },
-  webCta: {
-    alignSelf: 'flex-start',
-    height: 38,
-    borderRadius: 19,
-    paddingHorizontal: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: space.xs,
-  },
-  poster: { gap: space.sm, minHeight: 232 },
-  posterBleed: { height: 74, borderRadius: round.control },
-  posterTitle: { fontSize: 34, lineHeight: 36, fontWeight: '700', letterSpacing: -1 },
-  posterRule: { flexDirection: 'row' },
-  posterRuleLine: { height: 4, flex: 1, borderRadius: 2 },
-  posterMeta: { fontSize: 11, letterSpacing: 2 },
-  slide: { gap: space.sm, minHeight: 232, justifyContent: 'center' },
-  slideEyebrow: { fontSize: 10, letterSpacing: 2, fontWeight: '600' },
-  slideTitle: { fontSize: 28, lineHeight: 32, fontWeight: '600', letterSpacing: -0.6 },
-  slideFooter: { flexDirection: 'row', gap: 8, marginTop: 'auto' },
-  slideChip: { flex: 1, height: 12, borderRadius: 6 },
-  mappingWrap: { paddingTop: space.md + 2 },
-  mapping: { gap: 10 },
-  mappingRow: { flexDirection: 'row', justifyContent: 'space-between' },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    head: { paddingTop: space.cardGap },
+    surfaces: { paddingTop: space.md, flexDirection: 'row', gap: space.xs },
+    previewWrap: { paddingTop: space.md + 2 },
+    preview: {
+      borderRadius: skin.round.media,
+      borderWidth: 1,
+      borderColor: skin.ui.border.hairlineStrong,
+      padding: 18,
+      gap: space.cardGap,
+    },
+    previewHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    previewTitle: { fontSize: 17, fontWeight: '600' },
+    previewGlyph: { width: 30, height: 30, borderRadius: 10 },
+    stats: { flexDirection: 'row', gap: 10 },
+    stat: { flex: 1, borderRadius: skin.round.control, padding: space.sm, gap: 5 },
+    chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 80 },
+    bar: { flex: 1, borderRadius: 5 },
+    previewActions: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+    previewButton: {
+      flex: 1,
+      height: 42,
+      borderRadius: 21,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    previewGhost: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, opacity: 0.3 },
+    webNav: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    webLogo: { width: 22, height: 22, borderRadius: 7 },
+    webNavItem: { height: 6, borderRadius: 3, opacity: 0.55 },
+    webHeadline: { fontSize: 24, lineHeight: 28, fontWeight: '600', letterSpacing: -0.4 },
+    webLine: { height: 7, borderRadius: 4, opacity: 0.5 },
+    webCta: {
+      alignSelf: 'flex-start',
+      height: 38,
+      borderRadius: 19,
+      paddingHorizontal: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: space.xs,
+    },
+    poster: { gap: space.sm, minHeight: 232 },
+    posterBleed: { height: 74, borderRadius: skin.round.control },
+    posterTitle: { fontSize: 34, lineHeight: 36, fontWeight: '700', letterSpacing: -1 },
+    posterRule: { flexDirection: 'row' },
+    posterRuleLine: { height: 4, flex: 1, borderRadius: 2 },
+    posterMeta: { fontSize: 11, letterSpacing: 2 },
+    slide: { gap: space.sm, minHeight: 232, justifyContent: 'center' },
+    slideEyebrow: { fontSize: 10, letterSpacing: 2, fontWeight: '600' },
+    slideTitle: { fontSize: 28, lineHeight: 32, fontWeight: '600', letterSpacing: -0.6 },
+    slideFooter: { flexDirection: 'row', gap: 8, marginTop: 'auto' },
+    slideChip: { flex: 1, height: 12, borderRadius: 6 },
+    mappingWrap: { paddingTop: space.md + 2 },
+    mapping: { gap: 10 },
+    mappingRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  });

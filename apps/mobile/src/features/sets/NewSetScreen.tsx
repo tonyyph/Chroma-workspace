@@ -1,9 +1,9 @@
-import { round, size, space, typeExtra, ui } from '@chromawave/design-tokens';
+import { size, space, type Skin } from '@chromawave/design-tokens';
 import type { Palette } from '@chromawave/domain';
 import { useState } from 'react';
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native';
 import { PalettePhoto } from '@/features/library/PalettePhoto';
-import { usePreferences } from '@/providers';
+import { usePreferences, useSkin } from '@/providers';
 import {
   Button,
   Card,
@@ -15,6 +15,7 @@ import {
   ScreenHeader,
   SwatchStrip,
   Text,
+  useStyles,
 } from '@/ui';
 
 /**
@@ -38,6 +39,8 @@ export function NewSetScreen({
   onCancel: () => void;
   onSave: (name: string) => void;
 }) {
+  const skin = useSkin();
+  const styles = useStyles(makeStyles);
   const { t } = usePreferences();
   const [name, setName] = useState('');
   const [focused, setFocused] = useState(false);
@@ -74,7 +77,7 @@ export function NewSetScreen({
         <View
           style={[
             styles.field,
-            { borderColor: focused ? ui.action.primary : ui.border.hairlineStrong },
+            { borderColor: focused ? skin.ui.action.primary : skin.ui.border.hairlineStrong },
           ]}
         >
           <TextInput
@@ -87,7 +90,7 @@ export function NewSetScreen({
             onFocus={() => setFocused(true)}
             onSubmitEditing={submit}
             placeholder={t('sets.new.namePlaceholder')}
-            placeholderTextColor={ui.text.tertiary}
+            placeholderTextColor={skin.ui.text.tertiary}
             returnKeyType="done"
             style={styles.input}
             value={name}
@@ -129,28 +132,34 @@ export function NewSetScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  head: { paddingTop: space.md },
-  error: { paddingTop: space.md },
-  form: { paddingTop: space.md + 2, gap: space.sm },
-  field: {
-    height: size.field,
-    borderRadius: round.full,
-    backgroundColor: ui.fill.chip,
-    borderWidth: 1,
-    justifyContent: 'center',
-    paddingHorizontal: space.md,
-  },
-  input: {
-    padding: 0,
-    color: ui.text.primary,
-    fontFamily: typeExtra.button.fontFamily,
-    fontSize: 14,
-  },
-  rows: { paddingTop: space.sectionGap, gap: 10 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.sm },
-  rowThumb: { width: 44, height: 44, borderRadius: round.control, backgroundColor: ui.bg.media },
-  rowCopy: { flex: 1, gap: 3 },
-  rowStrip: { width: 60 },
-  hint: { paddingTop: space.sectionGap },
-});
+const makeStyles = (skin: Skin) =>
+  StyleSheet.create({
+    head: { paddingTop: space.md },
+    error: { paddingTop: space.md },
+    form: { paddingTop: space.md + 2, gap: space.sm },
+    field: {
+      height: size.field,
+      borderRadius: skin.round.full,
+      backgroundColor: skin.ui.fill.chip,
+      borderWidth: 1,
+      justifyContent: 'center',
+      paddingHorizontal: space.md,
+    },
+    input: {
+      padding: 0,
+      color: skin.ui.text.primary,
+      fontFamily: skin.type.button.fontFamily,
+      fontSize: 14,
+    },
+    rows: { paddingTop: space.sectionGap, gap: 10 },
+    row: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.sm },
+    rowThumb: {
+      width: 44,
+      height: 44,
+      borderRadius: skin.round.control,
+      backgroundColor: skin.ui.bg.media,
+    },
+    rowCopy: { flex: 1, gap: 3 },
+    rowStrip: { width: 60 },
+    hint: { paddingTop: space.sectionGap },
+  });
