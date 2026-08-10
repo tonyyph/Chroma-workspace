@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
    *  separates one reading from the next without breaking the material. */
   row: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: ui.border.hairlineStrong },
   band: {
-    height: 116,
+    height: 172,
     flexDirection: 'row',
     backgroundColor: ui.bg.media,
     justifyContent: 'flex-end',

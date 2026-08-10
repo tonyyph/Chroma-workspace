@@ -79,7 +79,7 @@ export const LibrarySignature = memo(function LibrarySignature({
 });
 
 const styles = StyleSheet.create({
-  root: { height: 210, backgroundColor: ui.bg.media, justifyContent: 'flex-end' },
+  root: { height: 144, backgroundColor: ui.bg.media, justifyContent: 'flex-end' },
   /** Vertical: a signature is a stack of weights, and stacking keeps the
    *  smallest one a band rather than a sliver at the edge of the screen. */
   bands: { ...StyleSheet.absoluteFillObject, flexDirection: 'column' },
