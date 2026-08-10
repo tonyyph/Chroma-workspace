@@ -161,10 +161,6 @@ export const vi: Record<MessageKey, string> = {
   'hero.studio.title': 'Biến bảng màu thành bề mặt',
   'hero.studio.body': 'Đưa {name} vào xưởng và xuất thành hình nền.',
   'hero.studio.cta': 'Mở xưởng',
-  'hero.pro.eyebrow': 'CHROMA WAVE PRO',
-  'hero.pro.title': 'Mở khoá trọn vẹn',
-  'hero.pro.body': 'Gộp bộ sưu tập, thẻ không watermark, xuất ASE, JSON và P3.',
-  'hero.pro.cta': 'Xem Pro',
 
   /* -------------------------------- bộ lọc khám phá · thư viện + thịnh hành */
   'filter.toggle': 'BỘ LỌC',

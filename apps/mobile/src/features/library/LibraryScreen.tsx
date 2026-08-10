@@ -26,10 +26,9 @@ import {
   FilterRail,
   Gutter,
   Icon,
+  Meta,
   Pressable,
   Screen,
-  ScreenHeader,
-  SectionHead,
   Shimmer,
   Text,
 } from '@/ui';
@@ -112,62 +111,73 @@ export function LibraryScreen() {
     [openPalette],
   );
 
+  const filtered = visible.length !== palettes.length;
+
   const header = (
     <>
-      <Gutter>
-        <ScreenHeader
-          meta={t('library.meta', { palettes: palettes.length, collections: sets.length })}
-          title={t('library.title')}
-          trailing={
-            <Pressable
-              accessibilityLabel={t('library.search')}
-              accessibilityRole="button"
-              // Explore is the next tab along, not a screen to stack on top of
-              // this one — `push` left a duplicate tab bar behind it.
-              onPress={() => router.navigate('/explore')}
-              style={styles.searchButton}
-            >
-              <Icon name="search" scale="action" />
-            </Pressable>
-          }
-        />
+      {/* MASTHEAD.
+          The screen used to say "Library" three times before showing a single
+          palette — once as the header, once as a section head over the grid,
+          once as the filter rail's own axis label — with a counts line, a
+          carousel and a rail stacked between them. Six blocks of chrome in
+          front of the thing the screen is for.
+
+          One title now, at the size a front door deserves, with the counts as
+          its eyebrow and search sharing that line rather than competing with
+          46pt type. */}
+      <Gutter style={styles.masthead}>
+        <View style={styles.mastheadTop}>
+          <Meta>{t('library.meta', { palettes: palettes.length, collections: sets.length })}</Meta>
+          <Pressable
+            accessibilityLabel={t('library.search')}
+            accessibilityRole="button"
+            hitSlop={12}
+            // Explore is the next tab along, not a screen to stack on top of
+            // this one — `push` left a duplicate tab bar behind it.
+            onPress={() => router.navigate('/explore')}
+          >
+            <Icon color={ui.text.secondary} name="search" scale="action" />
+          </Pressable>
+        </View>
+        <Text accessibilityRole="header" variant="hero">
+          {t('library.title')}
+        </Text>
       </Gutter>
 
       <View style={styles.hero}>
         <LandingHero recent={palettes[0] ?? null} />
       </View>
 
-      <Gutter style={styles.libraryHead}>
-        <SectionHead
-          meta={
-            visible.length === palettes.length
-              ? undefined
-              : t('library.resultCount', { count: visible.length, total: palettes.length })
-          }
-          title={t('library.title')}
+      <View style={styles.rail}>
+        <FilterRail
+          activeCount={filters.activeCount}
+          groups={filters.groups}
+          labels={filters.railLabels}
+          onReset={filters.reset}
+          primary={{
+            id: 'base',
+            label: t('library.title'),
+            options: libraryFilters.map((key) => ({
+              value: key,
+              label: t(`library.filter.${key}`),
+            })),
+            selected: [query.base],
+            onToggle: (value) => {
+              const next = libraryFilters.find((entry) => entry === value) ?? 'all';
+              filters.setBase(next);
+              analytics.track('library_filter_changed', { filter: next });
+            },
+          }}
         />
-      </Gutter>
+      </View>
 
-      <FilterRail
-        activeCount={filters.activeCount}
-        groups={filters.groups}
-        labels={filters.railLabels}
-        onReset={filters.reset}
-        primary={{
-          id: 'base',
-          label: t('library.title'),
-          options: libraryFilters.map((key) => ({
-            value: key,
-            label: t(`library.filter.${key}`),
-          })),
-          selected: [query.base],
-          onToggle: (value) => {
-            const next = libraryFilters.find((entry) => entry === value) ?? 'all';
-            filters.setBase(next);
-            analytics.track('library_filter_changed', { filter: next });
-          },
-        }}
-      />
+      {/* Only when a filter is narrowing something. An unfiltered library
+          counting itself twice on one screen is noise. */}
+      {filtered ? (
+        <Gutter style={styles.count}>
+          <Meta>{t('library.resultCount', { count: visible.length, total: palettes.length })}</Meta>
+        </Gutter>
+      ) : null}
     </>
   );
 
@@ -302,39 +312,36 @@ function EmptyLibrary({
 }
 
 const styles = StyleSheet.create({
-  searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: ui.fill.chip,
-    borderWidth: 1,
-    borderColor: ui.border.hairlineStrong,
+  masthead: { paddingTop: space.sm, gap: 6 },
+  mastheadTop: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    // The eyebrow sits on the search control's line, so the title below has the
+    // full width and nothing beside it to be measured against.
+    minHeight: 28,
   },
-  hero: {
-    paddingTop: space.md,
-  },
-  libraryHead: {
-    paddingTop: space.sectionGap,
-  },
-  list: {
-    paddingTop: space.cardGap,
-  },
+  hero: { paddingTop: space.lg },
+  rail: { paddingTop: space.sectionGap },
+  count: { paddingTop: space.sm },
+  list: { paddingTop: space.md },
   row: {
+    // Ragged by design: cards size to the palette they carry, so a row of a
+    // three-band and a six-band palette does not pretend they are the same
+    // object. Aligning to the top is what lets that read as rhythm.
     alignItems: 'flex-start',
-    paddingHorizontal: space.gutter - space.cardGap / 2,
+    paddingHorizontal: space.gutter - space.md / 2,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingTop: space.md,
-    marginHorizontal: -space.cardGap / 2,
+    marginHorizontal: -space.md / 2,
   },
   column: {
     flex: 1,
-    paddingHorizontal: space.cardGap / 2,
-    paddingBottom: space.cardGap,
+    paddingHorizontal: space.md / 2,
+    paddingBottom: space.md,
   },
   empty: {
     alignItems: 'center',

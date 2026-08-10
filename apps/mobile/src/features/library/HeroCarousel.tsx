@@ -96,18 +96,19 @@ export const HeroCarousel = memo(function HeroCarousel({
       });
     }
 
-    built.push({
-      id: 'pro',
-      eyebrow: t('hero.pro.eyebrow'),
-      title: t('hero.pro.title'),
-      body: t('hero.pro.body'),
-      cta: t('hero.pro.cta'),
-      onPress: () => router.push('/paywall?trigger=pro-tools'),
-      colors: ['#7C5CFF', '#B79CFF', '#22D3EE'],
-      art: 'field',
-      badge: { label: t('common.pro'), tone: 'pro' },
-    });
-
+    /**
+     * There was a fourth slide selling Pro here.
+     *
+     * Its copy offered "merged sets", which are free — merging is what a set is
+     * for — and ASE export, which has never been one of the four targets. Both
+     * had been wrong since the entitlement model was rewritten.
+     *
+     * It is not replaced with corrected copy. This screen is someone's own
+     * archive, and an advertisement above their own work is the least premium
+     * thing that can be put on a home screen. Pro is still reached from the
+     * gates that mean something: the export sheet, the share sheet's watermark
+     * row, and locked white balance in the viewfinder.
+     */
     return built;
   }, [featured, recent, router, t]);
 

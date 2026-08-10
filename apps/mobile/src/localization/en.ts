@@ -158,10 +158,6 @@ export const en = {
   'hero.studio.title': 'Turn a palette into a surface',
   'hero.studio.body': 'Take {name} into the studio and export it as a wallpaper.',
   'hero.studio.cta': 'Open studio',
-  'hero.pro.eyebrow': 'CHROMA WAVE PRO',
-  'hero.pro.title': 'Unlock the complete wave',
-  'hero.pro.body': 'Merged sets, watermark-free cards, and ASE, JSON and P3 export.',
-  'hero.pro.cta': 'See Pro',
 
   /* ---------------------------------- discovery filters · library + trending */
   'filter.toggle': 'FILTERS',

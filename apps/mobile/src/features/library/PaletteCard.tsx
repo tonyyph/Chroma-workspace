@@ -8,6 +8,17 @@ import { Meta, Pressable, Text } from '@/ui';
 import { PalettePhoto } from './PalettePhoto';
 
 /**
+ * How tall the palette's face is, given how many bands it has to fit.
+ *
+ * A fixed height flatters a three-colour palette and cheats a six-colour one:
+ * at 148pt a 6% signal in a six-band palette is nine points, which is a line
+ * rather than a colour. Growing with the count keeps the smallest band legible
+ * whatever the palette is — and the ragged rows that result are what stop a
+ * two-column grid reading as a spreadsheet.
+ */
+const faceHeight = (count: number) => 104 + Math.min(count, 6) * 12;
+
+/**
  * FLOW C · a library card.
  *
  * **What changed and why.** The card was a 112pt photograph over a 10pt band
@@ -72,7 +83,7 @@ export const PaletteCard = memo(function PaletteCard({
       <View
         accessibilityLabel={palette.colors.map((color) => color.hex).join(', ')}
         ref={face}
-        style={styles.face}
+        style={[styles.face, { height: faceHeight(palette.colors.length) }]}
       >
         {palette.colors.map((color, index) => (
           <View
@@ -115,7 +126,7 @@ const styles = StyleSheet.create({
   },
   /** Vertical, not horizontal: stacked bands hold their proportions at a
    *  column's width, where a 160pt-wide row would give a 6% signal 9 points. */
-  face: { height: 148, backgroundColor: ui.bg.media },
+  face: { backgroundColor: ui.bg.media },
   copy: {
     flexDirection: 'row',
     alignItems: 'center',

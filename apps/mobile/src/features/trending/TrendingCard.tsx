@@ -79,10 +79,7 @@ export const TrendingCard = memo(function TrendingCard({
         accessibilityLabel={item.name}
         accessibilityRole="button"
         onPress={open}
-        style={({ pressed }) => [
-          styles.entry,
-          pressed && { opacity: uiMotion.listPress.opacity },
-        ]}
+        style={({ pressed }) => [styles.entry, pressed && { opacity: uiMotion.listPress.opacity }]}
       >
         <View
           accessibilityLabel={item.colors.map((color) => color.hex).join(', ')}
