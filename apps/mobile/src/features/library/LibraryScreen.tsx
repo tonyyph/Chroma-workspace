@@ -114,9 +114,7 @@ export function LibraryScreen() {
       if (item.kind === 'palette') {
         return <PaletteRibbon onOpen={openPalette} palette={item.palette} />;
       }
-      // The band's end caps come from the active skin, not from chroma's scale:
-      // swiss answers `round.full` with a square edge, and a literal pill here
-      // would put chroma's geometry on a paper ground.
+
       const cap = skin.round.full;
       const last = item.colors.length - 1;
       return (

@@ -20,6 +20,7 @@ import {
 import {
   analytics,
   hapticsService,
+  migrateMemories,
   migrateStorage,
   notificationScheduler,
   preferencesRepository,
@@ -121,9 +122,17 @@ export function PreferencesProvider({
 
   useEffect(() => {
     let active = true;
-    // The MMKV migration has to finish before the first read, or an upgrading
+    // Both migrations have to finish before the first read, or an upgrading
     // user sees defaults for one launch and then their real data on the next.
+    //
+    // Ordered, not parallel: the memory migration reads the palette key that the
+    // MMKV migration copies over from AsyncStorage, so running them together
+    // would let an upgrading user's library migrate from a key that had not
+    // arrived yet — and the result would be a legitimately empty v2 store that
+    // never runs again, because the migration is idempotent.
     migrateStorage()
+      .catch(() => undefined)
+      .then(() => migrateMemories())
       .catch(() => undefined)
       .then(() => Promise.all([preferencesRepository.get(), notificationScheduler.getPermission()]))
       .then(([stored, permission]) => {

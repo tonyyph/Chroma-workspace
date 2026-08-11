@@ -39,6 +39,18 @@ export const RANKING_WEIGHTS = {
   rejected: 0.5,
   /** Nothing to play is worse than something to play, but not disqualifying. */
   noPreview: 0.12,
+  /**
+   * The track's title echoes the genre we searched for.
+   *
+   * A keyword index cannot distinguish "this record belongs to the shoegaze
+   * scene" from "this record has the word Dream in its title", and the second
+   * kind arrives constantly: searching `dream pop` surfaced two K-pop singles
+   * called "Dream", and `chamber music` returned four separate tracks actually
+   * titled "Chamber Music". A song named after a genre is nearly always either a
+   * novelty or a keyword-farmed upload — almost never the canonical record
+   * someone meant.
+   */
+  titleEcho: 0.18,
 } as const;
 
 /**
@@ -134,6 +146,10 @@ export function rankCandidates({
       score -= RANKING_WEIGHTS.rejected;
     }
 
+    if (surfacedBy !== null && titleEchoesGenre(track.title, surfacedBy)) {
+      score -= RANKING_WEIGHTS.titleEcho;
+    }
+
     const hasPreview = previewAvailable ? previewAvailable.has(track.providerTrackId) : true;
     if (!hasPreview) score -= RANKING_WEIGHTS.noPreview;
 
@@ -213,6 +229,20 @@ function withAtmosphereReasons(
     .slice(0, Math.max(1, 4 - reasons.length));
 
   return [...reasons, ...strongest].slice(0, 4);
+}
+
+/**
+ * Whether the title looks like it matched the *word* rather than the genre.
+ *
+ * Tested on the head word, because that is the one a title collides on:
+ * "dream pop" collides through "Dream", "chamber music" through "Chamber".
+ * Short head words are skipped — a three-letter fragment appearing in a title
+ * says nothing.
+ */
+function titleEchoesGenre(title: string, genre: string): boolean {
+  const head = genre.split(' ')[0]?.toLowerCase() ?? '';
+  if (head.length < 4) return false;
+  return new RegExp(`\\b${head.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i').test(title);
 }
 
 function matchesEra(eras: readonly string[], year: number): boolean {

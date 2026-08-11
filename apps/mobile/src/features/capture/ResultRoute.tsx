@@ -74,10 +74,18 @@ export default function ResultRoute() {
       void soundService.play('save');
       analytics.track('palette_saved', { tuned: palette.tuned, source: palette.source });
       discard();
-      // Back to the project when there is one: the merged band re-proportioning
-      // to include this capture is the result of the action, and landing on the
-      // palette detail instead would hide it.
-      router.replace(target ? `/set/${target.id}` : `/palette/${palette.id}`);
+      /**
+       * Back to the project when there is one: the merged band re-proportioning
+       * to include this capture is the result of the action, and landing on the
+       * palette detail instead would hide it.
+       *
+       * Otherwise straight into pairing. The save already produced a complete
+       * Chromatic Memory — `MemoryBackedPaletteRepository` widens a palette the
+       * memory store has never seen — so this is not "finish the record", it is
+       * the second half of what the product is for. Backing out of that screen
+       * lands on the memory, which is a finished thing either way.
+       */
+      router.replace(target ? `/set/${target.id}` : `/pair?id=${palette.id}`);
     },
     [toPalette, save, sets, saveSet, setId, discard, router],
   );

@@ -54,7 +54,105 @@ existing 339 tests still pass; the ten tool screens still compile.
 
 ---
 
-## Phase 2 — Core vertical slice · **the phase that matters**
+## Phase 2 — Core vertical slice · **in progress**
+
+**Verified on an iPhone 16 Plus simulator, 2026-08-11.** Screenshots in
+`docs/evidence/ios-v2-*.png`.
+
+- `migrateToMemories` ran against **real pre-existing v1 data** on the device:
+  the library went from "0 palettes" to "4 palettes · 2 collections", photos and
+  month signatures intact, served through `MemoryBackedPaletteRepository`.
+- `chromawave://pair` ran the whole pipeline live — palette → atmosphere →
+  intent → iTunes → ranked cards with real artwork, per-track reasons, "Hear it"
+  (no autoplay), and the store link every card must carry.
+
+Three defects were found only by running it, and all three are fixed:
+
+1. `migrateMemories()` was written and tested but **never called** — the launch
+   path in `PreferencesProvider` invoked only the MMKV migration.
+2. `scripts/run-ios.sh` invoked whatever `expo` was on `PATH`, which a globally
+   installed legacy `expo-cli` shadows. It built the app, then failed on
+   "Missing package metro" _after_ the build, so the simulator kept running a
+   stale binary and reported phantom "Cannot find native module" errors.
+3. Every card printed the same "Why this matches" sentence, because the copy was
+   derived from the palette alone. It now leads with the candidate's own genre.
+
+**Audio is Verified.** A device probe resolved a real preview and played it end
+to end:
+
+```
+[audio-probe] intent shoegaze/indie folk/chamber pop pace=medium
+[audio-probe] candidates 14
+[audio-probe] preview resolved for Cherry-Coloured Funk     ← Cocteau Twins
+[audio-probe] loading → loading → loading
+[audio-probe] playing 118ms / 29929ms
+[audio-probe] playing 12535ms / 29929ms
+[audio-probe] playing 29668ms / 29929ms
+[audio-probe] idle                                          ← stops, does not loop
+```
+
+The duration is the decisive detail: **29 929 ms is the asset's own duration**,
+not the 30 000 ms fallback the provider guesses, so AVFoundation genuinely opened
+and decoded the stream. Position advances in real time, and the clip ends at
+`idle` rather than repeating. The player's unit tests use a fake `expo-audio` and
+could only ever prove the state machine; this proves the native path.
+
+What remains unproven is a human _hearing_ it — simulator audio routing is not
+something a log can attest to. That is a headphones check, not an engineering
+one.
+
+The probe was a temporary route and has been deleted.
+
+**The loop closes.** Choosing a track now writes it onto the memory, and the
+memory survives a cold start:
+
+```
+[pair-probe] memory a0000000-…-0001 "Harbour dusk"
+[pair-probe] before: status=unpaired  paired=false
+[pair-probe] pipeline error=null recs=5
+[pair-probe] saved "Tour de France, Étape 3" — Kraftwerk
+[pair-probe] after:  status=paired  paired=true  genres=Electronic
+```
+
+The app was then terminated and cold-launched, and the palette detail rendered
+the track from disk — artwork, preview control, replace action, store link
+(`docs/evidence/ios-v2-memory-paired-cold-start.png`). The `facets.paired` and
+`facets.genres` denormalisations moved with the write, which is what keeps the
+archive's filtering honest.
+
+**A note on how this was verified.** UI automation was abandoned after
+`cliclick` was found to clamp negative Y coordinates — the Simulator sat on a
+display above the main one, so every synthetic tap landed somewhere else
+entirely and two of them backgrounded the app. Moving the window to positive
+coordinates fixed reachability but not the bezel offset, and `screencapture` is
+blocked without Screen Recording permission. The device checks above therefore
+drive the **real code paths programmatically** and verify the result by cold
+start and screenshot. What that leaves unverified is the literal `onPress`
+wiring of two buttons; the logic behind them is covered by
+`useChromaticMemory.test.ts`.
+
+**Capture reaches the music.** A fresh capture already becomes a memory —
+`MemoryBackedPaletteRepository` widens any palette the memory store has not seen
+— so the only gap was that nothing offered pairing afterwards. `ResultRoute` now
+lands on the pairing screen instead of the palette detail (captures scoped to a
+Working Set still return to the set, which is deliberate). Verified on device:
+
+```
+[capture-probe] before: 4 memories
+[capture-probe] saved as memory schemaVersion=2
+[capture-probe] atmosphere mood=serene lum=0.838 warm=0.668
+[capture-probe] pairing status=unpaired paired=false
+[capture-probe] facets month=2026-08 dominant=#F6E7CF
+[capture-probe] after: 5 memories
+```
+
+Pairing that warm capture returned ambient and new age, against the shoegaze and
+krautrock the dark palettes returned — the mapping does real work
+(`docs/evidence/ios-v2-pairing-warm-palette.png`). It also surfaced a layout
+defect: catalogue album names run very long, and one wrapped to four lines and
+pushed the play control down the card. Album metadata is now capped to one line.
+
+## Phase 2 — remaining
 
 One complete journey, production quality, no secondary screens:
 

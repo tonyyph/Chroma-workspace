@@ -132,6 +132,40 @@ describe('rankCandidates', () => {
     expect(new Set(results.map((r) => r.track.providerTrackId)).size).toBe(5);
   });
 
+  /**
+   * Measured against the live catalogue: searching `dream pop` surfaced two
+   * K-pop singles called "Dream", and `chamber music` returned four tracks
+   * literally titled "Chamber Music". A keyword index cannot tell genre
+   * membership from a word in a title; this is what separates them.
+   */
+  it('demotes a track whose title merely echoes the genre we searched for', () => {
+    const results = rankCandidates({
+      intent: { ...intent, genres: ['chamber music', 'minimalism', 'krautrock'] },
+      candidates: [
+        { track: track('echo', { title: 'Chamber Music' }), matchedGenre: 'chamber music' },
+        {
+          track: track('real', { title: 'Merry Christmas Mr. Lawrence' }),
+          matchedGenre: 'chamber music',
+        },
+      ],
+      limit: 2,
+    });
+    expect(results[0]!.track.providerTrackId).toBe('real');
+  });
+
+  it('only tests the head word, and ignores short ones', () => {
+    // "dub" is three letters; a title containing it says nothing.
+    const results = rankCandidates({
+      intent: { ...intent, genres: ['dub'] },
+      candidates: [
+        { track: track('a', { title: 'Dubious Intentions' }), matchedGenre: 'dub' },
+        { track: track('b', { title: 'Something Else' }), matchedGenre: 'dub' },
+      ],
+      limit: 2,
+    });
+    expect(results.map((r) => r.score)).toEqual([results[0]!.score, results[1]!.score]);
+  });
+
   it('returns nothing for nothing, without throwing', () => {
     expect(rankCandidates({ intent, candidates: [] })).toEqual([]);
   });

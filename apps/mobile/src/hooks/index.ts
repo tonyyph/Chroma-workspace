@@ -9,6 +9,7 @@
  * imports its own barrel is a cycle.
  */
 export * from './useAccent';
+export * from './useChromaticMemory';
 export * from './useChromaticSurface';
 export * from './useDebounced';
 export * from './useImageSampler';

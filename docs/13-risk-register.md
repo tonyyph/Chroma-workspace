@@ -63,8 +63,63 @@ restricted (`06`).
 arithmetic; reasons cite only dimensions actually measured — colour, light,
 atmosphere — never a fabricated audio feature; feedback biases subsequent runs;
 "Try again" rotates the seed; manual search always available.
-**Residual:** medium-high. **Resolved by:** using it on real photographs. This is
-the risk that most deserves early qualitative testing.
+**Observed on device, 2026-08-11 — the risk is real and it has a shape.** Query
+quality is not uniform; it tracks how _distinctive_ the genre term is:
+
+| Palette      | Genre queried | What came back                                              |
+| ------------ | ------------- | ----------------------------------------------------------- |
+| dark, cool   | `shoegaze`    | Slowdive · Cocteau Twins · Beach House · Pale Saints        |
+| high chroma  | `krautrock`   | Kraftwerk · Tangerine Dream · Faust · Kikagaku Moyo         |
+| warm, bright | `ambient`     | "Ambient (Sound Healing)" by _Reiki_ · "Minway Meditations" |
+
+Narrow, scene-defining terms return canon. Broad wellness-adjacent terms return
+the catalogue's long tail of generic production music — technically the right
+genre, and nothing anyone would call a match.
+
+**The fix is curatorial, not algorithmic.** `CURATION` in `intent.ts` is a table
+precisely so this is one edit: the serene/low row should lead with terms that
+have a canon behind them (`modern classical`, `fourth world`, `kankyō ongaku`)
+rather than `ambient`, which is now a wellness-catalogue keyword as much as a
+genre. The same audit is owed to every row.
+
+### The audit, done — 2026-08-11
+
+Every one of the ~40 terms in `CURATION` was queried against the live VN
+storefront and judged on what came back. Three defects, each found only by
+looking:
+
+1. **Single common nouns fail.** `ambient` · `new age` · `piano` · `funk` ·
+   `house` · `disco` · `soul` · `gospel` · `bossa nova` · `indie folk` ·
+   `noise rock` and a dozen more returned production music, the wrong genre, or
+   title collisions — `funk` returned Brazilian funk producers, `house` returned
+   Beach House. Compound and subcultural names return canon. The table now uses
+   only measured terms, and `intent.test.ts` bans the failures by name.
+
+2. **Warmth was being discarded.** `CURATION` is keyed on mood and energy alone,
+   so a cold grey rain and a warm sunlit kitchen both read `serene` at low energy
+   and produced _the same five tracks_. Temperature now rotates the genre list,
+   giving them different leads and different candidate pools. The real fix is
+   warm/cool variants of each mood; that would re-label saved memories, so it is
+   deferred and noted.
+
+3. **Genre provenance cannot tell a genre from a word.** `dream pop` surfaced two
+   K-pop singles called "Dream"; `chamber music` returned four tracks titled
+   "Chamber Music". `RANKING_WEIGHTS.titleEcho` demotes a candidate whose title
+   echoes the searched term's head word.
+
+Measured before and after, same four palettes:
+
+| palette      | before                               | after                                             |
+| ------------ | ------------------------------------ | ------------------------------------------------- |
+| warm, bright | "Ambient (Sound Healing)" by _Reiki_ | Philip Glass · Jóhann Jóhannsson · Bruce Brubaker |
+| dark, cool   | Pale Saints · Beach House            | Beach House · Slowdive · Cocteau Twins            |
+| high chroma  | Tangerine Dream · "Punk" by Gazzelle | Tangerine Dream · Kraftwerk · Kikagaku Moyo       |
+| grey, flat   | _identical to warm, bright_          | Ryuichi Sakamoto · Mozart · Vivaldi               |
+
+**Residual:** medium. The engine now returns records people would recognise, and
+the remaining judgment — whether _this_ record suits _that_ photograph — is the
+part only listening can settle. **Resolved by:** qualitative testing on real
+photographs.
 
 ## R6 · A secret ends up in the bundle — **high if it happens**
 

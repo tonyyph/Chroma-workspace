@@ -78,8 +78,40 @@ export const INTENT_WEIGHTS = {
  * product most worth arguing about over time.
  *
  * Keyed by mood and then by an energy band, because the same mood at rest and in
- * motion are different records: nocturnal and still is ambient, nocturnal and
- * driving is darkwave.
+ * motion are different records: nocturnal and still is environmental music,
+ * nocturnal and driving is darkwave.
+ *
+ * ---
+ *
+ * **Every term below was measured against the live catalogue, and the first
+ * draft of this table was mostly wrong.**
+ *
+ * These queries hit a keyword index over titles and artist names, so a genre
+ * term only works if it is a term people actually *name records with*. Checked
+ * against the VN storefront on 2026-08-11:
+ *
+ * | term                | returned                                        |
+ * | ------------------- | ----------------------------------------------- |
+ * | `kankyo ongaku`     | Satoshi Ashikawa · Yoshio Ojima · Fumio Miyashita |
+ * | `spiritual jazz`    | John Coltrane · Kamasi Washington                |
+ * | `darkwave`          | Siouxsie & The Banshees · Joy Division · Depeche Mode |
+ * | `slowcore`          | Mojave 3 · Duster · Red House Painters           |
+ * | `city pop`          | Tomoko Aran · Anri · Mariya Takeuchi             |
+ * | `tropicalia`        | Caetano Veloso · Beck · Eliane Elias             |
+ * | ‡ `ambient`         | "weather balloon" · "Briar Moonwhisper"          |
+ * | ‡ `new age`         | "Sleep Music Lullabies" · "White Noise For Babies" |
+ * | ‡ `funk`            | Brazilian funk beat producers — a different genre |
+ * | ‡ `house`           | Beach House — a title match                      |
+ * | ‡ `disco`, `soul`, `piano`, `gospel`, `bossa nova`, `indie folk`, `noise rock`, `bedroom pop`, `exotica`, `highlife` | filler or the wrong music entirely |
+ *
+ * **The rule.** A single common English noun fails: it collides with song titles
+ * and with the catalogue's long tail of production music sold by keyword.
+ * Compound or subculturally specific names succeed, because only records that
+ * really belong to the scene are labelled with them. Prefer `spiritual jazz` to
+ * `jazz`, `folk rock` to `folk`, `modern classical` to `piano`.
+ *
+ * Terms marked ‡ above are **banned** and should not come back without new
+ * evidence. See docs/13 · R5.
  */
 type EnergyBand = 'low' | 'medium' | 'high';
 
@@ -93,19 +125,19 @@ type Curation = {
 export const CURATION: Record<AtmosphereMood, Record<EnergyBand, Curation>> = {
   nocturnal: {
     low: {
-      genres: ['ambient', 'downtempo', 'modern classical'],
+      genres: ['kankyo ongaku', 'modern classical', 'downtempo'],
       texture: ['spacious', 'hushed', 'reverberant'],
       instruments: ['synthesiser', 'piano', 'strings'],
       lyrical: 'instrumental',
     },
     medium: {
-      genres: ['trip hop', 'dub', 'dream pop'],
+      genres: ['trip hop', 'dream pop', 'post-rock'],
       texture: ['smoky', 'low-lit'],
       instruments: ['bass', 'rhodes', 'drum machine'],
       lyrical: 'either',
     },
     high: {
-      genres: ['darkwave', 'post-punk', 'industrial'],
+      genres: ['darkwave', 'post-punk', 'krautrock'],
       texture: ['taut', 'metallic'],
       instruments: ['bass', 'guitar', 'drum machine'],
       lyrical: 'vocal',
@@ -113,19 +145,19 @@ export const CURATION: Record<AtmosphereMood, Record<EnergyBand, Curation>> = {
   },
   melancholy: {
     low: {
-      genres: ['slowcore', 'piano', 'ambient'],
+      genres: ['slowcore', 'neoclassical', 'modern classical'],
       texture: ['sparse', 'unhurried'],
       instruments: ['piano', 'cello', 'guitar'],
       lyrical: 'either',
     },
     medium: {
-      genres: ['shoegaze', 'indie folk', 'chamber pop'],
+      genres: ['shoegaze', 'dream pop', 'chamber music'],
       texture: ['blurred', 'weathered'],
       instruments: ['guitar', 'strings'],
       lyrical: 'vocal',
     },
     high: {
-      genres: ['post-rock', 'emo', 'noise pop'],
+      genres: ['post-rock', 'shoegaze', 'post-punk'],
       texture: ['swelling', 'saturated'],
       instruments: ['guitar', 'drums'],
       lyrical: 'either',
@@ -133,19 +165,19 @@ export const CURATION: Record<AtmosphereMood, Record<EnergyBand, Curation>> = {
   },
   serene: {
     low: {
-      genres: ['ambient', 'new age', 'folk'],
+      genres: ['kankyo ongaku', 'chamber music', 'minimalism'],
       texture: ['still', 'airy'],
       instruments: ['guitar', 'harp', 'field recording'],
       lyrical: 'instrumental',
     },
     medium: {
-      genres: ['bossa nova', 'jazz', 'indie folk'],
+      genres: ['spiritual jazz', 'folk rock', 'tropicalia'],
       texture: ['gentle', 'unhurried'],
       instruments: ['nylon guitar', 'brushes', 'upright bass'],
       lyrical: 'either',
     },
     high: {
-      genres: ['balearic', 'soft rock', 'city pop'],
+      genres: ['city pop', 'soft rock', 'tropicalia'],
       texture: ['open', 'sunlit'],
       instruments: ['guitar', 'synthesiser'],
       lyrical: 'vocal',
@@ -153,19 +185,19 @@ export const CURATION: Record<AtmosphereMood, Record<EnergyBand, Curation>> = {
   },
   tender: {
     low: {
-      genres: ['indie folk', 'dream pop', 'soul'],
+      genres: ['dream pop', 'neoclassical', 'folk rock'],
       texture: ['close', 'warm'],
       instruments: ['guitar', 'rhodes', 'voice'],
       lyrical: 'vocal',
     },
     medium: {
-      genres: ['soul', 'chamber pop', 'bedroom pop'],
+      genres: ['city pop', 'chamber music', 'spiritual jazz'],
       texture: ['soft-focus', 'intimate'],
       instruments: ['rhodes', 'bass', 'strings'],
       lyrical: 'vocal',
     },
     high: {
-      genres: ['motown', 'indie pop', 'gospel'],
+      genres: ['motown', 'soft rock', 'synth pop'],
       texture: ['bright', 'lifting'],
       instruments: ['horns', 'organ', 'drums'],
       lyrical: 'vocal',
@@ -173,19 +205,19 @@ export const CURATION: Record<AtmosphereMood, Record<EnergyBand, Curation>> = {
   },
   earthy: {
     low: {
-      genres: ['americana', 'psychedelic folk', 'jazz'],
+      genres: ['psychedelic folk', 'folk rock', 'spiritual jazz'],
       texture: ['woody', 'dusty'],
       instruments: ['acoustic guitar', 'upright bass', 'pedal steel'],
       lyrical: 'either',
     },
     medium: {
-      genres: ['jazz', 'afrobeat', 'folk rock'],
+      genres: ['folk rock', 'spiritual jazz', 'tropicalia'],
       texture: ['organic', 'rolling'],
       instruments: ['horns', 'percussion', 'guitar'],
       lyrical: 'either',
     },
     high: {
-      genres: ['funk', 'blues rock', 'highlife'],
+      genres: ['psychedelic', 'folk rock', 'motown'],
       texture: ['gritty', 'live'],
       instruments: ['guitar', 'drums', 'horns'],
       lyrical: 'vocal',
@@ -193,19 +225,19 @@ export const CURATION: Record<AtmosphereMood, Record<EnergyBand, Curation>> = {
   },
   luminous: {
     low: {
-      genres: ['ambient pop', 'new age', 'minimalism'],
+      genres: ['kankyo ongaku', 'minimalism', 'contemporary classical'],
       texture: ['glassy', 'weightless'],
       instruments: ['synthesiser', 'vibraphone'],
       lyrical: 'instrumental',
     },
     medium: {
-      genres: ['indie pop', 'city pop', 'bossa nova'],
+      genres: ['city pop', 'tropicalia', 'soft rock'],
       texture: ['bright', 'buoyant'],
       instruments: ['guitar', 'synthesiser', 'bass'],
       lyrical: 'vocal',
     },
     high: {
-      genres: ['synth pop', 'house', 'disco'],
+      genres: ['synth pop', 'city pop', 'motown'],
       texture: ['gleaming', 'propulsive'],
       instruments: ['synthesiser', 'drum machine'],
       lyrical: 'vocal',
@@ -213,19 +245,19 @@ export const CURATION: Record<AtmosphereMood, Record<EnergyBand, Curation>> = {
   },
   vivid: {
     low: {
-      genres: ['psychedelic', 'exotica', 'dub'],
+      genres: ['psychedelic', 'tropicalia', 'dream pop'],
       texture: ['saturated', 'swirling'],
       instruments: ['organ', 'percussion'],
       lyrical: 'either',
     },
     medium: {
-      genres: ['afrobeat', 'latin', 'psychedelic rock'],
+      genres: ['tropicalia', 'psychedelic', 'spiritual jazz'],
       texture: ['vivid', 'kinetic'],
       instruments: ['percussion', 'horns', 'guitar'],
       lyrical: 'vocal',
     },
     high: {
-      genres: ['funk', 'disco', 'afrobeat'],
+      genres: ['motown', 'synth pop', 'psychedelic'],
       texture: ['electric', 'insistent'],
       instruments: ['bass', 'horns', 'drums'],
       lyrical: 'vocal',
@@ -233,19 +265,19 @@ export const CURATION: Record<AtmosphereMood, Record<EnergyBand, Curation>> = {
   },
   stark: {
     low: {
-      genres: ['minimalism', 'drone', 'modern classical'],
+      genres: ['minimalism', 'modern classical', 'contemporary classical'],
       texture: ['severe', 'unadorned'],
       instruments: ['piano', 'strings'],
       lyrical: 'instrumental',
     },
     medium: {
-      genres: ['krautrock', 'post-punk', 'minimal wave'],
+      genres: ['krautrock', 'post-punk', 'minimalism'],
       texture: ['angular', 'repetitive'],
       instruments: ['bass', 'drum machine', 'guitar'],
       lyrical: 'either',
     },
     high: {
-      genres: ['minimal techno', 'industrial', 'noise rock'],
+      genres: ['darkwave', 'post-punk', 'krautrock'],
       texture: ['hard-edged', 'relentless'],
       instruments: ['drum machine', 'synthesiser'],
       lyrical: 'instrumental',
@@ -345,12 +377,25 @@ export function deriveIntent({
   const curation = CURATION[atmosphere.mood][band];
 
   /**
-   * The seed rotates the genre list rather than shuffling it, so "Try again"
-   * gives a genuinely different lead genre while staying inside the same
-   * curatorial judgment. A shuffle would make repeat runs unreproducible; a
-   * rotation is deterministic in the seed, which is what the tests need.
+   * The genre list rotates rather than shuffling, so a different lead genre is
+   * still inside the same curatorial judgment. A shuffle would make repeat runs
+   * unreproducible; a rotation is deterministic, which is what the tests need.
+   *
+   * **Temperature rotates it as well as the seed, and that is not cosmetic.**
+   * `mood` and the energy band are the only keys into `CURATION`, and neither
+   * carries warmth — so a cold grey rain and a warm sunlit kitchen both read as
+   * `serene` at low energy and were producing the *same three queries and the
+   * same five tracks*. Two photographs that could not look less alike were
+   * getting identical music, which is the plainest possible refutation of what
+   * this product claims.
+   *
+   * Rotating by temperature gives them different lead genres, so different
+   * queries, so different candidate pools. It is a narrower fix than the real
+   * one — splitting the mood table into warm and cool variants — but that would
+   * re-label every memory already saved, and this does not.
    */
-  const genres = rotate(curation.genres, seed);
+  const temperatureStep = atmosphere.warmth > 0.2 ? 2 : atmosphere.warmth < -0.2 ? 1 : 0;
+  const genres = rotate(curation.genres, seed + temperatureStep);
 
   return musicIntentSchema.parse({
     valence: round3(valence),

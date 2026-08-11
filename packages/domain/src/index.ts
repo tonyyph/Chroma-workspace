@@ -9,6 +9,7 @@ export * from './intent';
 export * from './memory';
 export * from './migration';
 export * from './music';
+export * from './pairing';
 export * from './palette';
 export * from './preferences';
 export * from './ranking';

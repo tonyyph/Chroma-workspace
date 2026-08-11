@@ -255,3 +255,84 @@ describe('acceptRefinedIntent', () => {
     expect(accepted.seed).toBe(baseline.seed);
   });
 });
+
+/**
+ * The catalogue is a keyword index over titles and artist names, so a genre term
+ * only works if it is a term records are actually *labelled* with. Each term
+ * below was measured against the live VN storefront on 2026-08-11 and returned
+ * filler or an unrelated genre — `ambient` gave "Briar Moonwhisper", `funk` gave
+ * Brazilian funk producers, `house` gave Beach House on a title match.
+ *
+ * They are banned rather than merely discouraged, because the failure is
+ * invisible from inside the code: the pipeline succeeds, the cards render, and
+ * only a human listening notices that the match is meaningless.
+ */
+const BANNED_GENRE_TERMS = [
+  'ambient',
+  'new age',
+  'piano',
+  'funk',
+  'house',
+  'disco',
+  'soul',
+  'gospel',
+  'bossa nova',
+  'indie folk',
+  'indie pop',
+  'noise rock',
+  'noise pop',
+  'bedroom pop',
+  'chamber pop',
+  'exotica',
+  'highlife',
+  'minimal wave',
+  'minimal techno',
+  'dark ambient',
+  'drone',
+  'americana',
+  'lounge',
+  'coldwave',
+  'samba',
+  'latin',
+  'dub',
+  'emo',
+  'ambient pop',
+  'balearic',
+];
+
+describe('the curation table only uses terms the catalogue answers well', () => {
+  it('names no banned term in any row', () => {
+    const offenders: string[] = [];
+    for (const mood of atmosphereMoods) {
+      for (const band of ['low', 'medium', 'high'] as const) {
+        for (const genre of CURATION[mood][band].genres) {
+          if (BANNED_GENRE_TERMS.includes(genre.toLowerCase())) {
+            offenders.push(`${mood}/${band}: ${genre}`);
+          }
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('gives every row three distinct genres, so "Try again" has somewhere to go', () => {
+    for (const mood of atmosphereMoods) {
+      for (const band of ['low', 'medium', 'high'] as const) {
+        const genres = CURATION[mood][band].genres;
+        expect(new Set(genres).size, `${mood}/${band}`).toBe(genres.length);
+        expect(genres.length, `${mood}/${band}`).toBeGreaterThanOrEqual(3);
+      }
+    }
+  });
+
+  it('does not give a mood the same three genres at two energies', () => {
+    // Identical rows would mean energy changed nothing, which is the whole
+    // reason the table is keyed by band as well as mood.
+    for (const mood of atmosphereMoods) {
+      const rows = (['low', 'medium', 'high'] as const).map((band) =>
+        [...CURATION[mood][band].genres].sort().join('|'),
+      );
+      expect(new Set(rows).size, mood).toBe(3);
+    }
+  });
+});

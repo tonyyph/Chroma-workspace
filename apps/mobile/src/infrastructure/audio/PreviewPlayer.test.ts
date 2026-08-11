@@ -79,7 +79,7 @@ describe('PreviewPlayer', () => {
 
     expect(player.state).toMatchObject({
       kind: 'playing',
-      trackId: 'a',
+      providerTrackId: 'a',
       positionMs: 4000,
       durationMs: 30_000,
     });
@@ -98,7 +98,7 @@ describe('PreviewPlayer', () => {
 
     expect(first.pause).toHaveBeenCalled();
     expect(first.remove).toHaveBeenCalled();
-    expect(player.state).toMatchObject({ trackId: 'b' });
+    expect(player.state).toMatchObject({ providerTrackId: 'b' });
   });
 
   it('never leaves two players alive at once', async () => {
@@ -137,11 +137,15 @@ describe('PreviewPlayer', () => {
 
     mockPlayers[0]!.currentTime = 10;
     player.pause();
-    expect(player.state).toMatchObject({ kind: 'paused', trackId: 'a', positionMs: 10_000 });
+    expect(player.state).toMatchObject({
+      kind: 'paused',
+      providerTrackId: 'a',
+      positionMs: 10_000,
+    });
 
     player.resume();
     jest.advanceTimersByTime(250);
-    expect(player.state).toMatchObject({ kind: 'playing', trackId: 'a' });
+    expect(player.state).toMatchObject({ kind: 'playing', providerTrackId: 'a' });
     expect(mockPlayers).toHaveLength(1);
   });
 
@@ -179,7 +183,7 @@ describe('PreviewPlayer', () => {
   it('reports an unavailable preview as a state, not as silence', () => {
     const player = new PreviewPlayer();
     player.markUnavailable('a');
-    expect(player.state).toEqual({ kind: 'unavailable', trackId: 'a' });
+    expect(player.state).toEqual({ kind: 'unavailable', providerTrackId: 'a' });
   });
 
   it('gives up on a clip that never loads rather than spinning forever', async () => {
@@ -191,7 +195,7 @@ describe('PreviewPlayer', () => {
 
     jest.advanceTimersByTime(9000);
 
-    expect(player.state).toMatchObject({ kind: 'error', trackId: 'a' });
+    expect(player.state).toMatchObject({ kind: 'error', providerTrackId: 'a' });
   });
 
   it('publishes the current state to a new subscriber immediately', async () => {
@@ -201,7 +205,7 @@ describe('PreviewPlayer', () => {
     expect(seen).toEqual([{ kind: 'idle' }]);
 
     await player.play(track('a'), preview());
-    expect(seen[seen.length - 1]).toMatchObject({ kind: 'loading', trackId: 'a' });
+    expect(seen[seen.length - 1]).toMatchObject({ kind: 'loading', providerTrackId: 'a' });
   });
 
   it('stops publishing after unsubscribe', async () => {

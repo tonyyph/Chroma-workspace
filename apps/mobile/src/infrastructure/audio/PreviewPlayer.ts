@@ -16,11 +16,11 @@ import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-aud
 
 export type PreviewPlaybackState =
   | { kind: 'idle' }
-  | { kind: 'loading'; trackId: string }
-  | { kind: 'playing'; trackId: string; positionMs: number; durationMs: number }
-  | { kind: 'paused'; trackId: string; positionMs: number; durationMs: number }
-  | { kind: 'unavailable'; trackId: string }
-  | { kind: 'error'; trackId: string };
+  | { kind: 'loading'; providerTrackId: string }
+  | { kind: 'playing'; providerTrackId: string; positionMs: number; durationMs: number }
+  | { kind: 'paused'; providerTrackId: string; positionMs: number; durationMs: number }
+  | { kind: 'unavailable'; providerTrackId: string }
+  | { kind: 'error'; providerTrackId: string };
 
 export interface PreviewPlaybackService {
   readonly state: PreviewPlaybackState;
@@ -28,7 +28,7 @@ export interface PreviewPlaybackService {
   pause(): void;
   resume(): void;
   stop(): void;
-  markUnavailable(trackId: string): void;
+  markUnavailable(providerTrackId: string): void;
   subscribe(listener: (state: PreviewPlaybackState) => void): () => void;
 }
 
@@ -63,9 +63,9 @@ export class PreviewPlayer implements PreviewPlaybackService {
     // leave the previous clip running underneath it.
     this.teardown();
 
-    const trackId = track.providerTrackId;
-    this.currentTrackId = trackId;
-    this.publish({ kind: 'loading', trackId });
+    const providerTrackId = track.providerTrackId;
+    this.currentTrackId = providerTrackId;
+    this.publish({ kind: 'loading', providerTrackId });
 
     try {
       // The audio session is claimed on first playback rather than at launch:
@@ -79,24 +79,24 @@ export class PreviewPlayer implements PreviewPlaybackService {
 
       // A second `play()` may have arrived while the session was being set up.
       // If it did, this call is stale and must not take the player over.
-      if (this.currentTrackId !== trackId) {
+      if (this.currentTrackId !== providerTrackId) {
         player.remove();
         return;
       }
 
       this.current = player;
       this.loadTimer = setTimeout(() => {
-        if (this.currentTrackId === trackId && this.currentState.kind === 'loading') {
+        if (this.currentTrackId === providerTrackId && this.currentState.kind === 'loading') {
           this.teardown();
-          this.publish({ kind: 'error', trackId });
+          this.publish({ kind: 'error', providerTrackId });
         }
       }, LOAD_TIMEOUT_MS);
 
       player.play();
-      this.startTicking(trackId, preview.durationMs);
+      this.startTicking(providerTrackId, preview.durationMs);
     } catch {
       this.teardown();
-      this.publish({ kind: 'error', trackId });
+      this.publish({ kind: 'error', providerTrackId });
     }
   }
 
@@ -105,7 +105,7 @@ export class PreviewPlayer implements PreviewPlaybackService {
     this.current.pause();
     this.stopTicking();
     const { positionMs, durationMs } = this.readPosition();
-    this.publish({ kind: 'paused', trackId: this.currentTrackId, positionMs, durationMs });
+    this.publish({ kind: 'paused', providerTrackId: this.currentTrackId, positionMs, durationMs });
   }
 
   resume(): void {
@@ -126,10 +126,10 @@ export class PreviewPlayer implements PreviewPlaybackService {
    * unavailable" and offer its store link, which is the compliant alternative
    * when a provider offers no clip.
    */
-  markUnavailable(trackId: string): void {
+  markUnavailable(providerTrackId: string): void {
     this.teardown();
-    this.currentTrackId = trackId;
-    this.publish({ kind: 'unavailable', trackId });
+    this.currentTrackId = providerTrackId;
+    this.publish({ kind: 'unavailable', providerTrackId });
   }
 
   subscribe(listener: (state: PreviewPlaybackState) => void): () => void {
@@ -140,10 +140,10 @@ export class PreviewPlayer implements PreviewPlaybackService {
     };
   }
 
-  private startTicking(trackId: string, fallbackDurationMs: number): void {
+  private startTicking(providerTrackId: string, fallbackDurationMs: number): void {
     this.stopTicking();
     this.ticker = setInterval(() => {
-      if (this.current === null || this.currentTrackId !== trackId) return;
+      if (this.current === null || this.currentTrackId !== providerTrackId) return;
 
       const { positionMs, durationMs } = this.readPosition(fallbackDurationMs);
 
@@ -160,7 +160,7 @@ export class PreviewPlayer implements PreviewPlaybackService {
       if (!loaded) {
         // Still buffering. Saying "playing" here would put a moving progress bar
         // over silence, which is the dishonest version of a loading state.
-        this.publish({ kind: 'loading', trackId });
+        this.publish({ kind: 'loading', providerTrackId });
         return;
       }
 
@@ -177,7 +177,7 @@ export class PreviewPlayer implements PreviewPlaybackService {
         return;
       }
 
-      this.publish({ kind: 'playing', trackId, positionMs, durationMs });
+      this.publish({ kind: 'playing', providerTrackId, positionMs, durationMs });
     }, TICK_MS);
   }
 

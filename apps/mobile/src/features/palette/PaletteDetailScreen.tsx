@@ -7,13 +7,15 @@ import { useCallback, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import { ShareSheet, type ShareOptions } from '@/features/capture/ShareSheet';
 import { PalettePhoto } from '@/features/library/PalettePhoto';
+import { TrackBlock } from '@/features/pairing/TrackBlock';
 import { ToolFallback } from '@/features/tools/ToolFallback';
-import { useAccent, useChromaticSurface, usePalettes } from '@/hooks';
+import { useAccent, useChromaticMemory, useChromaticSurface, usePalettes } from '@/hooks';
 import { persistPhoto, renderShareCard, shareFile } from '@/lib';
 import { useEntitlement, usePreferences, useSkin } from '@/providers';
 import {
   ActionSheet,
   Button,
+  ButtonRow,
   CardGroup,
   Chip,
   ColorRow,
@@ -82,6 +84,9 @@ export function PaletteDetailScreen() {
   // One borrowed colour for this screen. Tags are the palette's own vocabulary,
   // so they are the thing worth saying in its own voice.
   const accent = useAccent(palette?.colors ?? null);
+  // The aggregate behind the palette view. A `Palette` can carry the colours;
+  // it has nowhere to put the track, so the music comes from the memory itself.
+  const { memory } = useChromaticMemory(palette?.id);
 
   /**
    * Every menu action is a write-then-reflect: persist first, and only update
@@ -197,7 +202,17 @@ export function PaletteDetailScreen() {
   return (
     <Screen
       action={
-        <Button label={t('palette.share')} onPress={() => setSharing(true)} variant="contrast" />
+        <ButtonRow>
+          {/* The pairing entry. A saved palette and a fresh capture reach the
+              same screen, because attaching music now and attaching it six
+              months later are the same act. */}
+          <Button
+            label={t('pair.title')}
+            onPress={() => router.push(`/pair?id=${palette.id}`)}
+            variant="primary"
+          />
+          <Button label={t('palette.share')} onPress={() => setSharing(true)} variant="contrast" />
+        </ButtonRow>
       }
     >
       <Gutter style={styles.nav}>
@@ -271,6 +286,17 @@ export function PaletteDetailScreen() {
         ))}
         <Chip icon="add" label={t('palette.addTag')} onPress={() => setPrompt('tag')} tone="add" />
       </Gutter>
+
+      {/* THE MUSIC.
+          Above the colour spec deliberately. The spec is reference material a
+          professional goes looking for; the track is the other half of what this
+          memory *is*, and burying it under a table of OKLCh values would say the
+          opposite. */}
+      {memory ? (
+        <Gutter style={styles.music}>
+          <TrackBlock pairing={memory.musicPairing} paletteId={palette.id} />
+        </Gutter>
+      ) : null}
 
       {/* THE SPEC.
           Bare rows on the ground, not a card: this is a reference table, and
@@ -487,6 +513,7 @@ const styles = StyleSheet.create({
     gap: space.xs,
   },
   /** A reference table on the ground, not a raised card competing with the hero. */
+  music: { marginTop: space.sectionGap },
   list: { paddingTop: space.sectionGap },
   listRow: { paddingVertical: 13 },
   listDivider: { borderBottomWidth: 1 },
