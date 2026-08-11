@@ -69,7 +69,8 @@
           "defaultChannel": "chromatic-reminder",
           "enableBackgroundRemoteNotifications": false
         }
-      ]
+      ],
+      "./plugins/withChromawaveWidget"
     ],
     "experiments": {
       "typedRoutes": true,

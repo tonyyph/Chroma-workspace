@@ -13,3 +13,4 @@ export * from './pairing';
 export * from './palette';
 export * from './preferences';
 export * from './ranking';
+export * from './snapshot';
