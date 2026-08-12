@@ -404,7 +404,7 @@ async function main() {
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
   console.log(
     `${written.length} files · ${(totalBytes / 1024).toFixed(0)} KB · ${seconds}s · ` +
-    `${concurrency} workers · Chroma Signal`,
+      `${concurrency} workers · Chroma Signal`,
   );
 }
 

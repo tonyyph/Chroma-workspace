@@ -10,8 +10,10 @@ import { CardGroup, Gutter, Icon, Pressable, Text } from '@/ui';
  */
 const TOOLS = [
   // Grading leads: it is the only one that changes the photograph itself, and
-  // the rest operate on what the photograph already gave up.
+  // the rest operate on what the photograph already gave up. The performance
+  // follows it, because it plays the graded frame.
   { route: 'grade', labelKey: 'grade.title' },
+  { route: 'living', labelKey: 'living.title' },
   { route: 'contrast', labelKey: 'contrast.title' },
   { route: 'theme', labelKey: 'theme.title' },
   { route: 'gradient', labelKey: 'gradient.title' },

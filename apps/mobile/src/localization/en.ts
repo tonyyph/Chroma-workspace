@@ -570,6 +570,30 @@ export const en = {
   'grade.grain': 'Grain',
   'grade.stops': '{value} stops',
   'grade.amount': '{value} per cent',
+
+  'living.title': 'Living memory',
+  'living.play': 'Play',
+  'living.pause': 'Pause',
+  'living.replay': 'Play again',
+  'living.close': 'Close',
+  'living.silent': 'No music paired — playing in silence',
+  'living.pair': 'Pair music',
+  'living.noPhoto': 'A living memory needs a photograph.',
+  'living.scene.frame': 'The frame',
+  'living.scene.title': 'Where and when',
+  'living.scene.palette': 'The colours',
+  'living.scene.atmosphere': 'What it felt like',
+  'living.scene.track': 'The music',
+  'living.export': 'Saving a video needs an encoder this build does not carry.',
+
+  'atmosphere.mood.serene': 'Serene',
+  'atmosphere.mood.tender': 'Tender',
+  'atmosphere.mood.luminous': 'Luminous',
+  'atmosphere.mood.vivid': 'Vivid',
+  'atmosphere.mood.nocturnal': 'Nocturnal',
+  'atmosphere.mood.melancholy': 'Melancholy',
+  'atmosphere.mood.earthy': 'Earthy',
+  'atmosphere.mood.stark': 'Stark',
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -1,4 +1,4 @@
-import { makeColor, type Palette, type PaletteSet } from '@cw/domain';
+import { makeColor, paletteToMemory, type Palette, type PaletteSet } from '@cw/domain';
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { TuneScreen } from '@/features/capture/TuneScreen';
 import { ExploreScreen } from '@/features/explore/ExploreScreen';
 import { GradeScreen } from '@/features/grading/GradeScreen';
 import { LibraryScreen } from '@/features/library/LibraryScreen';
+import { LivingMemoryScreen } from '@/features/living/LivingMemoryScreen';
 import { PaletteDetailScreen } from '@/features/palette/PaletteDetailScreen';
 import { PaywallScreen } from '@/features/paywall/PaywallScreen';
 import { CollectionScreen } from '@/features/sets/CollectionScreen';
@@ -115,6 +116,9 @@ const METRICS: Metrics = {
 
 const second = palette({ id: '33333333-3333-4333-8333-333333333333', name: 'Late brick' });
 
+/** The performance works on the aggregate, not on the palette view of it. */
+const memory = () => paletteToMemory(palette({ photoUri: 'file:///photos/a.jpg' }));
+
 const cases: readonly [string, () => ReactElement][] = [
   ['Library', () => <LibraryScreen />],
   ['Explore', () => <ExploreScreen />],
@@ -176,6 +180,7 @@ const cases: readonly [string, () => ReactElement][] = [
   ['Activity', () => <ActivityScreen palettes={[palette()]} />],
   ['Scan', () => <ScanScreen onBuild={jest.fn()} onExit={jest.fn()} />],
   ['Grade', () => <GradeScreen />],
+  ['Living memory', () => <LivingMemoryScreen memory={memory()} />],
   ['Import & pick', () => <ImportPickScreen onCancel={jest.fn()} onExtract={jest.fn()} />],
 ];
 

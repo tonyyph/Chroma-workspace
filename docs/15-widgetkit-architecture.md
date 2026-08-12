@@ -15,13 +15,13 @@ Xcode survives until the next prebuild and then disappears — on a CI machine l
 before anyone notices locally.
 
 So the target is not a thing that exists in the project. It is a thing the
-project is *derived from*:
+project is _derived from_:
 
-| Committed source of truth | Generated, never committed |
-| --- | --- |
-| `apps/mobile/plugins/withChromawaveWidget.js` | `ios/ChromaWave.xcodeproj` |
-| `apps/mobile/targets/ChromawaveWidget/*.swift` | `ios/ChromawaveWidget/` |
-| `apps/mobile/modules/chromawave-shared-container/` | `ios/Pods/` |
+| Committed source of truth                          | Generated, never committed |
+| -------------------------------------------------- | -------------------------- |
+| `apps/mobile/plugins/withChromawaveWidget.js`      | `ios/ChromaWave.xcodeproj` |
+| `apps/mobile/targets/ChromawaveWidget/*.swift`     | `ios/ChromawaveWidget/`    |
+| `apps/mobile/modules/chromawave-shared-container/` | `ios/Pods/`                |
 
 The plugin was chosen over `@bacons/apple-targets` to avoid adding a
 build-critical dependency to the one path that cannot be debugged from
@@ -59,8 +59,8 @@ flowchart LR
 Six call sites write a memory — pair, save, tune, delete, set membership,
 migration. Hanging the publish off `libraryStore` means all six publish without
 any of them knowing the widget exists. Hanging it off
-`StoredMemoryRepository.save` would have published once per record *during the
-v1→v2 migration*, which is several hundred writes and several hundred timeline
+`StoredMemoryRepository.save` would have published once per record _during the
+v1→v2 migration_, which is several hundred writes and several hundred timeline
 reloads.
 
 ### Why reloads are content-compared
@@ -94,7 +94,7 @@ Three rules, and every field is a consequence of one:
 
 ### Codable compatibility
 
-Swift's synthesised `Decodable` fails the *whole* decode on an expected key it
+Swift's synthesised `Decodable` fails the _whole_ decode on an expected key it
 cannot find, so an omitted field is a blank widget rather than a missing line.
 The TypeScript side emits every key explicitly, including nulls; the Swift side
 declares the nullable ones as optionals. `snapshot.test.ts`'s
@@ -105,13 +105,13 @@ a renamed field and a blank widget in production.
 
 `readWidgetSnapshotFile` and `SnapshotStore.read` mirror each other:
 
-| Input | Result | Rendered |
-| --- | --- | --- |
-| Valid file | `ok` | The memory |
-| Missing / empty | `empty` | "No memories yet" |
-| Truncated JSON | `corrupt` | "Open the app" |
-| Unknown `schemaVersion` | `unsupported` | "Update Chroma Wave" |
-| One bad entry among seven | `ok`, `dropped: 1` | The other six |
+| Input                     | Result             | Rendered             |
+| ------------------------- | ------------------ | -------------------- |
+| Valid file                | `ok`               | The memory           |
+| Missing / empty           | `empty`            | "No memories yet"    |
+| Truncated JSON            | `corrupt`          | "Open the app"       |
+| Unknown `schemaVersion`   | `unsupported`      | "Update Chroma Wave" |
+| One bad entry among seven | `ok`, `dropped: 1` | The other six        |
 
 An unrecognised version is **refused, never best-effort decoded**. Rendering a
 confident guess at an unknown shape is how wrong information reaches a lock
@@ -119,9 +119,9 @@ screen; showing the empty state is honest.
 
 ## Families
 
-| Family | Name | Content |
-| --- | --- | --- |
-| `systemSmall` | Memory Pulse | Ground, palette strip, track or mood, date |
+| Family         | Name              | Content                                                      |
+| -------------- | ----------------- | ------------------------------------------------------------ |
+| `systemSmall`  | Memory Pulse      | Ground, palette strip, track or mood, date                   |
 | `systemMedium` | Chromawave Memory | Composition, mood, track, artist, bands, artwork when cached |
 
 Both render **both skins**. Swiss is not a recolour: paper ground, hard rules,
@@ -182,8 +182,8 @@ expo prebuild ×2                 → still exactly 2 targets (idempotent)
 
 ## Open decisions
 
-| Decision | Owner |
-| --- | --- |
-| Register the App Group in the Apple Developer portal | Repository owner |
-| Whether artwork caching is worth the storage and the licence question | Product |
-| Whether Large / accessory families are wanted once resurfacing exists | Product |
+| Decision                                                              | Owner            |
+| --------------------------------------------------------------------- | ---------------- |
+| Register the App Group in the Apple Developer portal                  | Repository owner |
+| Whether artwork caching is worth the storage and the licence question | Product          |
+| Whether Large / accessory families are wanted once resurfacing exists | Product          |

@@ -3,9 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
   atmosphereMoods,
   atmosphereReadingSchema,
+  describeAtmosphere,
   moodFor,
   moodTable,
   readAtmosphere,
+  type AtmosphereReading,
 } from './atmosphere';
 import { makeColor, type Color } from './palette';
 
@@ -148,5 +150,49 @@ describe('the mood table', () => {
       coherence: 0.9,
     };
     expect(moodFor(dark)).toBe('nocturnal');
+  });
+});
+
+describe('describeAtmosphere', () => {
+  const reading = (overrides: Partial<AtmosphereReading> = {}): AtmosphereReading => ({
+    luminosity: 0.5,
+    warmth: 0,
+    saturation: 0.5,
+    contrast: 0.5,
+    spread: 0.5,
+    coherence: 0.8,
+    mood: 'serene',
+    ...overrides,
+  });
+
+  it('is deterministic', () => {
+    expect(describeAtmosphere(reading({ mood: 'vivid' }))).toBe(
+      describeAtmosphere(reading({ mood: 'vivid' })),
+    );
+  });
+
+  it('names every mood in the reading', () => {
+    for (const mood of atmosphereMoods) {
+      expect(describeAtmosphere(reading({ mood }))).toContain(mood);
+    }
+  });
+
+  it('reports the visible direction of the atmosphere', () => {
+    const described = describeAtmosphere(
+      reading({
+        luminosity: 0.8,
+        warmth: 0.4,
+        saturation: 0.7,
+        contrast: 0.7,
+        coherence: 0.2,
+        mood: 'luminous',
+      }),
+    );
+
+    expect(described).toContain('bright');
+    expect(described).toContain('warm');
+    expect(described).toContain('saturated');
+    expect(described).toContain('high contrast');
+    expect(described).toContain('restless');
   });
 });

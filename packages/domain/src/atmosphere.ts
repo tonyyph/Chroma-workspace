@@ -232,3 +232,41 @@ export function readAtmosphere(colors: readonly Color[], deltaE = 0): Atmosphere
 }
 
 const round3 = (value: number) => Math.round(value * 1000) / 1000;
+
+const ATMOSPHERE_NAMES: Record<AtmosphereMood, string> = {
+  serene: 'serene',
+  tender: 'tender',
+  luminous: 'luminous',
+  vivid: 'vivid',
+  nocturnal: 'nocturnal',
+  melancholy: 'melancholy',
+  earthy: 'earthy',
+  stark: 'stark',
+};
+
+/**
+ * A compact description of what the reading says.
+ *
+ * This is deliberately derived from the stored reading, not from the image
+ * again. The living-memory player can explain what it is performing without
+ * paying another analysis cost or inventing copy outside the domain model.
+ */
+export function describeAtmosphere(reading: AtmosphereReading): string {
+  const terms = [ATMOSPHERE_NAMES[reading.mood]];
+
+  if (reading.luminosity >= 0.7) terms.push('bright');
+  else if (reading.luminosity <= 0.3) terms.push('dark');
+
+  if (reading.warmth >= 0.25) terms.push('warm');
+  else if (reading.warmth <= -0.25) terms.push('cool');
+
+  if (reading.saturation >= 0.6) terms.push('saturated');
+  else if (reading.saturation <= 0.25) terms.push('muted');
+
+  if (reading.contrast >= 0.65) terms.push('high contrast');
+  else if (reading.contrast <= 0.3) terms.push('soft contrast');
+
+  if (reading.coherence <= 0.35) terms.push('restless');
+
+  return terms.join(', ');
+}

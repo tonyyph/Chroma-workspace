@@ -3,11 +3,7 @@
   "mark": {
     "number": "07",
     "name": "Chroma Signal",
-    "bands": [
-      "#7C5CFF",
-      "#22D3EE",
-      "#FF7A5C"
-    ]
+    "bands": ["#7C5CFF", "#22D3EE", "#FF7A5C"]
   },
   "fileCount": 160,
   "totalBytes": 7806476,

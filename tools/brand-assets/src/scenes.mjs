@@ -430,22 +430,22 @@ export function shareCard(ratio = '1.91x1') {
   const strip = landscape
     ? { x0: 640, x1: 1144, y: 180, gap: 46, amp: 26, w: 38 }
     : {
-      x0: pad,
-      x1: width - pad,
-      y: photo.y + photo.h + Math.round(height * 0.075),
-      gap: Math.round(height * 0.032),
-      amp: Math.round(height * 0.018),
-      w: Math.round(height * 0.026),
-    };
+        x0: pad,
+        x1: width - pad,
+        y: photo.y + photo.h + Math.round(height * 0.075),
+        gap: Math.round(height * 0.032),
+        amp: Math.round(height * 0.018),
+        w: Math.round(height * 0.026),
+      };
   const meta = landscape
     ? { x: 640, y: 380, wide: 380, narrow: 280, mark: 540 }
     : {
-      x: pad,
-      y: strip.y + strip.gap * 3 + Math.round(height * 0.05),
-      wide: Math.round(width * 0.42),
-      narrow: Math.round(width * 0.3),
-      mark: height - pad * 2,
-    };
+        x: pad,
+        y: strip.y + strip.gap * 3 + Math.round(height * 0.05),
+        wide: Math.round(width * 0.42),
+        narrow: Math.round(width * 0.3),
+        mark: height - pad * 2,
+      };
 
   kids.push(
     element('rect', {
