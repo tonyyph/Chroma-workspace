@@ -618,6 +618,7 @@ export const en = {
   'rewind.collection.artist': '{key}',
   'rewind.collection.genre': '{key}',
   'rewind.count': '{count}',
+  'grade.applying': 'Applying…',
 } as const;
 
 export type MessageKey = keyof typeof en;

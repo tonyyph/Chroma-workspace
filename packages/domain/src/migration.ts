@@ -1,5 +1,4 @@
 import { z } from 'zod';
-
 import { readAtmosphere } from './atmosphere';
 import { unpairedPairing } from './music';
 import {
@@ -36,19 +35,11 @@ export type MigrationReport = {
   outcome: 'migrated' | 'already-current' | 'nothing-to-do' | 'aborted';
   migrated: number;
   quarantined: readonly StoredRecordProblem[];
-  /** Set when `outcome` is 'aborted'. The reason no v2 data was written. */
   abortReason: string | null;
 };
 
 export type MigrationPlan = {
   report: MigrationReport;
-  /**
-   * What to write, or null.
-   *
-   * Null rather than an empty array when nothing should be written, so a caller
-   * cannot confuse "abort, leave v1 alone" with "write an empty library" — the
-   * second would look like a successful migration that erased everything.
-   */
   memories: readonly ChromaticMemory[] | null;
 };
 
@@ -70,14 +61,12 @@ export function paletteToMemory(palette: Palette): ChromaticMemory {
     capturedAt: palette.capturedAt,
 
     image: {
-      // A v1 palette with no photograph becomes a colour-only memory rather than
-      // being dropped or forcing `localUri` nullable for every future record.
       localUri: palette.photoUri ?? LEGACY_IMAGE_URI,
       width: LEGACY_IMAGE_SIZE.width,
       height: LEGACY_IMAGE_SIZE.height,
       source: palette.photoUri === null ? ('legacy' as const) : ('photo-library' as const),
       grade: palette.grade,
-      thumbnailUri: null,
+      thumbnailUri: palette.thumbnailUri,
     },
 
     palette: {
@@ -142,12 +131,12 @@ export function memoryToPalette(memory: ChromaticMemory): Palette {
     setIds: memory.collectionIds,
     isPinned: memory.isPinned,
     grade: memory.image.grade,
+    thumbnailUri: memory.image.thumbnailUri,
   };
   return palette as Palette;
 }
 
 export type MigrationInput = {
-  /** The raw v1 value, already JSON-parsed. Anything at all; it is untrusted. */
   storedPalettes: unknown;
 };
 
@@ -169,9 +158,6 @@ export function migratePalettes({ storedPalettes }: MigrationInput): MigrationPl
   }
 
   if (!Array.isArray(storedPalettes)) {
-    // Not an array at all: something other than this app wrote the key, or it is
-    // corrupt at the top level. Refusing is safer than guessing, and v1 is left
-    // exactly as it was.
     return nothing('aborted', 'Stored palettes were not an array.');
   }
 

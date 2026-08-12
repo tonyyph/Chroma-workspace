@@ -102,6 +102,14 @@ export const paletteSchema = z
      * about a year later.
      */
     grade: gradeSchema.nullable().default(null),
+    /**
+     * A rendered copy of the photograph, graded when the palette is graded.
+     *
+     * Lists read this; the grade screen and the performance render the original
+     * live. A library grid cannot mount a Skia canvas per card without becoming
+     * a stuttering grid, and this is what keeps it from having to.
+     */
+    thumbnailUri: z.string().min(1).nullable().default(null),
   })
   .superRefine((palette, context) => {
     const total = palette.colors.reduce((sum, color) => sum + color.weight, 0);

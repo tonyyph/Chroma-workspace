@@ -34,6 +34,24 @@ export function fallbackPhotoIndexFor(palette: Palette): number {
   return 0;
 }
 
+/**
+ * Which of a palette's frames a card should draw, or null when it has none.
+ *
+ * **The graded copy first.** A palette carries its grade as eleven numbers, and
+ * screens that show the photograph large re-render it live. A list cannot: a
+ * Skia canvas per card is how a smooth grid becomes a stuttering one.
+ * `thumbnailUri` is the copy baked when the grade was applied, so every card
+ * shows the photograph as its owner graded it for the cost of an ordinary image
+ * load.
+ *
+ * Exported as a function because it is a decision, not a rendering detail, and a
+ * decision is worth testing without mounting anything.
+ */
+export function preferredSource(palette: Palette): { uri: string } | null {
+  const uri = palette.thumbnailUri ?? palette.photoUri;
+  return uri ? { uri } : null;
+}
+
 export function PalettePhoto({
   palette,
   style,
@@ -45,10 +63,11 @@ export function PalettePhoto({
 
   useEffect(() => {
     setSourceFailed(false);
-  }, [palette.photoUri]);
+  }, [palette.photoUri, palette.thumbnailUri]);
 
   const fallback = FALLBACK_PHOTOS[fallbackPhotoIndexFor(palette)] ?? harbourPhoto;
-  const source = palette.photoUri && !sourceFailed ? { uri: palette.photoUri } : fallback;
+  const preferred = preferredSource(palette);
+  const source = preferred && !sourceFailed ? preferred : fallback;
 
   return (
     <Image

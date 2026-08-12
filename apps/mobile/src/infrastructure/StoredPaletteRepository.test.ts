@@ -22,6 +22,7 @@ class MapStorage implements KeyValueStorage {
 }
 
 const palette = (id: string): Palette => ({
+  thumbnailUri: null,
   grade: null,
   schemaVersion: 1,
   id,

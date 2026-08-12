@@ -9,6 +9,7 @@ import {
 } from './youInsights';
 
 const palette = (overrides: Partial<Palette> & Pick<Palette, 'id'>): Palette => ({
+  thumbnailUri: null,
   grade: null,
   schemaVersion: 1,
   name: 'Fixture',

@@ -12,6 +12,7 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { usePaletteParam, usePalettes } from '@/hooks';
 import { hapticsService } from '@/infrastructure/dependencies';
+import { bakeGradedThumbnail } from '@/lib/grade/bakeGrade';
 import { useEntitlement, usePreferences, useSkin } from '@/providers';
 import {
   Button,
@@ -61,10 +62,9 @@ export function GradeScreen() {
   const [grade, setGrade] = useState<Grade | null>(null);
   const [comparing, setComparing] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [baking, setBaking] = useState(false);
   const [writeFailed, setWriteFailed] = useState(false);
 
-  // The saved grade wins on arrival, then the automatic one; `null` in state
-  // means "nothing chosen yet", which is different from "chose the neutral one".
   const current = grade ?? palette?.grade ?? automatic;
   const shown = comparing ? NEUTRAL_GRADE : current;
 
@@ -82,12 +82,21 @@ export function GradeScreen() {
   const apply = async () => {
     if (!palette) return;
     setWriteFailed(false);
+    setBaking(true);
     try {
-      await save({ ...palette, grade: current });
+      // Baked before the write, so the record and the file it points at land
+      // together — a palette claiming a thumbnail that does not exist yet would
+      // draw the ungraded frame until the next launch.
+      const baked = palette.photoUri
+        ? await bakeGradedThumbnail(palette.photoUri, current, palette.id)
+        : null;
+      await save({ ...palette, grade: current, thumbnailUri: baked });
       setSaved(true);
       void hapticsService.fire('extractionComplete');
     } catch {
       setWriteFailed(true);
+    } finally {
+      setBaking(false);
     }
   };
 
@@ -95,7 +104,7 @@ export function GradeScreen() {
     if (!palette) return;
     setWriteFailed(false);
     try {
-      await save({ ...palette, grade: null });
+      await save({ ...palette, grade: null, thumbnailUri: null });
       setGrade(NEUTRAL_GRADE);
       setSaved(false);
     } catch {
@@ -141,9 +150,6 @@ export function GradeScreen() {
       <Gutter>
         <View style={[styles.stage, { height: previewHeight }]}>
           {status === 'ready' && image ? (
-            // Press and hold anywhere on the frame to see it untouched. A
-            // before/after toggle placed elsewhere makes people look away from
-            // the thing they are judging.
             <Pressable
               accessibilityHint={t('grade.compare')}
               accessibilityLabel={t('grade.original')}
@@ -193,9 +199,6 @@ export function GradeScreen() {
           ) : null}
         </View>
 
-        {/* The grade said in words. It is what a screen reader announces, and it
-            is the app keeping its promise that a derived look can be explained
-            rather than merely applied. */}
         <View style={styles.reason}>
           <Meta accessibilityLabel={describeGrade(shown).join(', ')}>
             {describeGrade(shown).join(' · ')}
@@ -226,8 +229,6 @@ export function GradeScreen() {
           <Chip
             key={stock.id}
             label={stock.name}
-            // A locked look routes to the paywall rather than doing nothing,
-            // which is the only honest thing a visible control can do.
             onPress={() =>
               canAdjust ? choose(stock.grade) : router.push('/paywall?trigger=advanced-grading')
             }
@@ -325,8 +326,8 @@ export function GradeScreen() {
 
       <Gutter style={styles.actions}>
         <Button
-          disabled={status !== 'ready' || saved}
-          label={saved ? t('grade.applied') : t('grade.apply')}
+          disabled={status !== 'ready' || saved || baking}
+          label={saved ? t('grade.applied') : baking ? t('grade.applying') : t('grade.apply')}
           onPress={() => void apply()}
           size="lg"
           variant="contrast"

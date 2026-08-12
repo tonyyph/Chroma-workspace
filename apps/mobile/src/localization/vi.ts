@@ -616,4 +616,5 @@ export const vi: Record<MessageKey, string> = {
   'rewind.collection.artist': '{key}',
   'rewind.collection.genre': '{key}',
   'rewind.count': '{count}',
+  'grade.applying': 'Đang áp dụng…',
 };

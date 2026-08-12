@@ -73,6 +73,7 @@ export function useTrendingSave(): TrendingSaver {
       const id = Crypto.randomUUID();
       try {
         await savePalette({
+          thumbnailUri: null,
           grade: null,
           schemaVersion: 1,
           id,
@@ -81,9 +82,6 @@ export function useTrendingSave(): TrendingSaver {
           capturedAt: now,
           source: 'photo',
           colors: [...item.colors],
-          // Where it was read, kept as a tag so the copy still says where it is
-          // from once it is one library card among many. The handle that used to
-          // sit alongside it named nobody.
           tags: [item.category],
           location: null,
           photoUri: null,
@@ -109,8 +107,6 @@ export function useTrendingSave(): TrendingSaver {
 
   const open = useCallback(
     async (item: TrendingItem) => {
-      // Tapping the row opens the palette, which has to exist first — the same
-      // copy the SAVE control performs, without stopping to ask.
       const id = owned.get(item.id) ?? (await save(item));
       if (id) router.push(`/palette/${id}`);
     },

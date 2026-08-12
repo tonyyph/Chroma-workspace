@@ -50,6 +50,7 @@ jest.mock('expo-router', () => ({
 }));
 
 const palette = (overrides: Partial<Palette> = {}): Palette => ({
+  thumbnailUri: null,
   grade: null,
   schemaVersion: 1,
   id: '11111111-1111-4111-8111-111111111111',

@@ -1,7 +1,8 @@
 import { makeColor, type Palette } from '@cw/domain';
-import { fallbackPhotoIndexFor } from './PalettePhoto';
+import { fallbackPhotoIndexFor, preferredSource } from './PalettePhoto';
 
 const palette = (id: string, hex: string): Palette => ({
+  thumbnailUri: null,
   grade: null,
   schemaVersion: 1,
   id,
@@ -44,5 +45,36 @@ describe('fallbackPhotoIndexFor', () => {
     expect(fallbackPhotoIndexFor(palette('22222222-2222-4222-8222-222222222222', '#D16A3B'))).toBe(
       3,
     );
+  });
+});
+
+describe('which frame a card draws', () => {
+  it('prefers the graded copy over the original', () => {
+    // The whole point of baking: a list shows the photograph as its owner
+    // graded it, without a Skia canvas per card.
+    const graded = {
+      ...palette('11111111-1111-4111-8111-111111111111', '#7C5CFF'),
+      photoUri: 'file:///photos/original.jpg',
+      thumbnailUri: 'file:///photos/id-graded.png',
+    };
+    expect(preferredSource(graded)).toEqual({ uri: 'file:///photos/id-graded.png' });
+  });
+
+  it('falls back to the original when nothing has been baked', () => {
+    const plain = {
+      ...palette('11111111-1111-4111-8111-111111111111', '#7C5CFF'),
+      photoUri: 'file:///photos/original.jpg',
+      thumbnailUri: null,
+    };
+    expect(preferredSource(plain)).toEqual({ uri: 'file:///photos/original.jpg' });
+  });
+
+  it('has no uri at all for a palette that never had a photograph', () => {
+    const bare = {
+      ...palette('11111111-1111-4111-8111-111111111111', '#7C5CFF'),
+      photoUri: null,
+      thumbnailUri: null,
+    };
+    expect(preferredSource(bare)).toBeNull();
   });
 });

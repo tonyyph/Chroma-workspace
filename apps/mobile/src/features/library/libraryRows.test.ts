@@ -2,6 +2,7 @@ import { makeColor, type Palette } from '@cw/domain';
 import { clearMonthSignatureCache, toLibraryRows } from './libraryRows';
 
 const at = (id: string, capturedAt: string): Palette => ({
+  thumbnailUri: null,
   grade: null,
   schemaVersion: 1,
   id,
