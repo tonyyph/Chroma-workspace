@@ -6,6 +6,7 @@ import { ResultScreen } from '@/features/capture/ResultScreen';
 import { ShareSheet } from '@/features/capture/ShareSheet';
 import { TuneScreen } from '@/features/capture/TuneScreen';
 import { ExploreScreen } from '@/features/explore/ExploreScreen';
+import { GradeScreen } from '@/features/grading/GradeScreen';
 import { LibraryScreen } from '@/features/library/LibraryScreen';
 import { PaletteDetailScreen } from '@/features/palette/PaletteDetailScreen';
 import { PaywallScreen } from '@/features/paywall/PaywallScreen';
@@ -174,6 +175,7 @@ const cases: readonly [string, () => ReactElement][] = [
   ['Widgets', () => <WidgetsScreen onClose={jest.fn()} palette={palette()} />],
   ['Activity', () => <ActivityScreen palettes={[palette()]} />],
   ['Scan', () => <ScanScreen onBuild={jest.fn()} onExit={jest.fn()} />],
+  ['Grade', () => <GradeScreen />],
   ['Import & pick', () => <ImportPickScreen onCancel={jest.fn()} onExtract={jest.fn()} />],
 ];
 

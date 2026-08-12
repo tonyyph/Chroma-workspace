@@ -9,6 +9,9 @@ import { CardGroup, Gutter, Icon, Pressable, Text } from '@/ui';
  * them: check it, see it used, make a surface of it, measure it against another.
  */
 const TOOLS = [
+  // Grading leads: it is the only one that changes the photograph itself, and
+  // the rest operate on what the photograph already gave up.
+  { route: 'grade', labelKey: 'grade.title' },
   { route: 'contrast', labelKey: 'contrast.title' },
   { route: 'theme', labelKey: 'theme.title' },
   { route: 'gradient', labelKey: 'gradient.title' },

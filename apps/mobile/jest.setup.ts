@@ -62,6 +62,7 @@ jest.mock('@shopify/react-native-skia', () => {
     Rect: passthrough('SkiaRect'),
     Fill: passthrough('SkiaFill'),
     Shader: passthrough('SkiaShader'),
+    ImageShader: passthrough('SkiaImageShader'),
     Image: passthrough('SkiaImage'),
     LinearGradient: passthrough('SkiaLinearGradient'),
     RadialGradient: passthrough('SkiaRadialGradient'),

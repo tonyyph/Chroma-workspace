@@ -543,6 +543,33 @@ export const en = {
   'pair.error.empty': 'Nothing matched this palette. Try again for a different reading.',
   'pair.error.notConfigured': 'Music pairing is unavailable in this build.',
   'pair.empty': 'No matches yet.',
+
+  'grade.title': 'Grade',
+  'grade.subtitle': 'Read from this photograph, on this device',
+  'grade.auto': 'Automatic',
+  'grade.original': 'Original',
+  'grade.stocks': 'Film',
+  'grade.controls': 'Adjust',
+  'grade.apply': 'Apply grade',
+  'grade.applied': 'Grade saved',
+  'grade.remove': 'Remove grade',
+  'grade.compare': 'Hold to compare',
+  'grade.noPhoto': 'This palette has no photograph to grade.',
+  'grade.loading': 'Opening the photograph',
+  'grade.failed': 'That photograph could not be opened.',
+  'grade.failedDetail': 'The file may have moved or been cleared by the system.',
+  'grade.proBody':
+    'Film looks and per-parameter control are part of Pro. The automatic grade is always free.',
+  'grade.exposure': 'Exposure',
+  'grade.contrast': 'Contrast',
+  'grade.lift': 'Lift',
+  'grade.saturation': 'Saturation',
+  'grade.temperature': 'Temperature',
+  'grade.tint': 'Tint',
+  'grade.vignette': 'Vignette',
+  'grade.grain': 'Grain',
+  'grade.stops': '{value} stops',
+  'grade.amount': '{value} per cent',
 } as const;
 
 export type MessageKey = keyof typeof en;
