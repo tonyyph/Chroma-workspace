@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { chromaticMemorySchema, LEGACY_IMAGE_URI } from './memory';
 import { memoryToPalette, migratePalettes, paletteToMemory } from './migration';
+import { NEUTRAL_GRADE } from './grading';
 import { makeColor, paletteSchema, type Palette } from './palette';
 
 const uuid = (n: number) => `${String(n).padStart(8, '0')}-1111-4111-8111-111111111111`;
@@ -169,5 +170,20 @@ describe('migratePalettes', () => {
     const { memories } = migratePalettes({ storedPalettes: [v1Palette()] });
     const json = JSON.stringify(memories);
     expect(json).not.toMatch(/\.mp3|\.m4a|\.aac|previewUrl/i);
+  });
+});
+
+describe('a grade survives the round trip', () => {
+  it('carries a graded palette through to a memory and back', () => {
+    const graded = {
+      ...v1Palette(),
+      grade: { ...NEUTRAL_GRADE, temperature: 0.4, shadowTint: { hue: 245, strength: 0.3 } },
+    };
+    const back = memoryToPalette(paletteToMemory(graded));
+    expect(back.grade).toEqual(graded.grade);
+  });
+
+  it('leaves an ungraded palette ungraded', () => {
+    expect(memoryToPalette(paletteToMemory(v1Palette())).grade).toBeNull();
   });
 });

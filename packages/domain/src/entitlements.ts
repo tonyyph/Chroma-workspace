@@ -30,7 +30,17 @@ export type Entitlement =
   /** Holding white balance across a session so a walk's readings compare. */
   | 'locked_white_balance'
   /** Display P3 values alongside sRGB in exports. */
-  | 'wide_gamut_export';
+  | 'wide_gamut_export'
+  /**
+   * The film stocks and per-parameter control over a grade.
+   *
+   * The *automatic* grade is free and always will be. It is the product's
+   * central claim — that a photograph's own colour tells you how to grade it —
+   * and charging for the claim is the same mistake as capping the library.
+   * What Pro buys is the part that is systems work: taking the derived grade
+   * apart and putting it back differently.
+   */
+  | 'advanced_grading';
 
 const tierEntitlements: Record<SubscriptionTier, ReadonlySet<Entitlement>> = {
   free: new Set(),
@@ -40,6 +50,7 @@ const tierEntitlements: Record<SubscriptionTier, ReadonlySet<Entitlement>> = {
     'structured_export',
     'locked_white_balance',
     'wide_gamut_export',
+    'advanced_grading',
   ]),
 };
 

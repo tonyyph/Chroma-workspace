@@ -26,6 +26,7 @@ export default function CompareRoute() {
   const commitMerge = async () => {
     const now = new Date().toISOString();
     const merged: Palette = {
+      grade: null,
       schemaVersion: 1,
       id: Crypto.randomUUID(),
       name: t('compare.mergedName', { first: first.name, second: second.name }),

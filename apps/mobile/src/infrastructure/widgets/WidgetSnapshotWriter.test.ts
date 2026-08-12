@@ -31,6 +31,7 @@ const colors = [
 const memoryOf = (id = idAt(1), overrides: Partial<ChromaticMemoryDraft> = {}): ChromaticMemory => {
   const draft: ChromaticMemoryDraft = {
     image: {
+      grade: null,
       localUri: 'file:///photos/a.jpg',
       width: 3000,
       height: 4000,
@@ -158,6 +159,7 @@ describe('WidgetSnapshotWriter', () => {
       [
         memoryOf(idAt(1), {
           image: {
+            grade: null,
             localUri: 'file:///photos/a.jpg',
             width: 100,
             height: 100,

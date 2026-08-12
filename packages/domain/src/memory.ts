@@ -7,6 +7,7 @@ import {
   type AtmosphereReading,
 } from './atmosphere';
 import { visualAnalysisSchema } from './analysis';
+import { gradeSchema } from './grading';
 import { colorMetrics } from './discovery';
 import {
   musicPairingSchema,
@@ -54,6 +55,18 @@ export const imageRefSchema = z.object({
   height: z.number().int().positive(),
   source: imageSourceSchema,
   thumbnailUri: z.string().min(1).nullable(),
+  /**
+   * How this photograph is graded, or null for untouched.
+   *
+   * It belongs to the image rather than to the palette: a grade is a treatment
+   * of the frame, and the colours were measured from the frame as it was shot.
+   * Stored as the grade and never as graded pixels, so the original survives and
+   * the look stays something you can change your mind about.
+   *
+   * `.default(null)` widens the record rather than versioning it — every memory
+   * written before grading existed still parses.
+   */
+  grade: gradeSchema.nullable().default(null),
 });
 
 export type ImageRef = z.infer<typeof imageRefSchema>;

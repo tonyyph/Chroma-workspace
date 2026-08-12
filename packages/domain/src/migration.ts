@@ -76,6 +76,7 @@ export function paletteToMemory(palette: Palette): ChromaticMemory {
       width: LEGACY_IMAGE_SIZE.width,
       height: LEGACY_IMAGE_SIZE.height,
       source: palette.photoUri === null ? ('legacy' as const) : ('photo-library' as const),
+      grade: palette.grade,
       thumbnailUri: null,
     },
 
@@ -140,6 +141,7 @@ export function memoryToPalette(memory: ChromaticMemory): Palette {
     tuned: memory.palette.tuned,
     setIds: memory.collectionIds,
     isPinned: memory.isPinned,
+    grade: memory.image.grade,
   };
   return palette as Palette;
 }

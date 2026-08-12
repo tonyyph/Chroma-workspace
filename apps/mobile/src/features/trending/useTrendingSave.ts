@@ -73,6 +73,7 @@ export function useTrendingSave(): TrendingSaver {
       const id = Crypto.randomUUID();
       try {
         await savePalette({
+          grade: null,
           schemaVersion: 1,
           id,
           name: item.name,

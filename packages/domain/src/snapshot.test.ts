@@ -37,6 +37,7 @@ const colors = [
 
 const draft = (overrides: Partial<ChromaticMemoryDraft> = {}): ChromaticMemoryDraft => ({
   image: {
+    grade: null,
     localUri: 'file:///photos/a.jpg',
     width: 3000,
     height: 4000,
@@ -206,6 +207,7 @@ describe('toWidgetSnapshot', () => {
     const snapshot = toWidgetSnapshot(
       memoryOf({
         image: {
+          grade: null,
           localUri: LEGACY_IMAGE_URI,
           width: 1,
           height: 1,

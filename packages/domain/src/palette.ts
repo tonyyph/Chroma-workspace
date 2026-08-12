@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { hexDeltaE00, hexToRgb, rgbToHex, rgbToOklch } from './color';
+import { gradeSchema } from './grading';
 import { asProportions, withExactWeights } from './weights';
 
 /**
@@ -90,6 +91,17 @@ export const paletteSchema = z
     tuned: z.boolean(),
     setIds: z.array(z.string().uuid()).max(50),
     isPinned: z.boolean(),
+    /**
+     * The grade applied to this palette's photograph, or null for none.
+     *
+     * A widening rather than a new version: `.default(null)` means every record
+     * written before grading existed still parses, so `schemaVersion` stays at 1
+     * and no migration has to run. The grade is stored, never the graded pixels —
+     * it is eleven numbers, it re-renders identically every time, and keeping the
+     * original frame is what makes the grade something you can change your mind
+     * about a year later.
+     */
+    grade: gradeSchema.nullable().default(null),
   })
   .superRefine((palette, context) => {
     const total = palette.colors.reduce((sum, color) => sum + color.weight, 0);

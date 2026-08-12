@@ -30,6 +30,7 @@ jest.mock('@/store/libraryStore', () => ({
 const ID = 'a0000000-0000-4000-8000-000000000001';
 
 const palette: Palette = {
+  grade: null,
   schemaVersion: 1,
   id: ID,
   name: 'Harbour dusk',

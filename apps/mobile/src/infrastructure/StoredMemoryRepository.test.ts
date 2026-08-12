@@ -22,6 +22,7 @@ class MapStorage implements KeyValueStorage {
 const uuid = (n: number) => `${String(n).padStart(8, '0')}-1111-4111-8111-111111111111`;
 
 const palette = (n: number, overrides: Partial<Palette> = {}): Palette => ({
+  grade: null,
   schemaVersion: 1,
   id: uuid(n),
   name: `Capture ${n}`,

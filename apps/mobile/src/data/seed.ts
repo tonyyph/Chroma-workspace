@@ -15,6 +15,7 @@ const ago = (days: number) => new Date(Date.now() - days * day).toISOString();
 export function seedPalettes(): Palette[] {
   return [
     {
+      grade: null,
       schemaVersion: 1,
       id: 'a0000000-0000-4000-8000-000000000001',
       name: 'Harbour dusk',
@@ -40,6 +41,7 @@ export function seedPalettes(): Palette[] {
       isPinned: true,
     },
     {
+      grade: null,
       schemaVersion: 1,
       id: 'a0000000-0000-4000-8000-000000000002',
       name: 'Market awning',
@@ -63,6 +65,7 @@ export function seedPalettes(): Palette[] {
       isPinned: false,
     },
     {
+      grade: null,
       schemaVersion: 1,
       id: 'a0000000-0000-4000-8000-000000000003',
       name: 'Pool tile',
@@ -86,6 +89,7 @@ export function seedPalettes(): Palette[] {
       isPinned: true,
     },
     {
+      grade: null,
       schemaVersion: 1,
       id: 'a0000000-0000-4000-8000-000000000004',
       name: 'Terracotta wall',

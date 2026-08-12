@@ -149,6 +149,7 @@ describe('libraryStore.load', () => {
  */
 describe('libraryStore merged systems', () => {
   const palette = (id: string, hex: string): Palette => ({
+    grade: null,
     schemaVersion: 1,
     id,
     name: `Palette ${id}`,
