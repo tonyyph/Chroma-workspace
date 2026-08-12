@@ -8,6 +8,7 @@ export * from './feedback';
 export * from './gradePixels';
 export * from './grading';
 export * from './intent';
+export * from './livingMemory';
 export * from './memory';
 export * from './migration';
 export * from './music';
