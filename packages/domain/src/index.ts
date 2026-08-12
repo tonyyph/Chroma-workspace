@@ -5,6 +5,8 @@ export * from './discovery';
 export * from './entitlements';
 export * from './errors';
 export * from './feedback';
+export * from './gradePixels';
+export * from './grading';
 export * from './intent';
 export * from './memory';
 export * from './migration';
