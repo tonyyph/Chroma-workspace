@@ -1,4 +1,4 @@
-import { makeColor, type Color, type ExtractionResult } from '@cw/domain';
+import { evenlyWeightedColors, type Color, type ExtractionResult } from '@cw/domain';
 import { space, type Skin } from '@cw/tokens';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -167,15 +167,9 @@ export function ImportPickScreen({
 
   const extract = () => {
     if (usingPoints) {
-      const weight = Math.round((1 / points.length) * 1000) / 1000;
-      const roles = ['dominant', 'support', 'signal'] as const;
-      const colors = points.map((point, index) =>
-        makeColor(point.hex, weight, roles[index] ?? 'extra'),
-      );
-      const drift = 1 - colors.reduce((sum, color) => sum + color.weight, 0);
-      const first = colors[0];
-      if (first) colors[0] = { ...first, weight: Math.round((first.weight + drift) * 1000) / 1000 };
-      onExtract(colors, uri);
+      // A tapped point is a deliberate choice, so the points split the palette
+      // evenly and take their roles from the order they were placed in.
+      onExtract(evenlyWeightedColors(points.map((point) => point.hex)), uri);
       return;
     }
     if (auto?.colors.length) onExtract(auto.colors, uri);

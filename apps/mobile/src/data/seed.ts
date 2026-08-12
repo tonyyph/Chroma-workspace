@@ -1,4 +1,4 @@
-import { makeColor, type Color, type Palette } from '@cw/domain';
+import { makeColor, weightedColors, type Palette } from '@cw/domain';
 
 /**
  * Seed content, transcribed from `Chroma Wave App.dc.html`.
@@ -8,22 +8,6 @@ import { makeColor, type Color, type Palette } from '@cw/domain';
  * data for a local-first build with no server — it is written on first launch
  * and is fully editable and deletable afterwards.
  */
-
-/** The document expresses strip proportions as flex ratios; weights must sum to 1. */
-function weighted(entries: readonly [string, number, Color['role']][]): Color[] {
-  const total = entries.reduce((sum, [, ratio]) => sum + ratio, 0);
-  const swatches = entries.map(([hex, ratio, role]) =>
-    makeColor(hex, Math.round((ratio / total) * 1000) / 1000, role),
-  );
-  // Push any rounding remainder onto the dominant swatch so the sum stays exact.
-  const drift = 1 - swatches.reduce((sum, s) => sum + s.weight, 0);
-  const first = swatches[0];
-  if (!first) return swatches;
-  return [
-    { ...first, weight: Math.round((first.weight + drift) * 1000) / 1000 },
-    ...swatches.slice(1),
-  ];
-}
 
 const day = 86_400_000;
 const ago = (days: number) => new Date(Date.now() - days * day).toISOString();
@@ -62,7 +46,7 @@ export function seedPalettes(): Palette[] {
       createdAt: ago(3),
       capturedAt: ago(3),
       source: 'photo',
-      colors: weighted([
+      colors: weightedColors([
         ['#FFC24A', 2, 'dominant'],
         ['#FF7A5C', 1.3, 'support'],
         ['#8A3B2E', 1, 'signal'],
@@ -85,7 +69,7 @@ export function seedPalettes(): Palette[] {
       createdAt: ago(7),
       capturedAt: ago(7),
       source: 'photo',
-      colors: weighted([
+      colors: weightedColors([
         ['#22D3EE', 2, 'dominant'],
         ['#0F6E7C', 1.3, 'support'],
         ['#EDEAE3', 1, 'signal'],
@@ -108,7 +92,7 @@ export function seedPalettes(): Palette[] {
       createdAt: ago(14),
       capturedAt: ago(14),
       source: 'photo',
-      colors: weighted([
+      colors: weightedColors([
         ['#C4623B', 2, 'dominant'],
         ['#F1E7D6', 1.3, 'support'],
         ['#5C3A2E', 1, 'signal'],

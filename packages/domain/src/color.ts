@@ -1,5 +1,6 @@
 import { DomainError } from './errors';
 import type { Color, ColorRole } from './palette';
+import { withExactWeights } from './weights';
 
 /** An extracted cluster before it is narrowed to the shipped swatch shape. */
 type ExtractedColor = Readonly<{
@@ -250,12 +251,7 @@ export const extractPaletteFromRgba = (
     };
   });
 
-  // Weights are rounded for storage; the remainder rides on the dominant swatch
-  // so the schema's "must sum to one" invariant still holds.
-  const rounded = swatches.map((s) => ({ ...s, weight: Math.round(s.weight * 1000) / 1000 }));
-  const drift = 1 - rounded.reduce((sum, s) => sum + s.weight, 0);
-  const dominant = rounded[0];
-  if (dominant) dominant.weight = Math.round((dominant.weight + drift) * 1000) / 1000;
+  const rounded = withExactWeights(swatches);
 
   // BUILD KIT · section 8: "Report ΔE00, never ΔE76." The read's stability is the
   // mean perceptual distance from each sampled pixel to the colour it was folded

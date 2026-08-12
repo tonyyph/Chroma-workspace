@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { hexDeltaE00, hexToRgb, rgbToHex, rgbToOklch } from './color';
+import { asProportions, withExactWeights } from './weights';
 
 /**
  * The palette — the entity this product is built around.
@@ -180,6 +181,40 @@ export function makeColor(
 }
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+
+/** The order a palette hands out its named roles when nothing else has said. */
+const ROLE_ORDER = ['dominant', 'support', 'signal'] as const;
+
+/**
+ * Builds a palette's colours from proportions.
+ *
+ * The proportions are relative — flex ratios from the design document, pixel
+ * counts from an extraction, or a bare 1 apiece — and become weights that sum to
+ * exactly one. A role given as `null` is filled from the band order, so callers
+ * that simply have a list of hexes in dominance order get the right roles.
+ *
+ * Four call sites each carried their own copy of this arithmetic. Weights
+ * summing to one is a rule about palettes, not a detail of the screen that
+ * happens to be building one.
+ */
+export function weightedColors(
+  entries: readonly (readonly [hex: string, ratio: number, role?: ColorRole | null])[],
+): Color[] {
+  const weights = asProportions(entries.map(([, ratio]) => ratio));
+  return withExactWeights(
+    entries.map(([hex, , role], index) =>
+      makeColor(hex, weights[index] ?? 0, role ?? ROLE_ORDER[index] ?? 'extra'),
+    ),
+  );
+}
+
+/**
+ * `weightedColors` for colours that carry no proportion of their own — pinned
+ * while walking, or tapped onto an imported photo. Each takes an equal share.
+ */
+export function evenlyWeightedColors(hexes: readonly string[]): Color[] {
+  return weightedColors(hexes.map((hex) => [hex, 1] as const));
+}
 
 /** The colour carrying a named role, or null. Named roles are unique. */
 export function colorForRole(palette: Palette, role: ColorRole): Color | null {

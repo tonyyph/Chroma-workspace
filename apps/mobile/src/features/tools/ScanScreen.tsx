@@ -1,4 +1,4 @@
-import { makeColor, type Color } from '@cw/domain';
+import { evenlyWeightedColors, type Color } from '@cw/domain';
 import { space, type Skin } from '@cw/tokens';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -89,13 +89,9 @@ export function ScanScreen({
   };
 
   const build = () => {
-    const weight = Math.round((1 / pins.length) * 1000) / 1000;
-    const roles = ['dominant', 'support', 'signal'] as const;
-    const colors = pins.map((hex, index) => makeColor(hex, weight, roles[index] ?? 'extra'));
-    // Push rounding remainder onto the first so weights still sum to one.
-    const drift = 1 - colors.reduce((sum, color) => sum + color.weight, 0);
-    const first = colors[0];
-    if (first) colors[0] = { ...first, weight: Math.round((first.weight + drift) * 1000) / 1000 };
+    // Every pin was picked deliberately, so none outranks another: they split the
+    // palette evenly and take their roles from the order they were pinned in.
+    const colors = evenlyWeightedColors(pins);
     analytics.track('scan_pins_added', { count: pins.length });
     onBuild(colors);
   };

@@ -14,3 +14,4 @@ export * from './palette';
 export * from './preferences';
 export * from './ranking';
 export * from './snapshot';
+export * from './weights';
