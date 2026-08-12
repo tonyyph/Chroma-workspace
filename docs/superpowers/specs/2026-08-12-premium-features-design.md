@@ -125,10 +125,24 @@ sentence for screen readers.
 
 ## Slices 2 and 3, in outline
 
-**Living Memory** animates a memory — colour, waveform, typography, music and
-motion — for playback and sharing inside the app. Video file export is deferred
-until an encoder exists, and the feature is scoped so that its absence is not a
-hole.
+**Living Memory** — built. A memory is performed rather than listed: the graded
+photograph drifts, the palette breathes, the atmosphere is named, the track plays
+under it.
+
+Two decisions carry it. The **motion is derived, not templated** — pacing comes
+from the atmosphere, so a serene memory breathes at 2.6 seconds a cycle and a
+vivid one at 0.7; a template would say the same thing about a still lake and a
+lit dance floor. And **the audio is the clock** whenever audio is playing: a
+picture on its own timer and music on the audio device disagree within seconds,
+and a cut landing off the music is what makes a montage feel cheap.
+
+The invariant the player leans on is that scenes tile the runtime with no gap and
+no overlap — a gap is a black frame in the middle of someone's memory — asserted
+directly rather than watched for.
+
+**No video export, and no button that would fail.** Nothing in the dependency set
+can encode one. The screen says what is missing. Adding it means adding a native
+encoder first.
 
 **Smart Collections & Rewind** groups memories by season, mood, colour and music
 using pure functions over data already held, and produces "On this day" and
