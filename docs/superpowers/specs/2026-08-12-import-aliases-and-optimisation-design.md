@@ -13,7 +13,7 @@ Surveying the source first changed what that means:
   is `@chromawave/*`, at 151 uses across 126 files.
 - React Compiler is on (`app.json`, `experiments.reactCompiler`), yet the source
   carries 90 `useCallback`, 72 `useMemo` and 5 `memo()` written by hand. The
-  render work is therefore mostly *removal*, not addition.
+  render work is therefore mostly _removal_, not addition.
 - The weight-and-drift maths that makes a palette's weights sum to one is copied
   into four files.
 
@@ -71,6 +71,14 @@ mounts each screen and presses every control, which is the safety net.
 - Audit the 162 hand-written memo hooks and remove only those provably
   redundant. No blanket sweep: the diff would be enormous and some `memo()` calls
   still earn their place. Report the actual count changed.
+
+  **Outcome: none removed.** Compiling every source file with the app's own
+  React Compiler shows 165 components optimised and 13 bail-outs — and the
+  bail-outs are the files carrying the most manual memoisation.
+  `PreferencesProvider` has 18 memo hooks and is not compiled at all, because the
+  compiler cannot lower its `finally` clause. The hooks are the only memoisation
+  those files have. The measurement now ships as
+  `apps/mobile/scripts/react-compiler-healthcheck.mjs`.
 
 ## Verification
 
