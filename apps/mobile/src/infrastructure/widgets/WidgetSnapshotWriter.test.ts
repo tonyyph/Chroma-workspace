@@ -10,7 +10,7 @@ import {
   type ChromaticMemoryDraft,
   type MusicTrackReference,
 } from '@cw/domain';
-import type { KeyValueStorage } from '../KeyValueStorage';
+import type { KeyValueStorage } from '@/infrastructure/KeyValueStorage';
 import {
   LAST_PUBLISHED_KEY,
   SNAPSHOT_FILE_NAME,

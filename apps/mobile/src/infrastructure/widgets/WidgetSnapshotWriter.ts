@@ -6,7 +6,7 @@ import {
   type ChromaticMemory,
   type WidgetSnapshotFile,
 } from '@cw/domain';
-import type { KeyValueStorage } from '../KeyValueStorage';
+import type { KeyValueStorage } from '@/infrastructure/KeyValueStorage';
 
 /**
  * Publishes the library to the shared container the widget reads.

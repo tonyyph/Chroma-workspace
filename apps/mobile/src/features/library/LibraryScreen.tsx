@@ -14,6 +14,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { seedPalettes } from '@/data';
+import { useDiscoveryFilters } from '@/features/discovery/useDiscoveryFilters';
 import { useTrending } from '@/features/trending/useTrending';
 import { usePalettes, useSets } from '@/hooks';
 import { analytics } from '@/infrastructure/dependencies';
@@ -34,7 +35,6 @@ import {
   useStyles,
 } from '@/ui';
 import { reportBackdropScroll } from '@/ui/backdropMotion';
-import { useDiscoveryFilters } from '../discovery/useDiscoveryFilters';
 import { HeroCarousel } from './HeroCarousel';
 import { toLibraryRows, type LibraryRow } from './libraryRows';
 import { PaletteRibbon } from './PaletteRibbon';
