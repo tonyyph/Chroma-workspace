@@ -16,5 +16,7 @@ export * from './pairing';
 export * from './palette';
 export * from './preferences';
 export * from './ranking';
+export * from './rewind';
 export * from './snapshot';
+export * from './styleDna';
 export * from './weights';
