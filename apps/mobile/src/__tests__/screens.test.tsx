@@ -11,6 +11,7 @@ import { LibraryScreen } from '@/features/library/LibraryScreen';
 import { LivingMemoryScreen } from '@/features/living/LivingMemoryScreen';
 import { PaletteDetailScreen } from '@/features/palette/PaletteDetailScreen';
 import { PaywallScreen } from '@/features/paywall/PaywallScreen';
+import { RewindScreen } from '@/features/rewind/RewindScreen';
 import { CollectionScreen } from '@/features/sets/CollectionScreen';
 import { ActivityScreen } from '@/features/tools/ActivityScreen';
 import { ApplyThemeScreen } from '@/features/tools/ApplyThemeScreen';
@@ -181,6 +182,7 @@ const cases: readonly [string, () => ReactElement][] = [
   ['Scan', () => <ScanScreen onBuild={jest.fn()} onExit={jest.fn()} />],
   ['Grade', () => <GradeScreen />],
   ['Living memory', () => <LivingMemoryScreen memory={memory()} />],
+  ['Rewind', () => <RewindScreen />],
   ['Import & pick', () => <ImportPickScreen onCancel={jest.fn()} onExtract={jest.fn()} />],
 ];
 

@@ -17,5 +17,6 @@ export * from './useNotificationRoute';
 export * from './useWidgetSnapshot';
 export * from './usePaletteParam';
 export * from './usePalettes';
+export * from './useMemories';
 export * from './usePhotoRead';
 export * from './useSets';

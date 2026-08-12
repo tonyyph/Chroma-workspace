@@ -148,6 +148,14 @@ export function ControlDeck({ unread }: { unread: number }) {
       </Gutter>
       <Gutter style={styles.group}>
         <CardGroup>
+          {/* Rewind leads the group: it is the only row here that is about
+              what the library has become rather than about the app. */}
+          <Row
+            icon="palette"
+            label={t('rewind.title')}
+            onPress={() => router.push('/tools/rewind')}
+            value={t('you.open')}
+          />
           <Row
             icon="activity"
             label={t('activity.title')}
