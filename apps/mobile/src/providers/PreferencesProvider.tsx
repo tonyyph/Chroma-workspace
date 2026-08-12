@@ -109,6 +109,18 @@ function parseReminderTime(time: ReminderTime): { hour: number; minute: number }
   return { hour, minute };
 }
 
+/**
+ * **The `useMemo` and `useCallback` below are load-bearing — do not delete them.**
+ *
+ * React Compiler is enabled for this app, which normally makes hand-written
+ * memoisation redundant. It is not redundant here: the compiler bails out of
+ * this whole provider because `apply` uses a `finally` clause, which it cannot
+ * lower. Nothing in this file is memoised for you.
+ *
+ * The `finally` stays: clearing the busy flag on every path in one place beats
+ * two copies of the reset that can drift. Run
+ * `node scripts/react-compiler-healthcheck.mjs` to see the current bail-outs.
+ */
 export function PreferencesProvider({
   children,
   onReady,
