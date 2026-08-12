@@ -1,4 +1,4 @@
-import { extractPaletteFromRgba } from '@chromawave/domain';
+import { extractPaletteFromRgba } from '@cw/domain';
 
 /**
  * Why the reader downscales instead of point-sampling.

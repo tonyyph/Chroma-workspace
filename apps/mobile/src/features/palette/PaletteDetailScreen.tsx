@@ -1,5 +1,5 @@
-import { space } from '@chromawave/design-tokens';
-import { readableOn, roledColors, shortAge, type Palette } from '@chromawave/domain';
+import { readableOn, roledColors, shortAge, type Palette } from '@cw/domain';
+import { space } from '@cw/tokens';
 import * as Clipboard from 'expo-clipboard';
 import * as Crypto from 'expo-crypto';
 import { useLocalSearchParams, useRouter } from 'expo-router';

@@ -1,4 +1,4 @@
-import { type PaletteSet } from '@chromawave/domain';
+import { type PaletteSet } from '@cw/domain';
 import * as Crypto from 'expo-crypto';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';

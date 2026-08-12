@@ -1,4 +1,4 @@
-import { makeColor, type Color } from '@chromawave/domain';
+import { makeColor, type Color } from '@cw/domain';
 
 /**
  * The trending catalogue.

@@ -1,4 +1,4 @@
-import type { Skin } from '@chromawave/design-tokens';
+import type { Skin } from '@cw/tokens';
 import { Text as RNText, type TextProps, type TextStyle } from 'react-native';
 import { useSkin } from '@/providers';
 

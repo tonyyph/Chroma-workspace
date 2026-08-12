@@ -1,4 +1,4 @@
-import { size } from '@chromawave/design-tokens';
+import { size } from '@cw/tokens';
 import Feather from '@expo/vector-icons/Feather';
 import type { StyleProp, TextStyle } from 'react-native';
 import { useSkin } from '@/providers';

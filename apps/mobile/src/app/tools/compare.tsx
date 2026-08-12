@@ -1,4 +1,4 @@
-import { mergePalettes, type Palette } from '@chromawave/domain';
+import { mergePalettes, type Palette } from '@cw/domain';
 import * as Crypto from 'expo-crypto';
 import { useRouter } from 'expo-router';
 import { CompareScreen } from '@/features/tools/CompareScreen';

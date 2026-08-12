@@ -1,4 +1,4 @@
-import type { GradientRole } from '@chromawave/design-tokens';
+import type { GradientRole } from '@cw/tokens';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, type ViewStyle } from 'react-native';
 

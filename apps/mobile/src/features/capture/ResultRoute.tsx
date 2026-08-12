@@ -1,4 +1,4 @@
-import { makeColor, type Palette } from '@chromawave/domain';
+import { makeColor, type Palette } from '@cw/domain';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { useChromaticSurface, usePalettes, useSets } from '@/hooks';

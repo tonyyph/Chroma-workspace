@@ -1,4 +1,4 @@
-import type { Color } from '@chromawave/domain';
+import type { Color } from '@cw/domain';
 import { create } from 'zustand';
 
 /** Where the strip was on screen when it was tapped, in window coordinates. */

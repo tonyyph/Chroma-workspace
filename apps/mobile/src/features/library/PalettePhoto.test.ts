@@ -1,4 +1,4 @@
-import { makeColor, type Palette } from '@chromawave/domain';
+import { makeColor, type Palette } from '@cw/domain';
 import { fallbackPhotoIndexFor } from './PalettePhoto';
 
 const palette = (id: string, hex: string): Palette => ({

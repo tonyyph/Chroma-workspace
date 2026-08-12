@@ -1,4 +1,4 @@
-import { brandBands } from '@chromawave/design-tokens';
+import { brandBands } from '@cw/tokens';
 import Svg, { Path } from 'react-native-svg';
 import { useSkin } from '@/providers';
 import { sine, squircle } from './BandField';

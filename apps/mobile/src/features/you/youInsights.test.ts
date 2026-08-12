@@ -1,4 +1,4 @@
-import { makeColor, type Palette } from '@chromawave/domain';
+import { makeColor, type Palette } from '@cw/domain';
 import {
   byRecency,
   capturedThisMonth,

@@ -1,6 +1,6 @@
-import type { PaywallTrigger } from '@chromawave/analytics';
-import { space, type Skin } from '@chromawave/design-tokens';
-import type { Palette } from '@chromawave/domain';
+import type { PaywallTrigger } from '@cw/analytics';
+import type { Palette } from '@cw/domain';
+import { space, type Skin } from '@cw/tokens';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';

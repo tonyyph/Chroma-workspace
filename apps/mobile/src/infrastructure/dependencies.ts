@@ -1,5 +1,5 @@
-import { DevelopmentAnalytics } from '@chromawave/analytics';
-import { UnconfiguredMusicProvider, type MusicProvider } from '@chromawave/domain';
+import { DevelopmentAnalytics } from '@cw/analytics';
+import { UnconfiguredMusicProvider, type MusicProvider } from '@cw/domain';
 import { PreviewPlayer } from './audio/PreviewPlayer';
 import { ExpoHapticsService } from './ExpoHapticsService';
 import { ExpoNotificationScheduler } from './ExpoNotificationScheduler';

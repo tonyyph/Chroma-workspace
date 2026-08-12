@@ -1,4 +1,4 @@
-import { brandBands, easing, motionRules, storyboard } from '@chromawave/design-tokens';
+import { brandBands, easing, motionRules, storyboard } from '@cw/tokens';
 import { useEffect } from 'react';
 import { RefreshControl, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, {

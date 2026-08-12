@@ -1,4 +1,4 @@
-import { size, space, type ElevationLevel, type Skin } from '@chromawave/design-tokens';
+import { size, space, type ElevationLevel, type Skin } from '@cw/tokens';
 import { BlurView } from 'expo-blur';
 import { useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';

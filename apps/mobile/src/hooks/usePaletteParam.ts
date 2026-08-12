@@ -1,4 +1,4 @@
-import type { Palette } from '@chromawave/domain';
+import type { Palette } from '@cw/domain';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { paletteRepository } from '@/infrastructure/dependencies';

@@ -1,4 +1,4 @@
-import { skins, type Skin } from '@chromawave/design-tokens';
+import { skins, type Skin } from '@cw/tokens';
 import { createContext, useContext, useMemo } from 'react';
 import { usePreferences } from './PreferencesProvider';
 

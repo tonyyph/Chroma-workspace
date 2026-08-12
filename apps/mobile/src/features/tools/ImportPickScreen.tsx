@@ -1,5 +1,5 @@
-import { space, type Skin } from '@chromawave/design-tokens';
-import { makeColor, type Color, type ExtractionResult } from '@chromawave/domain';
+import { makeColor, type Color, type ExtractionResult } from '@cw/domain';
+import { space, type Skin } from '@cw/tokens';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useEffect, useState } from 'react';

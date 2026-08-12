@@ -7,7 +7,7 @@ import {
   type LibraryFilter,
   type PaletteQuery,
   type VisualStyle,
-} from '@chromawave/domain';
+} from '@cw/domain';
 import { useCallback, useMemo, useState } from 'react';
 import { usePreferences } from '@/providers';
 import type { FilterGroup, FilterOption } from '@/ui';

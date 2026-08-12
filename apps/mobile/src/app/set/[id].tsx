@@ -1,4 +1,4 @@
-import type { PaletteSet } from '@chromawave/domain';
+import type { PaletteSet } from '@cw/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { CollectionScreen } from '@/features/sets/CollectionScreen';

@@ -1,10 +1,4 @@
-import {
-  makeColor,
-  paletteSchema,
-  type Color,
-  type Palette,
-  type PaletteSource,
-} from '@chromawave/domain';
+import { makeColor, paletteSchema, type Color, type Palette, type PaletteSource } from '@cw/domain';
 import * as Crypto from 'expo-crypto';
 import { create } from 'zustand';
 

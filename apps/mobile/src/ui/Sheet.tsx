@@ -1,4 +1,4 @@
-import { size, space } from '@chromawave/design-tokens';
+import { size, space } from '@cw/tokens';
 import { BlurView } from 'expo-blur';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

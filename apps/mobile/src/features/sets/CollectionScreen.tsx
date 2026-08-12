@@ -1,11 +1,5 @@
-import { space, type Skin } from '@chromawave/design-tokens';
-import {
-  contrastRatio,
-  paletteGaps,
-  type Color,
-  type Palette,
-  type PaletteSet,
-} from '@chromawave/domain';
+import { contrastRatio, paletteGaps, type Color, type Palette, type PaletteSet } from '@cw/domain';
+import { space, type Skin } from '@cw/tokens';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useMemo, useState } from 'react';

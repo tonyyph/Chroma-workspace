@@ -1,4 +1,4 @@
-import { space, uiMotion } from '@chromawave/design-tokens';
+import { space, uiMotion } from '@cw/tokens';
 import { StyleSheet, View } from 'react-native';
 import { useSkin } from '@/providers';
 import { Icon, type IconName } from './Icon';

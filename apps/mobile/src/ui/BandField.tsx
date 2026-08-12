@@ -1,4 +1,4 @@
-import { brandBands } from '@chromawave/design-tokens';
+import { brandBands } from '@cw/tokens';
 import Svg, { Defs, FeGaussianBlur, Filter, Path, Rect } from 'react-native-svg';
 
 /**

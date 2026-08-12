@@ -1,4 +1,4 @@
-import type { AtmosphereReading, MusicIntent, MusicRecommendation } from '@chromawave/domain';
+import type { AtmosphereReading, MusicIntent, MusicRecommendation } from '@cw/domain';
 import type { MessageKey } from '@/localization/messages';
 
 /**

@@ -1,10 +1,10 @@
-import { size, space } from '@chromawave/design-tokens';
 import {
   readAtmosphere,
   type Color,
   type MusicRecommendation,
   type MusicTrackReference,
-} from '@chromawave/domain';
+} from '@cw/domain';
+import { size, space } from '@cw/tokens';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo } from 'react';

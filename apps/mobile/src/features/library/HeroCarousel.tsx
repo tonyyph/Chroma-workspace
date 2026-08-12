@@ -1,5 +1,5 @@
-import { brandBands, space, type Skin } from '@chromawave/design-tokens';
-import type { Palette } from '@chromawave/domain';
+import type { Palette } from '@cw/domain';
+import { brandBands, space, type Skin } from '@cw/tokens';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { memo, useMemo } from 'react';

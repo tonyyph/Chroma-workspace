@@ -1,4 +1,4 @@
-import { size } from '@chromawave/design-tokens';
+import { size } from '@cw/tokens';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';

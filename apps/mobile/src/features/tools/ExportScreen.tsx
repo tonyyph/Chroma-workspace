@@ -1,6 +1,6 @@
-import type { ExportFormat } from '@chromawave/analytics';
-import { space, type Skin } from '@chromawave/design-tokens';
-import { rgbToDisplayP3, type Palette } from '@chromawave/domain';
+import type { ExportFormat } from '@cw/analytics';
+import { rgbToDisplayP3, type Palette } from '@cw/domain';
+import { space, type Skin } from '@cw/tokens';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useMemo, useState } from 'react';

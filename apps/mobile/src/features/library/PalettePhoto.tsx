@@ -1,4 +1,4 @@
-import type { Palette } from '@chromawave/domain';
+import type { Palette } from '@cw/domain';
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import type { ImageStyle, StyleProp } from 'react-native';

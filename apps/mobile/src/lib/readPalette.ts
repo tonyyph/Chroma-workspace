@@ -1,4 +1,4 @@
-import { extractPaletteFromRgba, type ExtractionResult } from '@chromawave/domain';
+import { extractPaletteFromRgba, type ExtractionResult } from '@cw/domain';
 import { FilterMode, MipmapMode, Skia, TileMode } from '@shopify/react-native-skia';
 
 /**

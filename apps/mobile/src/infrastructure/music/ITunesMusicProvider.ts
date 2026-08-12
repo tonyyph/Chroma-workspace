@@ -5,7 +5,7 @@ import {
   type MusicSearchQuery,
   type MusicSearchResult,
   type MusicTrackReference,
-} from '@chromawave/domain';
+} from '@cw/domain';
 import { Linking } from 'react-native';
 
 /**

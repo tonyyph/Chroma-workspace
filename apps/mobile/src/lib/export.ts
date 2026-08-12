@@ -1,4 +1,4 @@
-import type { Palette } from '@chromawave/domain';
+import type { Palette } from '@cw/domain';
 import {
   FontSlant,
   FontWeight,

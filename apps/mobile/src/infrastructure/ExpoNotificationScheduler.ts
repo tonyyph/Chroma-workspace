@@ -1,4 +1,4 @@
-import type { Language, NotificationPermission, NotificationScheduler } from '@chromawave/domain';
+import type { Language, NotificationPermission, NotificationScheduler } from '@cw/domain';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 

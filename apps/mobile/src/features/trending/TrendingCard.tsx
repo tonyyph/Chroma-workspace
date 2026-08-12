@@ -1,5 +1,5 @@
-import { space, uiMotion, type Skin } from '@chromawave/design-tokens';
-import { shortAge } from '@chromawave/domain';
+import { shortAge } from '@cw/domain';
+import { space, uiMotion, type Skin } from '@cw/tokens';
 import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { type TrendingItem } from '@/data';

@@ -1,4 +1,4 @@
-import { colorSignature, dedupeById, makeColor } from '@chromawave/domain';
+import { colorSignature, dedupeById, makeColor } from '@cw/domain';
 import { trendingItems, type TrendingItem } from '@/data';
 import type { KeyValueStorage } from '@/infrastructure/KeyValueStorage';
 import {

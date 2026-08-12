@@ -5,7 +5,7 @@ import {
   snapshotChanged,
   type ChromaticMemory,
   type WidgetSnapshotFile,
-} from '@chromawave/domain';
+} from '@cw/domain';
 import type { KeyValueStorage } from '../KeyValueStorage';
 
 /**

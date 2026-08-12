@@ -1,4 +1,4 @@
-import { DomainError, defaultUserPreferences, type UserPreferences } from '@chromawave/domain';
+import { DomainError, defaultUserPreferences, type UserPreferences } from '@cw/domain';
 import type { KeyValueStorage } from './KeyValueStorage';
 import {
   StoredPreferencesRepository,

@@ -1,4 +1,4 @@
-import { makeColor, type Palette } from '@chromawave/domain';
+import { makeColor, type Palette } from '@cw/domain';
 import { clearMonthSignatureCache, toLibraryRows } from './libraryRows';
 
 const at = (id: string, capturedAt: string): Palette => ({

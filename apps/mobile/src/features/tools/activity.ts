@@ -1,4 +1,4 @@
-import type { Palette } from '@chromawave/domain';
+import type { Palette } from '@cw/domain';
 
 /**
  * G9's unread model, such as it can be without a server.

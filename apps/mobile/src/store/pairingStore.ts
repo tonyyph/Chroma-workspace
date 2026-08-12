@@ -9,7 +9,7 @@ import {
   type PairingError,
   type PairingStage,
   type VisualAnalysis,
-} from '@chromawave/domain';
+} from '@cw/domain';
 import { create } from 'zustand';
 import { musicProvider, previewPlayer } from '@/infrastructure/dependencies';
 

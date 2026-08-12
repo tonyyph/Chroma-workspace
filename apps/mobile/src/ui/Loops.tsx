@@ -1,4 +1,4 @@
-import { brandBands, motionRules, uiMotion } from '@chromawave/design-tokens';
+import { brandBands, motionRules, uiMotion } from '@cw/tokens';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
 import { AccessibilityInfo, StyleSheet, View, useWindowDimensions } from 'react-native';

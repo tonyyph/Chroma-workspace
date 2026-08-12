@@ -1,5 +1,5 @@
-import { space, type Skin } from '@chromawave/design-tokens';
-import { makeColor, type Color } from '@chromawave/domain';
+import { makeColor, type Color } from '@cw/domain';
+import { space, type Skin } from '@cw/tokens';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

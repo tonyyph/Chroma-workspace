@@ -1,4 +1,4 @@
-import type { SoundCue, SoundService } from '@chromawave/domain';
+import type { SoundCue, SoundService } from '@cw/domain';
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 
 /**

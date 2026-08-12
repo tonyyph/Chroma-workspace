@@ -1,5 +1,5 @@
-import { space, type Skin } from '@chromawave/design-tokens';
-import { extractPaletteFromRgba } from '@chromawave/domain';
+import { extractPaletteFromRgba } from '@cw/domain';
+import { space, type Skin } from '@cw/tokens';
 import { useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';

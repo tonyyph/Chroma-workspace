@@ -1,4 +1,4 @@
-import { size } from '@chromawave/design-tokens';
+import { size } from '@cw/tokens';
 import { StyleSheet, View } from 'react-native';
 import { useSkin } from '@/providers';
 import { Pressable } from './Pressable';

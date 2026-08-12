@@ -7,7 +7,7 @@ import {
   type NotificationPermission,
   type ReminderTime,
   type UserPreferences,
-} from '@chromawave/domain';
+} from '@cw/domain';
 import {
   createContext,
   type PropsWithChildren,

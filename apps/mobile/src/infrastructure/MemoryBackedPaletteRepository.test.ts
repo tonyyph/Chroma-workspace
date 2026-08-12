@@ -4,7 +4,7 @@ import {
   withSelectedTrack,
   type MusicTrackReference,
   type Palette,
-} from '@chromawave/domain';
+} from '@cw/domain';
 import type { KeyValueStorage } from './KeyValueStorage';
 import { MemoryBackedPaletteRepository } from './MemoryBackedPaletteRepository';
 import { StoredMemoryRepository } from './StoredMemoryRepository';

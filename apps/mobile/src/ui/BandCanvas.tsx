@@ -1,4 +1,4 @@
-import { brandBands, motionRules, uiMotion } from '@chromawave/design-tokens';
+import { brandBands, motionRules, uiMotion } from '@cw/tokens';
 import {
   Blur,
   Canvas,

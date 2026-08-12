@@ -1,4 +1,4 @@
-import type { Color } from '@chromawave/domain';
+import type { Color } from '@cw/domain';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo } from 'react';
 import { useReducedMotion } from 'react-native-reanimated';

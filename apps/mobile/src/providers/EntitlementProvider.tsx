@@ -1,4 +1,4 @@
-import { hasEntitlement, type Entitlement, type SubscriptionTier } from '@chromawave/domain';
+import { hasEntitlement, type Entitlement, type SubscriptionTier } from '@cw/domain';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { entitlements } from '@/infrastructure/dependencies';
 

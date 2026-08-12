@@ -9,7 +9,7 @@ import {
   type ChromaticMemory,
   type ChromaticMemoryDraft,
   type MusicTrackReference,
-} from '@chromawave/domain';
+} from '@cw/domain';
 import type { KeyValueStorage } from '../KeyValueStorage';
 import {
   LAST_PUBLISHED_KEY,

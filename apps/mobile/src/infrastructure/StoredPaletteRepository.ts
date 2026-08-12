@@ -4,7 +4,7 @@ import {
   paletteSchema,
   type Palette,
   type PaletteRepository,
-} from '@chromawave/domain';
+} from '@cw/domain';
 // Deliberately the module, not the `@/lib` barrel: the barrel also carries
 // `export.ts`, which reaches a Skia canvas. Storage has no business pulling a
 // rendering module into its graph.

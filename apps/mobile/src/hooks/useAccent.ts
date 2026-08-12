@@ -1,4 +1,4 @@
-import { readableOn, type Color } from '@chromawave/domain';
+import { readableOn, type Color } from '@cw/domain';
 import { useMemo } from 'react';
 import { useSkin } from '@/providers';
 import { accentTint } from '@/ui/chroma';

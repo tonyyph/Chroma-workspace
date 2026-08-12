@@ -1,4 +1,4 @@
-import { colorSignature, ownedSignatureIndex } from '@chromawave/domain';
+import { colorSignature, ownedSignatureIndex } from '@cw/domain';
 import * as Crypto from 'expo-crypto';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';

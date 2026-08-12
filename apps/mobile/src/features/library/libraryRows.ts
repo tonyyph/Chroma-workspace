@@ -1,4 +1,4 @@
-import { mergePalettes, paletteSignature, type Color, type Palette } from '@chromawave/domain';
+import { mergePalettes, paletteSignature, type Color, type Palette } from '@cw/domain';
 
 /**
  * The library, cut into months.

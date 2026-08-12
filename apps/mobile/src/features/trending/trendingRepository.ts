@@ -4,7 +4,7 @@ import {
   matchesQuery,
   type ColorMood,
   type VisualStyle,
-} from '@chromawave/domain';
+} from '@cw/domain';
 import { trendingItems, type TrendingCategory, type TrendingItem } from '@/data';
 import type { KeyValueStorage } from '@/infrastructure/KeyValueStorage';
 

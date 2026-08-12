@@ -1,4 +1,4 @@
-import { space } from '@chromawave/design-tokens';
+import { space } from '@cw/tokens';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';

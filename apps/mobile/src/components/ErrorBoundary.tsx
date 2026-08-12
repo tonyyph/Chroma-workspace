@@ -1,4 +1,4 @@
-import { space } from '@chromawave/design-tokens';
+import { space } from '@cw/tokens';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, EmptyGlyph, Screen, Text } from '@/ui';

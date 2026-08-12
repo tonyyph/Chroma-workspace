@@ -1,4 +1,4 @@
-import { DomainError, makeColor, type Palette } from '@chromawave/domain';
+import { DomainError, makeColor, type Palette } from '@cw/domain';
 import { seedPalettes } from '@/data';
 import type { KeyValueStorage } from './KeyValueStorage';
 import { StoredPaletteRepository } from './StoredPaletteRepository';

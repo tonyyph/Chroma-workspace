@@ -1,4 +1,4 @@
-import { duration, size, space } from '@chromawave/design-tokens';
+import { duration, size, space } from '@cw/tokens';
 import { useEffect } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, {

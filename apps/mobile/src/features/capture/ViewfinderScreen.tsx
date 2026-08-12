@@ -1,5 +1,5 @@
-import { size, space, uiMotion, type Skin } from '@chromawave/design-tokens';
-import { readStability, type Color } from '@chromawave/domain';
+import { readStability, type Color } from '@cw/domain';
+import { size, space, uiMotion, type Skin } from '@cw/tokens';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';

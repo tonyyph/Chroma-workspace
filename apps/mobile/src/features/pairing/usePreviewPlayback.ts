@@ -1,4 +1,4 @@
-import type { MusicTrackReference } from '@chromawave/domain';
+import type { MusicTrackReference } from '@cw/domain';
 import { useCallback, useEffect, useState } from 'react';
 import type { PreviewPlaybackState } from '@/infrastructure/audio/PreviewPlayer';
 import { musicProvider, previewPlayer } from '@/infrastructure/dependencies';

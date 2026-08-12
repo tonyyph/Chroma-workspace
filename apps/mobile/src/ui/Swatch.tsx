@@ -1,4 +1,4 @@
-import { size, space } from '@chromawave/design-tokens';
+import { size, space } from '@cw/tokens';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { Pressable } from './Pressable';
 import { Text } from './Text';

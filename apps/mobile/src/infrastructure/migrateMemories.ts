@@ -1,4 +1,4 @@
-import { migratePalettes, type MigrationReport } from '@chromawave/domain';
+import { migratePalettes, type MigrationReport } from '@cw/domain';
 import type { KeyValueStorage } from './KeyValueStorage';
 import { MEMORY_STORAGE_KEY, QUARANTINE_STORAGE_KEY } from './StoredMemoryRepository';
 

@@ -1,4 +1,4 @@
-import { dedupeById } from '@chromawave/domain';
+import { dedupeById } from '@cw/domain';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type TrendingItem } from '@/data';
 import { fetchTrending, type TrendingRequest } from './trendingRepository';

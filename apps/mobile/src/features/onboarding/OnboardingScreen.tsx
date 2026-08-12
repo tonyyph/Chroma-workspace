@@ -1,4 +1,4 @@
-import { brandBands, duration, size, space, type Skin } from '@chromawave/design-tokens';
+import { brandBands, duration, size, space, type Skin } from '@cw/tokens';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';

@@ -7,7 +7,7 @@ import {
   type ColorMood,
   type Palette,
   type VisualStyle,
-} from '@chromawave/domain';
+} from '@cw/domain';
 
 /**
  * What the profile knows about someone, read from what they have kept.

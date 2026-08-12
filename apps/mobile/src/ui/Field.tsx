@@ -1,4 +1,4 @@
-import { size, space } from '@chromawave/design-tokens';
+import { size, space } from '@cw/tokens';
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { useSkin } from '@/providers';

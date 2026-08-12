@@ -1,4 +1,4 @@
-import { space } from '@chromawave/design-tokens';
+import { space } from '@cw/tokens';
 import { useCallback, useEffect, useState } from 'react';
 import {
   AccessibilityInfo,

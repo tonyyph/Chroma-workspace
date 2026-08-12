@@ -7,7 +7,7 @@ import {
   type MusicPairing,
   type MusicTrackReference,
   type Palette,
-} from '@chromawave/domain';
+} from '@cw/domain';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { useChromaticMemory } from './useChromaticMemory';
 

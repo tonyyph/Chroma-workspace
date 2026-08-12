@@ -6,7 +6,10 @@
     "noUncheckedIndexedAccess": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@/assets/*": ["./assets/*"]
+      "@/assets/*": ["./assets/*"],
+      "@cw/analytics": ["../../packages/analytics/src/index.ts"],
+      "@cw/domain": ["../../packages/domain/src/index.ts"],
+      "@cw/tokens": ["../../packages/design-tokens/src/index.ts"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]

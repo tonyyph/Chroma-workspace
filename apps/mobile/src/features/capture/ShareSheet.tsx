@@ -1,5 +1,5 @@
-import { space, type Skin } from '@chromawave/design-tokens';
-import type { Palette } from '@chromawave/domain';
+import type { Palette } from '@cw/domain';
+import { space, type Skin } from '@cw/tokens';
 import { Image } from 'expo-image';
 import { useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';

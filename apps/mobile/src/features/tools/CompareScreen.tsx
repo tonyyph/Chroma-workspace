@@ -1,5 +1,5 @@
-import { space, type Skin } from '@chromawave/design-tokens';
-import { hexDeltaE00, type Palette } from '@chromawave/domain';
+import { hexDeltaE00, type Palette } from '@cw/domain';
+import { space, type Skin } from '@cw/tokens';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { usePreferences, useSkin } from '@/providers';

@@ -7,7 +7,7 @@ import {
   type ChromaticMemoryRepository,
   type Palette,
   type PaletteRepository,
-} from '@chromawave/domain';
+} from '@cw/domain';
 
 /**
  * The v1 `Palette` interface, served from v2 memories.

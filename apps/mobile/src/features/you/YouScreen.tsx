@@ -1,4 +1,3 @@
-import { brandBands, space, type Skin } from '@chromawave/design-tokens';
 import {
   exportTargetSchema,
   shortAge,
@@ -6,7 +5,8 @@ import {
   type ExportTarget,
   type Palette,
   type VisualStyle,
-} from '@chromawave/domain';
+} from '@cw/domain';
+import { brandBands, space, type Skin } from '@cw/tokens';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';

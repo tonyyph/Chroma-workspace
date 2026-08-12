@@ -1,5 +1,5 @@
-import { space, uiMotion } from '@chromawave/design-tokens';
-import { shortAge, type Palette } from '@chromawave/domain';
+import { shortAge, type Palette } from '@cw/domain';
+import { space, uiMotion } from '@cw/tokens';
 import { memo, useCallback, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { usePreferences, useSkin } from '@/providers';

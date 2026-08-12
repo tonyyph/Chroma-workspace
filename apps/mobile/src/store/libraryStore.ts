@@ -1,4 +1,4 @@
-import { dedupeById, mergePalettes, type Palette, type PaletteSet } from '@chromawave/domain';
+import { dedupeById, mergePalettes, type Palette, type PaletteSet } from '@cw/domain';
 import { create } from 'zustand';
 import { paletteRepository, setRepository } from '@/infrastructure/dependencies';
 

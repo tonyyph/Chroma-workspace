@@ -1,4 +1,4 @@
-import type { Color } from '@chromawave/domain';
+import type { Color } from '@cw/domain';
 import { useCallback, useRef, useState } from 'react';
 // The module rather than the `@/lib` barrel — see the note in `lib/index.ts`.
 import { readPalette, type ReadOutcome } from '@/lib/readPalette';

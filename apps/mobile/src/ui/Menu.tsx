@@ -1,4 +1,4 @@
-import { space, uiMotion } from '@chromawave/design-tokens';
+import { space, uiMotion } from '@cw/tokens';
 import { useEffect, useState } from 'react';
 import {
   Keyboard,

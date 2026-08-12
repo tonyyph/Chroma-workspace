@@ -1,4 +1,4 @@
-import { skins } from '@chromawave/design-tokens';
+import { skins } from '@cw/tokens';
 import { Canvas, Fill, Shader, Skia } from '@shopify/react-native-skia';
 import { memo, useEffect } from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';

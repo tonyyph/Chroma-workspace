@@ -1,10 +1,5 @@
-import { brandColors, space, type Skin } from '@chromawave/design-tokens';
-import {
-  contrastRatio,
-  simulateVisionHex,
-  type Palette,
-  type VisionSimulation,
-} from '@chromawave/domain';
+import { contrastRatio, simulateVisionHex, type Palette, type VisionSimulation } from '@cw/domain';
+import { brandColors, space, type Skin } from '@cw/tokens';
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { usePreferences, useSkin } from '@/providers';

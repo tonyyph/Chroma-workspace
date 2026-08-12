@@ -1,5 +1,5 @@
-import { brandBands, space, type Skin } from '@chromawave/design-tokens';
-import { shortAge, type Palette } from '@chromawave/domain';
+import { shortAge, type Palette } from '@cw/domain';
+import { brandBands, space, type Skin } from '@cw/tokens';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';

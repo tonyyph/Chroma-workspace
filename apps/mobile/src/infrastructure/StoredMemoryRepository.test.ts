@@ -1,4 +1,4 @@
-import { makeColor, paletteToMemory, type ChromaticMemory, type Palette } from '@chromawave/domain';
+import { makeColor, paletteToMemory, type ChromaticMemory, type Palette } from '@cw/domain';
 import type { KeyValueStorage } from './KeyValueStorage';
 import { MEMORY_STORAGE_KEY, StoredMemoryRepository } from './StoredMemoryRepository';
 

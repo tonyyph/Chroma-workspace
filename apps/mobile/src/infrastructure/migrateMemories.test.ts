@@ -1,4 +1,4 @@
-import { makeColor, type Palette } from '@chromawave/domain';
+import { makeColor, type Palette } from '@cw/domain';
 import type { KeyValueStorage } from './KeyValueStorage';
 import {
   CURRENT_DATA_VERSION,

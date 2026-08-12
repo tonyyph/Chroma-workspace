@@ -1,4 +1,4 @@
-import { brandGeometry } from '@chromawave/design-tokens';
+import { brandGeometry } from '@cw/tokens';
 import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 /**

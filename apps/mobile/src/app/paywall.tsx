@@ -1,4 +1,4 @@
-import type { PaywallTrigger } from '@chromawave/analytics';
+import type { PaywallTrigger } from '@cw/analytics';
 import { useLocalSearchParams } from 'expo-router';
 import { PaywallScreen } from '@/features/paywall/PaywallScreen';
 import { usePalettes } from '@/hooks';

@@ -1,5 +1,5 @@
-import { size, space, type Skin } from '@chromawave/design-tokens';
-import type { Palette } from '@chromawave/domain';
+import type { Palette } from '@cw/domain';
+import { size, space, type Skin } from '@cw/tokens';
 import { useState } from 'react';
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native';
 import { PalettePhoto } from '@/features/library/PalettePhoto';

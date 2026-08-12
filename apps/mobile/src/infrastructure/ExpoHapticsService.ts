@@ -1,4 +1,4 @@
-import type { HapticMoment, HapticsService } from '@chromawave/domain';
+import type { HapticMoment, HapticsService } from '@cw/domain';
 import * as Haptics from 'expo-haptics';
 
 /**

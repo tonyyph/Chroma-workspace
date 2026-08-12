@@ -2,7 +2,7 @@ import {
   subscriptionTierSchemaValues,
   type EntitlementProvider,
   type SubscriptionTier,
-} from '@chromawave/domain';
+} from '@cw/domain';
 import type { KeyValueStorage } from './KeyValueStorage';
 
 export const ENTITLEMENT_STORAGE_KEY = '@chromawave/entitlement:v1';

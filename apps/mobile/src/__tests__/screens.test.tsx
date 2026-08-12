@@ -1,4 +1,4 @@
-import { makeColor, type Palette, type PaletteSet } from '@chromawave/domain';
+import { makeColor, type Palette, type PaletteSet } from '@cw/domain';
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';

@@ -4,7 +4,7 @@ import {
   userPreferencesSchema,
   type PreferencesRepository,
   type UserPreferences,
-} from '@chromawave/domain';
+} from '@cw/domain';
 import type { KeyValueStorage } from './KeyValueStorage';
 
 export const PREFERENCES_STORAGE_KEY = '@chromawave/preferences:v1';

@@ -1,5 +1,5 @@
-import { brandBands } from '@chromawave/design-tokens';
-import { clampOklch, hexToRgb, type Color } from '@chromawave/domain';
+import { clampOklch, hexToRgb, type Color } from '@cw/domain';
+import { brandBands } from '@cw/tokens';
 import { Easing, makeMutable, withTiming } from 'react-native-reanimated';
 
 /**

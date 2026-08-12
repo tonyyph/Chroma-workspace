@@ -1,4 +1,4 @@
-import { makeColor } from '@chromawave/domain';
+import { makeColor } from '@cw/domain';
 import { ContrastScreen } from '@/features/tools/ContrastScreen';
 import { ToolFallback } from '@/features/tools/ToolFallback';
 import { usePaletteParam, usePalettes } from '@/hooks';

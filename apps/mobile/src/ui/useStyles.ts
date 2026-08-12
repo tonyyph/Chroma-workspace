@@ -1,4 +1,4 @@
-import type { Skin } from '@chromawave/design-tokens';
+import type { Skin } from '@cw/tokens';
 import { useMemo } from 'react';
 import { useSkin } from '@/providers';
 

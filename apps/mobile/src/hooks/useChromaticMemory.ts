@@ -4,7 +4,7 @@ import {
   type MusicFeedback,
   type MusicPairing,
   type MusicTrackReference,
-} from '@chromawave/domain';
+} from '@cw/domain';
 import { useCallback, useEffect, useState } from 'react';
 import { memoryRepository } from '@/infrastructure/dependencies';
 import { useLibraryStore } from '@/store/libraryStore';

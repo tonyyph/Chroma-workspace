@@ -1,4 +1,4 @@
-import { brandBands, size, space, uiMotion } from '@chromawave/design-tokens';
+import { brandBands, size, space, uiMotion } from '@cw/tokens';
 import { BlurView } from 'expo-blur';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

@@ -5,7 +5,7 @@
  * a few points off the alignment every other block on the screen sits on and
  * the whole column looks bent.
  */
-import { space } from '@chromawave/design-tokens';
+import { space } from '@cw/tokens';
 
 /**
  * A fifth shorter than it was.

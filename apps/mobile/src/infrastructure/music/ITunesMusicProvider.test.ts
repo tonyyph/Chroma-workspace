@@ -1,4 +1,4 @@
-import { musicTrackReferenceSchema, type MusicSearchQuery } from '@chromawave/domain';
+import { musicTrackReferenceSchema, type MusicSearchQuery } from '@cw/domain';
 import { ITUNES_ATTRIBUTION, ITunesMusicProvider } from './ITunesMusicProvider';
 
 const query = (terms: string, overrides: Partial<MusicSearchQuery> = {}): MusicSearchQuery => ({

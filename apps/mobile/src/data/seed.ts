@@ -1,4 +1,4 @@
-import { makeColor, type Color, type Palette } from '@chromawave/domain';
+import { makeColor, type Color, type Palette } from '@cw/domain';
 
 /**
  * Seed content, transcribed from `Chroma Wave App.dc.html`.

@@ -1,5 +1,5 @@
-import { space, type Skin } from '@chromawave/design-tokens';
-import { emptyQuery, queryPalettes } from '@chromawave/domain';
+import { emptyQuery, queryPalettes } from '@cw/domain';
+import { space, type Skin } from '@cw/tokens';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';

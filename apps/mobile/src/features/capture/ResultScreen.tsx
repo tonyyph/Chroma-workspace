@@ -1,5 +1,5 @@
-import { space } from '@chromawave/design-tokens';
-import { readStability, type Color, type Palette } from '@chromawave/domain';
+import { readStability, type Color, type Palette } from '@cw/domain';
+import { space } from '@cw/tokens';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';

@@ -1,4 +1,4 @@
-import type { MusicPreview, MusicTrackReference } from '@chromawave/domain';
+import type { MusicPreview, MusicTrackReference } from '@cw/domain';
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 
 /**

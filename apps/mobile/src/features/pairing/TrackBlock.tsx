@@ -1,5 +1,5 @@
-import { space } from '@chromawave/design-tokens';
-import type { MusicPairing } from '@chromawave/domain';
+import type { MusicPairing } from '@cw/domain';
+import { space } from '@cw/tokens';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';

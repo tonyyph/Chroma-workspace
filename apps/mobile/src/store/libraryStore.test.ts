@@ -18,7 +18,7 @@ jest.mock('@/infrastructure/dependencies', () => ({
   },
 }));
 
-import { makeColor, type Palette, type PaletteSet } from '@chromawave/domain';
+import { makeColor, type Palette, type PaletteSet } from '@cw/domain';
 import { useLibraryStore } from './libraryStore';
 
 /**

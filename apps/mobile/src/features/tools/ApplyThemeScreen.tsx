@@ -1,5 +1,5 @@
-import { space, type Skin } from '@chromawave/design-tokens';
-import { contrastRatio, safeForegroundFor, type Palette } from '@chromawave/domain';
+import { contrastRatio, safeForegroundFor, type Palette } from '@cw/domain';
+import { space, type Skin } from '@cw/tokens';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { usePreferences } from '@/providers';

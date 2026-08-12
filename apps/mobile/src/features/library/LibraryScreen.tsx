@@ -1,4 +1,3 @@
-import { size, space, type Skin } from '@chromawave/design-tokens';
 import {
   colorMoods,
   libraryFilters,
@@ -7,7 +6,8 @@ import {
   type ColorMood,
   type Palette,
   type VisualStyle,
-} from '@chromawave/domain';
+} from '@cw/domain';
+import { size, space, type Skin } from '@cw/tokens';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';

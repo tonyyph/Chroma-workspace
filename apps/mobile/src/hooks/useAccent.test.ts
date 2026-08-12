@@ -1,4 +1,4 @@
-import { contrastRatio, hexToRgb, makeColor, rgbToOklch } from '@chromawave/domain';
+import { contrastRatio, hexToRgb, makeColor, rgbToOklch } from '@cw/domain';
 import { renderHook } from '@testing-library/react-native';
 import { useAccent } from './useAccent';
 
