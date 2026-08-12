@@ -217,7 +217,12 @@ export function applyGradeToRgba(
         },
         grade,
       );
-      const shade = vignetteFactor(x, y, width, height, grade.vignette);
+      // Sampled at the pixel's centre, not its corner. A pixel is an area, and
+      // its value belongs at the middle of that area — which is also the
+      // convention every GPU uses, so the shader and this agree by construction
+      // rather than being half a pixel apart at the edges, where a vignette's
+      // falloff is steepest and half a pixel is worth seventeen 8-bit steps.
+      const shade = vignetteFactor(x + 0.5, y + 0.5, width, height, grade.vignette);
       out[offset] = Math.round(clamp01(graded.r * shade) * 255);
       out[offset + 1] = Math.round(clamp01(graded.g * shade) * 255);
       out[offset + 2] = Math.round(clamp01(graded.b * shade) * 255);

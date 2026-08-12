@@ -270,3 +270,21 @@ describe('applyGradeToRgba', () => {
     expect(corner).toBeLessThan(centre);
   });
 });
+
+describe('the pixel-centre convention', () => {
+  it('samples the vignette at pixel centres, the way a GPU does', () => {
+    // Half a pixel is worth seventeen 8-bit steps at the corner of a small
+    // image, which is how the shader caught this: a corner pixel of a 16-wide
+    // frame sits at 0.5, not at 0, so its vignette is not the full corner value.
+    const size = 16;
+    const rgba = new Uint8Array(size * size * 4).fill(200);
+    for (let index = 3; index < rgba.length; index += 4) rgba[index] = 255;
+
+    const out = applyGradeToRgba(rgba, size, size, resolveGrade({ ...NEUTRAL_GRADE, vignette: 1 }));
+
+    const atCentres = 200 * vignetteFactor(0.5, 0.5, size, size, 1);
+    const atCorners = 200 * vignetteFactor(0, 0, size, size, 1);
+    expect(Math.abs((out[0] ?? 0) - atCentres)).toBeLessThanOrEqual(1);
+    expect(Math.abs((out[0] ?? 0) - atCorners)).toBeGreaterThan(10);
+  });
+});
