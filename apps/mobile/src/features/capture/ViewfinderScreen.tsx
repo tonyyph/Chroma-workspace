@@ -55,6 +55,21 @@ const RATIOS = [
 ] as const;
 
 /**
+ * What the shutter writes to disk.
+ *
+ * **JPEG, not the platform default.** Vision Camera's `containerFormat` defaults
+ * to `'native'`, which on iOS means HEIC — and the Skia build shipped by
+ * `@shopify/react-native-skia` has no HEIF codec, so `MakeImageFromEncoded`
+ * returned null for every shot and the read reported COULD NOT READ THAT FRAME.
+ * A simulator has no camera, which is why this only appeared on hardware.
+ *
+ * Hoisted out of the component because `usePhotoOutput` memoises on the identity
+ * of what it is handed: an object literal in the render body builds a new photo
+ * output, and reconfigures the capture session, on every render.
+ */
+const PHOTO_OUTPUT = { containerFormat: 'jpeg' } as const;
+
+/**
  * B1 · VIEWFINDER · "shutter is the mark, 84px target".
  *
  * The live read is real: a Vision Camera frame processor subsamples each frame
@@ -71,7 +86,7 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
 
   const { hasPermission, requestPermission, canRequestPermission } = useCameraPermission();
   const device = useCameraDevice('back');
-  const photoOutput = usePhotoOutput();
+  const photoOutput = usePhotoOutput(PHOTO_OUTPUT);
   const [mode, setMode] = useState<Mode>('live');
   const [capturing, setCapturing] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);

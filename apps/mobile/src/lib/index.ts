@@ -7,6 +7,7 @@
  * anything else below the view layer import the module they want directly, so
  * the data layer never grows a dependency on how things are drawn.
  */
+export * from './decodable';
 export * from './export';
 export * from './photos';
 export * from './readPalette';

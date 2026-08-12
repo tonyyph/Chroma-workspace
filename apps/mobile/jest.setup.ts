@@ -120,9 +120,12 @@ jest.mock('react-native-vision-camera', () => {
       requestPermission: jest.fn(async () => true),
       status: 'authorized',
     }),
-    usePhotoOutput: () => ({
+    // The options are recorded, not ignored: which container format a screen
+    // asks for decides whether the frame can be decoded at all, and that is
+    // asserted in `photoContainerFormat.test.tsx`.
+    usePhotoOutput: jest.fn(() => ({
       capturePhotoToFile: jest.fn(async () => ({ filePath: '/tmp/mock.jpg' })),
-    }),
+    })),
   };
 });
 

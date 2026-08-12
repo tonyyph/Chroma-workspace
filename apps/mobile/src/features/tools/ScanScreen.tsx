@@ -17,6 +17,23 @@ import { Button, Card, Chip, Icon, LiveReadPulse, Pressable, Text, useStyles } f
 const MAX_PINS = 7;
 
 /**
+ * What a pin's frame is written as.
+ *
+ * `containerFormat` is stated rather than left to default: the default is
+ * `'native'`, which on iOS is HEIC, and the shipped Skia binary carries no HEIF
+ * codec — every pin failed to decode on a real device. See `ViewfinderScreen`.
+ *
+ * A module constant, not a literal in the render body, because `usePhotoOutput`
+ * memoises on identity: a fresh object each render rebuilds the photo output and
+ * reconfigures the capture session mid-walk.
+ */
+const PHOTO_OUTPUT = {
+  containerFormat: 'jpeg',
+  // A pin only needs a dominant colour, and a small frame reads faster.
+  targetResolution: { width: 640, height: 480 },
+} as const;
+
+/**
  * G1 · SCAN MODE · "pin colours as you move, batch into one palette".
  *
  * Each tap pins whatever the live read currently makes dominant, so walking and
@@ -37,7 +54,7 @@ export function ScanScreen({
   const [pinFailed, setPinFailed] = useState(false);
   const { hasPermission } = useCameraPermission();
   const device = useCameraDevice('back');
-  const photoOutput = usePhotoOutput({ targetResolution: { width: 640, height: 480 } });
+  const photoOutput = usePhotoOutput(PHOTO_OUTPUT);
   const { read, colors, reading } = usePhotoRead();
 
   const dominant = colors.find((color) => color.role === 'dominant') ?? colors[0];

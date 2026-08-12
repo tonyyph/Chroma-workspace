@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useImageSampler } from '@/hooks';
 import { hapticsService } from '@/infrastructure/dependencies';
-import { readPalette } from '@/lib';
+import { readPalette, toDecodableUri } from '@/lib';
 import { usePreferences } from '@/providers';
 import { Card, Chip, NavBar, Pressable, Screen, Slider, Text, useStyles } from '@/ui';
 
@@ -55,8 +55,12 @@ export function ImportPickScreen({
       const result = await ImagePicker.launchImageLibraryAsync({ quality: 1 });
       // The picker can resolve to nothing at all when the sheet is dismissed by
       // the system rather than by the user, so the shape is checked, not assumed.
-      const picked = result?.canceled === false ? result.assets?.[0]?.uri : undefined;
-      if (!picked) return;
+      const chosen = result?.canceled === false ? result.assets?.[0]?.uri : undefined;
+      if (!chosen) return;
+      // An iPhone's library is mostly HEIC, and the picker hands those back
+      // untouched — a container the Skia build has no codec for. Converting here
+      // rather than at the read means the tap sampler decodes the same file.
+      const picked = await toDecodableUri(chosen);
       setUri(picked);
       // Points are positions in the old photo; keeping them would label the new
       // one with colours it does not contain.
