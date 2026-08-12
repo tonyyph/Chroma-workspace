@@ -1,7 +1,6 @@
-import { readStability, type Color } from '@cw/domain';
 import { size, space, uiMotion, type Skin } from '@cw/tokens';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,23 +12,11 @@ import {
   type CameraRef,
 } from 'react-native-vision-camera';
 import { BrandMark } from '@/components';
-import { usePhotoRead } from '@/hooks';
-import { hapticsService, soundService } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers';
-import { useCaptureStore } from '@/store';
-import {
-  Button,
-  Card,
-  Chip,
-  Icon,
-  LiveReadPulse,
-  Meta,
-  Pressable,
-  ScanSweep,
-  Text,
-  useCaptureSequence,
-  useStyles,
-} from '@/ui';
+import { Chip, Icon, Pressable, ScanSweep, Text, useStyles } from '@/ui';
+import { LiveReadPanel } from './LiveReadPanel';
+import { PermissionGate } from './PermissionGate';
+import { useCaptureSession } from './useCaptureSession';
 
 /** The three viewfinder modes, each with its own message key. */
 const MODES = [
@@ -72,9 +59,9 @@ const PHOTO_OUTPUT = { containerFormat: 'jpeg' } as const;
 /**
  * B1 · VIEWFINDER · "shutter is the mark, 84px target".
  *
- * The live read is real: a Vision Camera frame processor subsamples each frame
- * and the extractor runs on that, so the strip below shows the actual colours in
- * front of the lens. The 620ms scan sweep is the Skia layer the kit specifies.
+ * This file is the viewfinder's chrome and the settings that chrome changes.
+ * What a press of the shutter actually does lives in `useCaptureSession`, which
+ * is where the two-clock rule that makes a capture complete is written down.
  */
 export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
   const styles = useStyles(makeStyles);
@@ -88,93 +75,12 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
   const device = useCameraDevice('back');
   const photoOutput = usePhotoOutput(PHOTO_OUTPUT);
   const [mode, setMode] = useState<Mode>('live');
-  const [capturing, setCapturing] = useState(false);
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [flash, setFlash] = useState<Flash>('off');
   const [ratioIndex, setRatioIndex] = useState(0);
   const ratio = RATIOS[ratioIndex] ?? RATIOS[0];
 
-  const { read, colors, deltaE, confidence, reading, latest } = usePhotoRead();
-
-  const begin = useCaptureStore((state) => state.begin);
-
-  /**
-   * A capture finishes when two independent things have both finished: the
-   * shutter storyboard, which runs on a fixed clock, and the decode-and-extract,
-   * which takes as long as the photo takes.
-   *
-   * They used to be treated as one. `onSettled` fired when the animation ended
-   * and gave up silently if the colours were not ready yet — which, for a
-   * full-resolution frame, was most of the time. The shutter appeared to do
-   * nothing at all. Tracking them separately and committing when the second one
-   * lands is the whole fix.
-   */
-  const [sequenceDone, setSequenceDone] = useState(false);
-  const [readDone, setReadDone] = useState(false);
-  const [captureError, setCaptureError] = useState(false);
-
-  const onSettled = useCallback(() => {
-    void hapticsService.fire('extractionComplete');
-    void soundService.play('extractDone');
-    setSequenceDone(true);
-  }, []);
-
-  const sequence = useCaptureSequence(capturing, onSettled);
-
-  useEffect(() => {
-    if (!capturing || !sequenceDone || !readDone) return;
-
-    setCapturing(false);
-    setSequenceDone(false);
-    setReadDone(false);
-
-    const outcome = latest.current;
-    if (!outcome?.ok || outcome.result.colors.length === 0) {
-      // Say so rather than stranding the user on a viewfinder that appears to
-      // have ignored them.
-      setCaptureError(true);
-      return;
-    }
-
-    begin({
-      colors: outcome.result.colors,
-      // Read straight from state, not through a ref written during render. The
-      // shot is stored before the read is awaited, so by the time `readDone` is
-      // true this state has committed; a ref only existed to dodge the
-      // dependency, and writing one mid-render is what React Compiler assumes
-      // nobody does.
-      photoUri,
-      deltaE: outcome.result.deltaE,
-      confidence: outcome.result.confidence,
-      source: 'photo',
-      setId,
-    });
-    router.push('/capture/result');
-  }, [begin, capturing, latest, photoUri, readDone, router, sequenceDone, setId]);
-
-  const shoot = useCallback(async () => {
-    void hapticsService.fire('shutterPress');
-    void soundService.play('shutter');
-    setCaptureError(false);
-    setSequenceDone(false);
-    setReadDone(false);
-    setCapturing(true);
-    try {
-      // The torch covers the LIVE reading; the flash fires for the frame the
-      // extractor actually reads, which is the one that has to be lit.
-      const file = await photoOutput.capturePhotoToFile({ flashMode: flash }, {});
-      // `filePath` is a filesystem path, not a file:// URL — Image needs the scheme.
-      const uri = `file://${file.filePath}`;
-      setPhotoUri(uri);
-      await read(uri);
-    } catch {
-      latest.current = { ok: false, reason: 'decode' };
-    } finally {
-      // Marked done on every path, or a failed shot would leave the capture
-      // waiting forever with the shutter disabled.
-      setReadDone(true);
-    }
-  }, [flash, latest, photoOutput, read]);
+  const { sequence, shoot, capturing, captureError, colors, deltaE, confidence, reading } =
+    useCaptureSession({ photoOutput, flash, setId });
 
   /**
    * The three modes are three different capture paths, so selecting one routes
@@ -198,9 +104,6 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
       />
     );
   }
-
-  const readColors = colors.length ? colors : [];
-  const stability = readStability(deltaE);
 
   return (
     <View style={styles.root}>
@@ -277,34 +180,13 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
         </View>
 
         <View style={[styles.bottom, { paddingBottom: insets.bottom + space.lg }]}>
-          <View style={styles.readPanel}>
-            <View style={styles.readHead}>
-              <Text tone="tertiary" variant="eyebrow">
-                {t('capture.liveRead')}
-              </Text>
-              <Meta tone={captureError ? 'danger' : stability === 'stable' ? 'info' : 'tertiary'}>
-                {captureError
-                  ? t('capture.readFailed')
-                  : readColors.length
-                    ? `ΔE ${deltaE} · ${t(`common.stability.${stability}`)} · ${Math.round(confidence * 100)}%`
-                    : t('capture.reading')}
-              </Meta>
-            </View>
-            {readColors.length ? (
-              <Animated.View style={[styles.readRow, sequence.swatchStyle]}>
-                {readColors.map((color: Color) => (
-                  <View key={color.hex} style={styles.readItem}>
-                    <View style={[styles.readSwatch, { backgroundColor: color.hex }]} />
-                    <Text tone="secondary" variant="monoSmall">
-                      {color.hex.slice(1)}
-                    </Text>
-                  </View>
-                ))}
-              </Animated.View>
-            ) : (
-              <LiveReadPulse />
-            )}
-          </View>
+          <LiveReadPanel
+            colors={colors}
+            confidence={confidence}
+            deltaE={deltaE}
+            failed={captureError}
+            swatchStyle={sequence.swatchStyle}
+          />
 
           <View style={styles.shutterRow}>
             <Pressable
@@ -369,41 +251,6 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
   );
 }
 
-/** A4's copy, reused when the permission was never granted or was revoked. */
-function PermissionGate({
-  canRequest,
-  onRequest,
-  onCancel,
-}: {
-  canRequest: boolean;
-  onRequest: () => void;
-  onCancel: () => void;
-}) {
-  const styles = useStyles(makeStyles);
-  const insets = useSafeAreaInsets();
-  const { t } = usePreferences();
-  return (
-    <View style={[styles.root, styles.gate, { paddingTop: insets.top + space.xl }]}>
-      <BrandMark size={76} />
-      <Text style={styles.gateTitle} variant="headline">
-        {t('onboarding.permission.title')}
-      </Text>
-      <Text style={styles.gateBody} tone="secondary" variant="body">
-        {t('onboarding.permission.body')}
-      </Text>
-      <Card style={styles.gateCard}>
-        <Text tone="secondary" variant="body">
-          {t(canRequest ? 'capture.permission.allowBody' : 'capture.permission.deniedBody')}
-        </Text>
-      </Card>
-      {canRequest ? (
-        <Button label={t('onboarding.allowCamera')} onPress={onRequest} size="lg" />
-      ) : null}
-      <Button label={t('capture.notNow')} onPress={onCancel} variant="ghost" />
-    </View>
-  );
-}
-
 const makeStyles = (skin: Skin) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: skin.ui.bg.media },
@@ -451,19 +298,6 @@ const makeStyles = (skin: Skin) =>
     },
     reticleDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFFFFF' },
     bottom: { paddingHorizontal: space.gutter, gap: space.cardGap },
-    readPanel: {
-      backgroundColor: skin.ui.scrim.panel,
-      borderWidth: 1,
-      borderColor: skin.ui.border.hairlineStrong,
-      borderRadius: skin.round.media - 2,
-      padding: space.cardGap,
-      gap: space.sm,
-      minHeight: 108,
-    },
-    readHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    readRow: { flexDirection: 'row', gap: space.xs },
-    readItem: { flex: 1, gap: 6 },
-    readSwatch: { height: 44, borderRadius: skin.round.swatch },
     shutterRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -494,10 +328,6 @@ const makeStyles = (skin: Skin) =>
     modes: { flexDirection: 'row', gap: 18, justifyContent: 'center' },
     mode: { paddingBottom: 5 },
     modeActive: { borderBottomWidth: 2, borderBottomColor: skin.ui.action.primary },
-    gate: { alignItems: 'center', gap: space.md, paddingHorizontal: space.sectionGap },
-    gateTitle: { textAlign: 'center' },
-    gateBody: { textAlign: 'center' },
-    gateCard: { alignSelf: 'stretch' },
   });
 
 export const shutterPressScale = uiMotion.shutterPress.scale;

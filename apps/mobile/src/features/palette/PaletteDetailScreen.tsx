@@ -1,26 +1,20 @@
-import { readableOn, roledColors, shortAge, type Palette } from '@cw/domain';
+import { type Palette } from '@cw/domain';
 import { space } from '@cw/tokens';
-import * as Clipboard from 'expo-clipboard';
-import * as Crypto from 'expo-crypto';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
-import { ShareSheet, type ShareOptions } from '@/features/capture/ShareSheet';
-import { PalettePhoto } from '@/features/library/PalettePhoto';
+import { ShareSheet } from '@/features/capture/ShareSheet';
 import { TrackBlock } from '@/features/pairing/TrackBlock';
 import { ToolFallback } from '@/features/tools/ToolFallback';
 import { useAccent, useChromaticMemory, useChromaticSurface, usePalettes } from '@/hooks';
-import { persistPhoto, renderShareCard, shareFile } from '@/lib';
 import { useEntitlement, usePreferences, useSkin } from '@/providers';
 import {
   ActionSheet,
   Button,
   ButtonRow,
-  CardGroup,
   Chip,
   ColorRow,
   ConfirmSheet,
-  Gradient,
   Gutter,
   Icon,
   InlineError,
@@ -29,51 +23,35 @@ import {
   PromptSheet,
   Screen,
   Text,
-  HERO_HEIGHT,
   type MenuAction,
 } from '@/ui';
+import { PaletteHero } from './PaletteHero';
+import { PaletteWorkbench } from './PaletteWorkbench';
+import { usePaletteActions } from './usePaletteActions';
 
 /** Which of the two prompts the one modal is currently serving. */
 type Prompt = 'rename' | 'tag' | null;
 
-/** B4 · PALETTE DETAIL — proportional hero, tags, hex list, export row. */
+/**
+ * B4 · PALETTE DETAIL — proportional hero, tags, hex list, export row.
+ *
+ * The screen holds what the folds have to agree on: which palette, which sheet
+ * is open. The subject, the workbench and the writes each live beside this file,
+ * because none of them needs to know about the others.
+ */
 export function PaletteDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { t, feedback } = usePreferences();
   const watermarkFree = useEntitlement('watermark_free_share');
   const skin = useSkin();
-  const { palettes, loading, save: savePalette, remove: removePalette } = usePalettes();
+  const { palettes, loading } = usePalettes();
   const [menuOpen, setMenuOpen] = useState(false);
   const [prompt, setPrompt] = useState<Prompt>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
-  const [writeFailed, setWriteFailed] = useState(false);
 
-  /**
-   * Renders the card and hands it to the system share sheet, which is also where
-   * "Save Image" lives on both platforms. Both sheet buttons land here because
-   * the difference between them is a choice inside that sheet, not here.
-   */
-  const exportCard = useCallback(async (target: Palette, options: ShareOptions) => {
-    setSharing(false);
-    const bytes = renderShareCard({
-      palette: target,
-      format: options.format,
-      showHex: options.showHex,
-      watermark: options.watermark,
-    });
-    if (!bytes) {
-      // No offscreen surface means no card; the hexes are still worth having.
-      void Clipboard.setStringAsync(target.colors.map((color) => color.hex).join(', '));
-      setWriteFailed(true);
-      return;
-    }
-    const slug = target.name.toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-');
-    if ((await shareFile(bytes, `${slug}-${options.format}.png`)) === 'failed') {
-      setWriteFailed(true);
-    }
-  }, []);
+  const { commit, remove, duplicate, exportCard, writeFailed } = usePaletteActions();
 
   // The palette comes from the shared store, so a rename here reaches the
   // library grid, the sets that contain it and Explore's search at once.
@@ -87,63 +65,6 @@ export function PaletteDetailScreen() {
   // The aggregate behind the palette view. A `Palette` can carry the colours;
   // it has nowhere to put the track, so the music comes from the memory itself.
   const { memory } = useChromaticMemory(palette?.id);
-
-  /**
-   * Every menu action is a write-then-reflect: persist first, and only update
-   * the screen if the write landed. Updating state first would show a rename
-   * that silently did not survive the next launch.
-   */
-  const commit = useCallback(
-    async (next: Palette) => {
-      setWriteFailed(false);
-      try {
-        await savePalette(next);
-      } catch {
-        setWriteFailed(true);
-      }
-    },
-    [savePalette],
-  );
-
-  const remove = useCallback(
-    async (target: Palette) => {
-      try {
-        await removePalette(target.id);
-        router.back();
-      } catch {
-        setWriteFailed(true);
-      }
-    },
-    [removePalette, router],
-  );
-
-  const duplicate = useCallback(
-    async (source: Palette) => {
-      const now = new Date().toISOString();
-      const id = Crypto.randomUUID();
-      const copy: Palette = {
-        ...source,
-        id,
-        name: t('palette.copyName', { name: source.name }),
-        createdAt: now,
-        // The copy gets its own file. Sharing the original's would mean deleting
-        // either palette took the other's photo with it.
-        photoUri: persistPhoto(source.photoUri, id),
-        // The copy is a new record but the light it was read from is not, so the
-        // capture time is carried over rather than reset to now.
-        isPinned: false,
-        setIds: [],
-      };
-      setWriteFailed(false);
-      try {
-        await savePalette(copy);
-        router.replace(`/palette/${copy.id}`);
-      } catch {
-        setWriteFailed(true);
-      }
-    },
-    [router, savePalette, t],
-  );
 
   if (!palette) {
     // Once the store has loaded, a missing id means the palette was deleted —
@@ -160,27 +81,10 @@ export function PaletteDetailScreen() {
     );
   }
 
-  /**
-   * The name is written on the palette, so it has to be legible against it —
-   * and the band it lands on is whatever the user photographed. `readableOn`
-   * moves lightness only, so the title keeps the palette's own hue and still
-   * clears AA against the darkest band the scrim leaves showing.
-   */
-  const titleInk = readableOn(
-    roledColors(palette)[0]?.hex ?? skin.ui.text.primary,
-    palette.colors[0]?.hex ?? skin.ui.bg.base,
-    3,
-  );
-  const heroLabel = palette.colors.map((swatch) => swatch.hex).join(', ');
-
-  const meta = [
-    t('palette.saved', { age: shortAge(palette.capturedAt) }),
-    palette.location,
-    t('palette.colourCount', { count: palette.colors.length }),
-    palette.space === 'p3' ? 'sRGB / P3' : 'sRGB',
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const share = (target: Palette) => (options: Parameters<typeof exportCard>[1]) => {
+    setSharing(false);
+    void exportCard(target, options);
+  };
 
   const menuActions: readonly MenuAction[] = [
     { label: t('palette.menu.rename'), onPress: () => setPrompt('rename') },
@@ -244,33 +148,7 @@ export function PaletteDetailScreen() {
         </Gutter>
       ) : null}
 
-      {/* THE SUBJECT.
-          Full-bleed and edge to edge rather than a rounded card inset in a
-          gutter: this palette is what the screen is about, and a 180pt tile
-          floating in the middle of the ground made it one item among seven.
-          The name sits *on* it, in a colour derived from the palette itself and
-          held to AA against the band behind it, so the title and its subject
-          are one object instead of a caption under a picture. */}
-      <View
-        accessibilityLabel={heroLabel}
-        style={[styles.hero, { backgroundColor: skin.ui.bg.media }]}
-      >
-        {palette.photoUri ? (
-          <PalettePhoto palette={palette} style={StyleSheet.absoluteFill} />
-        ) : null}
-        <View style={styles.heroBands}>
-          {palette.colors.map((swatch) => (
-            <View key={swatch.hex} style={{ flex: swatch.weight, backgroundColor: swatch.hex }} />
-          ))}
-        </View>
-        <Gradient role={skin.effects.scrimBottom('strong')} />
-        <View style={styles.heroCopy}>
-          <Text numberOfLines={3} style={{ color: titleInk }} variant="hero">
-            {palette.name}
-          </Text>
-          <Meta tone="secondary">{meta}</Meta>
-        </View>
-      </View>
+      <PaletteHero palette={palette} />
 
       {/* A tag is a search term: tapping one runs it against the library rather
           than opening an editor, which is what people reach for a tag to do. */}
@@ -313,59 +191,7 @@ export function PaletteDetailScreen() {
         ))}
       </Gutter>
 
-      {/* THE WORKBENCH.
-          Four tools that transform this palette, as a grouped list rather than a
-          2x2 grid of chips. The grid gave eight destinations identical weight
-          and no order; a list has a reading direction, room for the name to
-          breathe, and a shape the eye already knows how to scan. */}
-      <Gutter style={styles.sectionHead}>
-        <Text
-          style={accent ? { color: accent.color } : undefined}
-          tone="tertiary"
-          variant="eyebrow"
-        >
-          {t('palette.tools')}
-        </Text>
-      </Gutter>
-      <Gutter>
-        <CardGroup>
-          {TOOLS.map((tool) => (
-            <ToolRow
-              key={tool.route}
-              label={t(tool.labelKey)}
-              onPress={() => router.push(`/tools/${tool.route}?id=${palette.id}`)}
-            />
-          ))}
-        </CardGroup>
-      </Gutter>
-
-      {/* And the three that take it out of the app. */}
-      <Gutter style={styles.sectionHead}>
-        <Text
-          style={accent ? { color: accent.color } : undefined}
-          tone="tertiary"
-          variant="eyebrow"
-        >
-          {t('export.title')}
-        </Text>
-      </Gutter>
-      <Gutter>
-        <CardGroup>
-          <ToolRow
-            label={t('export.title')}
-            onPress={() => router.push(`/tools/export?id=${palette.id}`)}
-          />
-          <ToolRow
-            label={t('palette.widgets')}
-            onPress={() => router.push(`/tools/widgets?id=${palette.id}`)}
-          />
-          <ToolRow
-            label={t('common.proJson')}
-            locked
-            onPress={() => router.push('/paywall?trigger=json-export')}
-          />
-        </CardGroup>
-      </Gutter>
+      <PaletteWorkbench accentColor={accent?.color} paletteId={palette.id} />
 
       {/* C4. The sheet is where the format and the card options live, so Share
           opens it rather than silently copying hexes to the clipboard. */}
@@ -383,8 +209,8 @@ export function PaletteDetailScreen() {
         <View style={styles.shareSheet}>
           <ShareSheet
             isPro={watermarkFree}
-            onSaveImage={(options) => void exportCard(palette, options)}
-            onShare={(options) => void exportCard(palette, options)}
+            onSaveImage={share(palette)}
+            onShare={share(palette)}
             palette={palette}
           />
         </View>
@@ -433,50 +259,6 @@ export function PaletteDetailScreen() {
   );
 }
 
-/**
- * The four tools that transform a palette, in the order someone reaches for
- * them: check it, see it used, make a surface of it, measure it against another.
- */
-const TOOLS = [
-  { route: 'contrast', labelKey: 'contrast.title' },
-  { route: 'theme', labelKey: 'theme.title' },
-  { route: 'gradient', labelKey: 'gradient.title' },
-  { route: 'compare', labelKey: 'compare.title' },
-] as const;
-
-/** One row of a grouped list: name, an optional Pro mark, and a chevron. */
-function ToolRow({
-  label,
-  onPress,
-  locked = false,
-}: {
-  label: string;
-  onPress: () => void;
-  locked?: boolean;
-}) {
-  const skinFor = useSkin();
-  return (
-    <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      onPress={onPress}
-      style={styles.toolRow}
-    >
-      <Text style={styles.toolLabel} variant="rowTitle">
-        {label}
-      </Text>
-      {locked ? (
-        <View style={[styles.pro, skinFor.tint.pro, { borderRadius: skinFor.round.chip }]}>
-          <Text style={{ color: skinFor.tint.pro.color }} variant="chip">
-            PRO
-          </Text>
-        </View>
-      ) : null}
-      <Icon color={skinFor.ui.text.tertiary} name="forward" scale="inline" />
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   head: {
     paddingTop: space.md,
@@ -495,17 +277,6 @@ const styles = StyleSheet.create({
   error: {
     paddingBottom: space.cardGap,
   },
-  /** Edge to edge and tall: the subject, not a thumbnail of it. */
-  hero: {
-    // Shared with the flight overlay, which computes its destination rather
-    // than measuring this — see `HeroTransition`.
-    height: HERO_HEIGHT,
-    justifyContent: 'flex-end',
-  },
-  /** Behind the scrim and over the photo — the palette as the ground it came from. */
-  heroBands: { ...StyleSheet.absoluteFillObject, flexDirection: 'row', opacity: 0.94 },
-  heroCopy: { paddingHorizontal: space.gutter, paddingBottom: space.gutter, gap: space.xs },
-
   tags: {
     paddingTop: space.md,
     flexDirection: 'row',
@@ -517,10 +288,6 @@ const styles = StyleSheet.create({
   list: { paddingTop: space.sectionGap },
   listRow: { paddingVertical: 13 },
   listDivider: { borderBottomWidth: 1 },
-  sectionHead: { paddingTop: space.sectionGap, paddingBottom: space.xs },
-  toolRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  toolLabel: { flex: 1 },
-  pro: { borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4 },
   shareBackdrop: StyleSheet.absoluteFillObject,
   shareSheet: {
     marginTop: 'auto',
