@@ -112,8 +112,6 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
   const [sequenceDone, setSequenceDone] = useState(false);
   const [readDone, setReadDone] = useState(false);
   const [captureError, setCaptureError] = useState(false);
-  const photoRef = useRef<string | null>(null);
-  photoRef.current = photoUri;
 
   const onSettled = useCallback(() => {
     void hapticsService.fire('extractionComplete');
@@ -140,14 +138,19 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
 
     begin({
       colors: outcome.result.colors,
-      photoUri: photoRef.current,
+      // Read straight from state, not through a ref written during render. The
+      // shot is stored before the read is awaited, so by the time `readDone` is
+      // true this state has committed; a ref only existed to dodge the
+      // dependency, and writing one mid-render is what React Compiler assumes
+      // nobody does.
+      photoUri,
       deltaE: outcome.result.deltaE,
       confidence: outcome.result.confidence,
       source: 'photo',
       setId,
     });
     router.push('/capture/result');
-  }, [begin, capturing, latest, readDone, router, sequenceDone, setId]);
+  }, [begin, capturing, latest, photoUri, readDone, router, sequenceDone, setId]);
 
   const shoot = useCallback(async () => {
     void hapticsService.fire('shutterPress');
