@@ -12,6 +12,8 @@ import { StoredEntitlements } from './StoredEntitlements';
 import { StoredMemoryRepository } from './StoredMemoryRepository';
 import { StoredPreferencesRepository } from './StoredPreferencesRepository';
 import { StoredSetRepository } from './StoredSetRepository';
+import { ExpoSharedContainer, ExpoTimelineReloader } from './widgets/ExpoSharedContainer';
+import { WidgetSnapshotWriter } from './widgets/WidgetSnapshotWriter';
 
 export const analytics = new DevelopmentAnalytics(__DEV__);
 
@@ -72,3 +74,33 @@ export const musicProvider: MusicProvider = new ITunesMusicProvider();
  * catalogue", and the screens must already handle it.
  */
 export { UnconfiguredMusicProvider };
+
+/**
+ * What the home screen widget reads.
+ *
+ * Reports `unavailable` and does nothing at all on Android, in Expo Go, and on
+ * any build whose App Group entitlement was never provisioned — which is why it
+ * is constructed unconditionally rather than behind a platform check. The
+ * absence is a state the writer already models, not a branch every caller has
+ * to remember.
+ */
+export const widgetSnapshotWriter = new WidgetSnapshotWriter(
+  new ExpoSharedContainer(),
+  new ExpoTimelineReloader(),
+  storage,
+);
+
+/**
+ * Publishes the current library to the shared container.
+ *
+ * Reads through `memoryRepository` rather than taking the library store's
+ * palettes, because a widget shows a track and the palette projection has
+ * nowhere to put one. Never throws: the caller is a side effect of a save.
+ */
+export async function publishWidgetSnapshot(skin: 'chroma' | 'swiss') {
+  try {
+    return await widgetSnapshotWriter.sync(await memoryRepository.list(), skin);
+  } catch {
+    return { status: 'failed', reason: 'library-unreadable' } as const;
+  }
+}

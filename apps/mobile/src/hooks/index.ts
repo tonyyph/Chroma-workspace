@@ -14,6 +14,7 @@ export * from './useChromaticSurface';
 export * from './useDebounced';
 export * from './useImageSampler';
 export * from './useNotificationRoute';
+export * from './useWidgetSnapshot';
 export * from './usePaletteParam';
 export * from './usePalettes';
 export * from './usePhotoRead';

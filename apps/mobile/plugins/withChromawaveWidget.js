@@ -94,12 +94,23 @@ const withWidgetTarget = (config) =>
     const widgetBundleId = `${bundleIdentifier}.widget`;
     const platformRoot = config.modRequest.platformProjectRoot;
 
-    // Idempotent. `expo prebuild` without `--clean` runs the mods against a
-    // project that may already have been through them, and a second target with
-    // the same name builds an app that fails App Store validation.
-    if (findTarget(project, TARGET_NAME)) return config;
-
+    /**
+     * Rewritten on every prebuild, deliberately outside the idempotency guard
+     * below.
+     *
+     * These files are *generated content*, not project structure: a correction
+     * to the Info.plist has to reach a project that already has the target, or
+     * the fix only lands on machines that happen to run `--clean`. That is how
+     * a missing `CFBundleExecutable` survived a compile, an embed and a commit —
+     * it was written once and never revisited.
+     */
     writeSupportingFiles(platformRoot, bundleIdentifier);
+
+    // The *target* is what must not be added twice. `expo prebuild` without
+    // `--clean` runs the mods against a project that may already have been
+    // through them, and a second target with the same name builds an app that
+    // fails App Store validation.
+    if (findTarget(project, TARGET_NAME)) return config;
 
     const target = project.addTarget(TARGET_NAME, 'app_extension', TARGET_NAME, widgetBundleId);
 
@@ -128,19 +139,38 @@ const withWidgetTarget = (config) =>
     project.addBuildPhase([], 'PBXFrameworksBuildPhase', 'Frameworks', target.uuid);
 
     /**
+     * Remove the stray "Copy Files" phase `addTarget` leaves behind.
+     *
+     * `addTarget` registers the product through `addProductFile(..., { group:
+     * 'Copy Files' })`, which creates a `PBXCopyFilesBuildPhase` that belongs to
+     * no target and holds the `.appex` build file. Adding the real embed phase
+     * below then reuses that *same* `PBXBuildFile` — the lookup in
+     * `addBuildPhase` matches on the file reference's path — and one build file
+     * sitting in two phases is what makes CocoaPods' post-install hook die with
+     * `[Xcodeproj] Consistency issue: no parent for object ChromawaveWidget.appex`.
+     * Dropping the orphan leaves exactly one referrer, which is what Xcode wants.
+     */
+    removeOrphanCopyPhase(project, `${TARGET_NAME}.appex`);
+
+    /**
      * Embed the extension in the app.
      *
      * Without this the target builds happily and produces an `.appex` that is
      * never copied into the bundle — the single most common way a widget
      * "doesn't appear" with no error to point at.
      */
+    const mainTarget = project.getFirstTarget();
     project.addBuildPhase(
       [`${TARGET_NAME}.appex`],
       'PBXCopyFilesBuildPhase',
       'Embed App Extensions',
-      project.getFirstTarget().uuid,
+      mainTarget.uuid,
       'app_extension',
     );
+
+    // So the app builds the extension before trying to embed it. Without the
+    // dependency a clean build races and intermittently embeds nothing.
+    project.addTargetDependency(mainTarget.uuid, [target.uuid]);
 
     applyBuildSettings(project, bundleIdentifier, widgetBundleId);
 
@@ -207,6 +237,11 @@ function writeSupportingFiles(platformRoot, bundleIdentifier) {
 <dict>
   <key>CFBundleDisplayName</key>
   <string>Chroma Wave</string>
+  <!-- Without this, the extension compiles, embeds, and then fails to install
+       with "missing or invalid CFBundleExecutable" — a failure no build step
+       reports, because it is the installer that rejects the bundle. -->
+  <key>CFBundleExecutable</key>
+  <string>$(EXECUTABLE_NAME)</string>
   <key>CFBundleIdentifier</key>
   <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
   <key>CFBundleName</key>
@@ -241,6 +276,29 @@ function writeSupportingFiles(platformRoot, bundleIdentifier) {
 </plist>
 `,
   );
+}
+
+/**
+ * Deletes the parentless `Copy Files` phase holding `productName`.
+ *
+ * Matched on both the name and its contents rather than on the name alone, so a
+ * legitimate copy phase belonging to the app target is never touched.
+ */
+function removeOrphanCopyPhase(project, productName) {
+  const phases = project.hash.project.objects.PBXCopyFilesBuildPhase ?? {};
+  for (const key of Object.keys(phases)) {
+    const phase = phases[key];
+    if (typeof phase !== 'object' || phase === null) continue;
+    if (String(phase.name ?? '').replace(/"/g, '') !== 'Copy Files') continue;
+
+    const holdsProduct = (phase.files ?? []).some((file) =>
+      String(file.comment ?? '').includes(productName),
+    );
+    if (!holdsProduct) continue;
+
+    delete phases[key];
+    delete phases[`${key}_comment`];
+  }
 }
 
 /** `xcode` quotes target names inconsistently; compare unquoted. */

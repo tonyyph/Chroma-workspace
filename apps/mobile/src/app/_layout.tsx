@@ -18,7 +18,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components';
 import { syncDrop } from '@/features/trending/trendingRepository';
-import { useNotificationRoute } from '@/hooks';
+import { useNotificationRoute, useWidgetSnapshot } from '@/hooks';
 import { storage } from '@/infrastructure/dependencies';
 import {
   EntitlementProvider,
@@ -86,6 +86,10 @@ function AppNavigator() {
   // Inside the navigator, because it navigates: a router call from above the
   // Stack has nothing mounted to act on.
   useNotificationRoute();
+
+  // Publishes the library to the App Group the widget reads. Gated on the
+  // content having changed, so a re-render costs a comparison and no reload.
+  useWidgetSnapshot();
 
   /**
    * Pulls this week's field notes once per launch. Deliberately unawaited and
