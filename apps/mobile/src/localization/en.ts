@@ -619,6 +619,24 @@ export const en = {
   'rewind.collection.genre': '{key}',
   'rewind.count': '{count}',
   'grade.applying': 'Applying…',
+
+  'studio.title': 'Studio',
+  'studio.subtitle': 'Light on the lens, colour on the frame',
+  'studio.shutter': 'Capture',
+  'studio.retake': 'Retake',
+  'studio.keep': 'Keep',
+  'studio.exposure': 'Exposure',
+  'studio.zoom': 'Zoom',
+  'studio.torch': 'Light',
+  'studio.focusHint': 'Tap the preview to focus and meter there',
+  'studio.preparing': 'Waking the camera',
+  'studio.reading': 'Reading the frame',
+  'studio.failed': 'That frame could not be read.',
+  'studio.looks': 'Looks',
+  'studio.liveNote': 'Colour is applied to the frame you capture, not to the preview.',
+  'studio.stops': '{value} stops',
+  'studio.times': '{value}×',
+  'studio.mode': 'STUDIO',
 } as const;
 
 export type MessageKey = keyof typeof en;

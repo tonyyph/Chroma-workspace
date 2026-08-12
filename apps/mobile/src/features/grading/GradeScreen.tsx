@@ -1,5 +1,6 @@
 import {
   describeGrade,
+  gradesEqual,
   FILM_STOCKS,
   gradeForAtmosphere,
   NEUTRAL_GRADE,
@@ -210,12 +211,12 @@ export function GradeScreen() {
         <Chip
           label={t('grade.auto')}
           onPress={() => choose(automatic)}
-          tone={sameGrade(current, automatic) ? 'selected' : 'default'}
+          tone={gradesEqual(current, automatic) ? 'selected' : 'default'}
         />
         <Chip
           label={t('grade.original')}
           onPress={() => choose(NEUTRAL_GRADE)}
-          tone={sameGrade(current, NEUTRAL_GRADE) ? 'selected' : 'default'}
+          tone={gradesEqual(current, NEUTRAL_GRADE) ? 'selected' : 'default'}
         />
       </Gutter>
 
@@ -232,7 +233,7 @@ export function GradeScreen() {
             onPress={() =>
               canAdjust ? choose(stock.grade) : router.push('/paywall?trigger=advanced-grading')
             }
-            tone={!canAdjust ? 'pro' : sameGrade(current, stock.grade) ? 'selected' : 'default'}
+            tone={!canAdjust ? 'pro' : gradesEqual(current, stock.grade) ? 'selected' : 'default'}
           />
         ))}
       </Gutter>
@@ -378,30 +379,6 @@ function GradeSlider({
       value={value}
       valueText={spoken(value)}
     />
-  );
-}
-
-/**
- * Whether two grades are the same look.
- *
- * Compared by value rather than by identity because the chips have to show which
- * one is active after a reload, when the stored grade is a different object that
- * happens to hold the same numbers.
- */
-function sameGrade(a: Grade, b: Grade): boolean {
-  return (
-    a.exposure === b.exposure &&
-    a.contrast === b.contrast &&
-    a.lift === b.lift &&
-    a.saturation === b.saturation &&
-    a.temperature === b.temperature &&
-    a.tint === b.tint &&
-    a.vignette === b.vignette &&
-    a.grain === b.grain &&
-    a.shadowTint.hue === b.shadowTint.hue &&
-    a.shadowTint.strength === b.shadowTint.strength &&
-    a.highlightTint.hue === b.highlightTint.hue &&
-    a.highlightTint.strength === b.highlightTint.strength
   );
 }
 

@@ -28,6 +28,18 @@ import { Button, Card, Meta, Screen, Text, useStyles } from '@/ui';
  * returns a `react-native-nitro-image` `Image` — a dependency the app already
  * carries and currently never imports.
  *
+ * **ANDROID ONLY, and the answer for iOS is already known.** `takeSnapshot()` is
+ * annotated `@platform Android`, and its iOS counterpart is not implemented at
+ * all — `HybridPreviewView.swift` throws
+ * `"takeSnapshot() is not available on iOS!"` unconditionally. So this probe
+ * reports a failure on every iPhone, and the path it measures cannot become the
+ * live read there whatever the numbers say. With frame processors also blocked
+ * (see above), iOS has no route to preview pixels in this build at all; `Studio`
+ * is the shape that finding produced.
+ *
+ * It is kept for Android, where the path is real and the throughput is still
+ * unmeasured.
+ *
  * Reachable only by typing the path; nothing links here, and it is inert outside
  * __DEV__. Run it on a physical device: a simulator's camera is a static image
  * and its timings mean nothing.

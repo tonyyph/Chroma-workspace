@@ -26,11 +26,10 @@ the work worth doing.
    `usePhotoRead.ts` records it: `react-native-vision-camera-worklets` fails to
    compile against React Native 0.83 because it includes
    `React/RCTMessageThread.h`, a private header the prebuilt React pods do not
-   expose. No frame processor means no access to preview pixels. What is
-   achievable is a Skia composite over the preview as an approximation, plus an
-   exact grade applied to the frame the shutter captures. Selling "real-time 60
-   FPS filters" without saying this would be selling something that does not
-   exist.
+   expose. No frame processor means no access to preview pixels. Building Camera
+   Studio later turned up the second half of this: `takeSnapshot()` is not
+   implemented on iOS either, so there is _no_ route to preview pixels at all —
+   see the Camera Studio section, which records what that forced.
 2. **Living Memory has no video encoder available.** Animated playback inside the
    app is straightforward with Skia and Reanimated. Writing an `.mp4` needs a
    native module that is not in the dependency set.
@@ -57,7 +56,8 @@ honestly is part of the finish.
 
 Camera Studio ranks fourth on purpose: the grading engine must exist before a
 camera has anything to preview, so building the camera first is building it
-backwards. Style DNA is not a product anyone buys on its own; it is a multiplier,
+backwards. **It was built after the three, and the investigation changed what it
+is** — see below. Style DNA is not a product anyone buys on its own; it is a multiplier,
 and it attaches to Rewind rather than occupying one of the three places.
 
 ## Slice 1 · Chromatic Grade
@@ -167,6 +167,32 @@ guessed. Months say something true everywhere. The related timezone limit in
 "on this day" is asserted in a test rather than hidden: `capturedAt` is an
 instant and the offset was never stored, so fixing it properly means changing
 the capture record.
+
+## Camera Studio · what the evidence forced
+
+The brief asked for real-time cinematic filters at 60 FPS. On iOS, in this build,
+there is **no way to reach the preview's pixels at all**:
+
+- frame processors need `react-native-vision-camera-worklets`, which does not
+  compile against React Native 0.83;
+- `takeSnapshot()` — the path `spike-liveread.tsx` was written to measure — is
+  annotated `@platform Android` and its iOS counterpart throws
+  `"takeSnapshot() is not available on iOS!"` unconditionally.
+
+There is no third door. A composite tint over the preview was rejected: it can
+only approximate temperature and split-tone, cannot touch exposure, contrast or
+saturation, and would be contradicted by the photograph a second later. A camera
+whose preview lies about its own output is the worse product even though it demos
+better.
+
+So Studio splits the promise honestly. **Before the shutter**, everything that
+changes what the sensor records is native and immediate: exposure bias, zoom,
+tap-to-focus-and-meter, torch. **After it**, the look is applied to the captured
+frame exactly, by the shader already asserted pixel-for-pixel against its
+reference, and chosen while looking at the real photograph.
+
+The spike screen keeps its probe for Android, where the path is real, with its
+false premise corrected.
 
 ## Verification
 

@@ -18,9 +18,10 @@ import { LiveReadPanel } from './LiveReadPanel';
 import { PermissionGate } from './PermissionGate';
 import { useCaptureSession } from './useCaptureSession';
 
-/** The three viewfinder modes, each with its own message key. */
+/** The four capture paths, each with its own message key. */
 const MODES = [
   { key: 'live', labelKey: 'capture.mode.live' },
+  { key: 'studio', labelKey: 'studio.mode' },
   { key: 'photo', labelKey: 'capture.mode.photo' },
   { key: 'scan', labelKey: 'capture.mode.scan' },
 ] as const;
@@ -83,12 +84,13 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
     useCaptureSession({ photoOutput, flash, setId });
 
   /**
-   * The three modes are three different capture paths, so selecting one routes
-   * to it. LIVE is this screen, which is why it alone stays put.
+   * Each mode is a different capture path, so selecting one routes to it. LIVE
+   * is this screen, which is why it alone stays put.
    */
   const selectMode = useCallback(
     (next: Mode) => {
       setMode(next);
+      if (next === 'studio') router.push('/capture/studio');
       if (next === 'photo') router.push('/tools/import');
       if (next === 'scan') router.push('/tools/scan');
     },

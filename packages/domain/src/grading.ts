@@ -353,6 +353,30 @@ export const FILM_STOCKS: readonly FilmStock[] = [
 export const filmStock = (id: FilmStockId): FilmStock | null =>
   FILM_STOCKS.find((stock) => stock.id === id) ?? null;
 
+/**
+ * Whether two grades are the same look.
+ *
+ * By value, not by identity: a stored grade is a different object that happens
+ * to hold the same numbers, and a picker that compared references would show
+ * nothing selected after a reload.
+ */
+export function gradesEqual(a: Grade, b: Grade): boolean {
+  return (
+    a.exposure === b.exposure &&
+    a.contrast === b.contrast &&
+    a.lift === b.lift &&
+    a.saturation === b.saturation &&
+    a.temperature === b.temperature &&
+    a.tint === b.tint &&
+    a.vignette === b.vignette &&
+    a.grain === b.grain &&
+    a.shadowTint.hue === b.shadowTint.hue &&
+    a.shadowTint.strength === b.shadowTint.strength &&
+    a.highlightTint.hue === b.highlightTint.hue &&
+    a.highlightTint.strength === b.highlightTint.strength
+  );
+}
+
 /* --------------------------------------------------------------- describing */
 
 /**

@@ -13,6 +13,7 @@ import { PaletteDetailScreen } from '@/features/palette/PaletteDetailScreen';
 import { PaywallScreen } from '@/features/paywall/PaywallScreen';
 import { RewindScreen } from '@/features/rewind/RewindScreen';
 import { CollectionScreen } from '@/features/sets/CollectionScreen';
+import { CameraStudioScreen } from '@/features/studio/CameraStudioScreen';
 import { ActivityScreen } from '@/features/tools/ActivityScreen';
 import { ApplyThemeScreen } from '@/features/tools/ApplyThemeScreen';
 import { CompareScreen } from '@/features/tools/CompareScreen';
@@ -184,6 +185,7 @@ const cases: readonly [string, () => ReactElement][] = [
   ['Grade', () => <GradeScreen />],
   ['Living memory', () => <LivingMemoryScreen memory={memory()} />],
   ['Rewind', () => <RewindScreen />],
+  ['Camera studio', () => <CameraStudioScreen />],
   ['Import & pick', () => <ImportPickScreen onCancel={jest.fn()} onExtract={jest.fn()} />],
 ];
 

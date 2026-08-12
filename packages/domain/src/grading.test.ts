@@ -3,6 +3,7 @@ import { readAtmosphere, type AtmosphereMood, type AtmosphereReading } from './a
 import { makeColor } from './palette';
 import {
   describeGrade,
+  gradesEqual,
   gradeForAtmosphere,
   gradeSchema,
   NEUTRAL_GRADE,
@@ -216,5 +217,35 @@ describe('FILM_STOCKS', () => {
   it('offer looks that actually differ from each other', () => {
     const described = FILM_STOCKS.map((stock) => describeGrade(stock.grade).join(', '));
     expect(new Set(described).size).toBe(FILM_STOCKS.length);
+  });
+});
+
+describe('gradesEqual', () => {
+  it('matches a grade against a copy of itself', () => {
+    // A stored grade is a different object holding the same numbers; a picker
+    // comparing references would show nothing selected after a reload.
+    const stock = FILM_STOCKS[0]!.grade;
+    expect(gradesEqual(stock, JSON.parse(JSON.stringify(stock)) as Grade)).toBe(true);
+  });
+
+  it('separates two different looks', () => {
+    expect(gradesEqual(FILM_STOCKS[0]!.grade, FILM_STOCKS[1]!.grade)).toBe(false);
+  });
+
+  it('notices a change in any single parameter', () => {
+    for (const change of [
+      { exposure: 0.5 },
+      { contrast: 0.5 },
+      { lift: 0.1 },
+      { saturation: 0.5 },
+      { temperature: 0.5 },
+      { tint: 0.5 },
+      { vignette: 0.5 },
+      { grain: 0.5 },
+      { shadowTint: { hue: 200, strength: 0.5 } },
+      { highlightTint: { hue: 40, strength: 0.5 } },
+    ]) {
+      expect(gradesEqual(NEUTRAL_GRADE, { ...NEUTRAL_GRADE, ...change })).toBe(false);
+    }
   });
 });
