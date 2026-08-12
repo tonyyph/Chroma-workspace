@@ -144,10 +144,29 @@ directly rather than watched for.
 can encode one. The screen says what is missing. Adding it means adding a native
 encoder first.
 
-**Smart Collections & Rewind** groups memories by season, mood, colour and music
-using pure functions over data already held, and produces "On this day" and
-period recaps. Style DNA is folded in here as the profile those recaps read from,
-and as a new input to `ranking.preferenceBias`.
+**Smart Collections & Rewind** — built. Collections form themselves by month,
+mood, colour, artist and genre; "on this day" and month/year recaps look back;
+Style DNA is the profile all three read from and feeds `ranking` at about a
+third the strength of explicit feedback — turning a track down is a statement,
+photographing warm rooms is a habit, and a habit must not shout over a statement.
+
+Everything is derived and nothing is stored, the rule
+`feedback.accumulatePreference` already set: one source of truth, deleting a
+memory genuinely removes its influence, and changing how taste is read takes
+effect immediately.
+
+Two thresholds carry the honesty. Three members before a collection exists — two
+of a thing is a coincidence. Four before a recap exists, because rendering
+"0 memories, no mood, no colours" at someone about a quiet month is a thing an
+app should not say.
+
+**No seasons, and the reason is stated in the module.** A season is not a
+property of a date — December is summer for half the world — and `location` is
+free text a person typed, never a coordinate, so the hemisphere would have to be
+guessed. Months say something true everywhere. The related timezone limit in
+"on this day" is asserted in a test rather than hidden: `capturedAt` is an
+instant and the offset was never stored, so fixing it properly means changing
+the capture record.
 
 ## Verification
 
