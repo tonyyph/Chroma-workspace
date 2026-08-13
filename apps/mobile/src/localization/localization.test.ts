@@ -72,6 +72,9 @@ const BUTTON_KEYS = messageKeys.filter(
     key === 'result.save' ||
     // The import screen's second primary action, full width under the swatches.
     key === 'import.cinematic' ||
+    // The grade screen's two ways out.
+    key === 'grade.save' ||
+    key === 'grade.share' ||
     key === 'tune.apply' ||
     key === 'tune.cancel' ||
     key === 'palette.share' ||

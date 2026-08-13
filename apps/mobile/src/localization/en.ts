@@ -571,6 +571,16 @@ export const en = {
   'grade.grain': 'Grain',
   'grade.stops': '{value} stops',
   'grade.amount': '{value} per cent',
+  'grade.save': 'Save photo',
+  'grade.share': 'Share',
+  'grade.exporting': 'Rendering…',
+  'grade.savedPhoto': 'Saved to your photos',
+  'grade.sharedPhoto': 'Shared',
+  'grade.saveDenied': 'Chroma Wave cannot add to your photos.',
+  'grade.saveDeniedDetail': 'Allow photo access in Settings to save a graded photograph.',
+  'grade.exportFailed': 'That photograph could not be exported.',
+  'grade.exportFailedDetail':
+    'The file may have moved, or it may be larger than this device can render.',
 
   'living.title': 'Living memory',
   'living.play': 'Play',

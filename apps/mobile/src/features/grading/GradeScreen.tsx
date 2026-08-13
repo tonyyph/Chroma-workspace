@@ -31,6 +31,7 @@ import {
   useStyles,
 } from '@/ui';
 import { GradePreview, useGradeImage } from './GradePreview';
+import { useGradedExport } from './useGradedExport';
 
 /**
  * The grade this photograph asks for, and the room to disagree with it.
@@ -70,6 +71,7 @@ export function GradeScreen() {
   const shown = comparing ? NEUTRAL_GRADE : current;
 
   const { image, status } = useGradeImage(palette?.photoUri ?? null);
+  const exporter = useGradedExport(palette?.photoUri ?? null, current);
 
   const previewWidth = width - space.gutter * 2;
   const previewHeight = Math.round(previewWidth * 1.25);
@@ -325,13 +327,40 @@ export function GradeScreen() {
         </Gutter>
       )}
 
+      {/*
+        Saving the photograph is the primary action and applying the grade is
+        not. Someone who imported a frame came to get a frame out; remembering
+        the look on the palette record is the smaller, separate intention.
+      */}
       <Gutter style={styles.actions}>
+        <Button
+          disabled={status !== 'ready' || exporter.status === 'working'}
+          label={exporter.status === 'working' ? t('grade.exporting') : t('grade.save')}
+          onPress={exporter.save}
+          size="lg"
+          variant="contrast"
+        />
+        <Button
+          disabled={status !== 'ready' || exporter.status === 'working'}
+          label={t('grade.share')}
+          onPress={exporter.share}
+          variant="secondary"
+        />
+
+        {exporter.status === 'saved' ? <Meta>{t('grade.savedPhoto')}</Meta> : null}
+        {exporter.status === 'shared' ? <Meta>{t('grade.sharedPhoto')}</Meta> : null}
+        {exporter.status === 'denied' ? (
+          <InlineError detail={t('grade.saveDeniedDetail')} title={t('grade.saveDenied')} />
+        ) : null}
+        {exporter.status === 'failed' ? (
+          <InlineError detail={t('grade.exportFailedDetail')} title={t('grade.exportFailed')} />
+        ) : null}
+
         <Button
           disabled={status !== 'ready' || saved || baking}
           label={saved ? t('grade.applied') : baking ? t('grade.applying') : t('grade.apply')}
           onPress={() => void apply()}
-          size="lg"
-          variant="contrast"
+          variant="secondary"
         />
         {palette?.grade ? (
           <Button label={t('grade.remove')} onPress={() => void clear()} variant="ghost" />
