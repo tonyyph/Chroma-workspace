@@ -127,4 +127,3 @@ export function seedPalettes(): Palette[] {
  */
 
 /** B1 · the live read strip, before a capture is committed. */
-export const liveReadSample = ['#7C5CFF', '#4A3AA8', '#22D3EE', '#FF7A5C', '#F1E7D6'] as const;

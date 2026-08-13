@@ -176,5 +176,3 @@ export const unavailableContainer: SharedContainer = {
   copyIn: () => false,
   prune: () => undefined,
 };
-
-export const noopReloader: TimelineReloader = { reload: () => undefined };

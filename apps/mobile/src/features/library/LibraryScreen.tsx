@@ -7,7 +7,7 @@ import {
   type Palette,
   type VisualStyle,
 } from '@cw/domain';
-import { size, space, type Skin } from '@cw/tokens';
+import { size, space } from '@cw/tokens';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -318,7 +318,9 @@ function EmptyLibrary({
   );
 }
 
-const makeStyles = (skin: Skin) =>
+// No skin token in this sheet: the screen reads what it needs from `useSkin`
+// directly, at the two places it needs it.
+const makeStyles = () =>
   StyleSheet.create({
     masthead: { gap: 6 },
     mastheadTop: {

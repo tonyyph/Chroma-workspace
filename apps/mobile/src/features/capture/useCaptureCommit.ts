@@ -18,13 +18,24 @@ export function useCaptureCommit(): (name: string) => Promise<Palette | null> {
   const { save } = usePalettes();
   const { sets, save: saveSet } = useSets();
   const toPalette = useCaptureStore((state) => state.toPalette);
-  const setId = useCaptureStore((state) => state.pending?.setId ?? null);
   const discard = useCaptureStore((state) => state.discard);
 
   return useCallback(
     async (name: string) => {
       const draft = toPalette(name);
       if (!draft) return null;
+
+      /**
+       * Read at call time, not through a selector.
+       *
+       * The import path begins a capture and commits it on the very next line,
+       * inside one event handler — so a `setId` captured by the last render is
+       * the value from *before* the capture existed. Today that is always null
+       * and nothing breaks; the first set-scoped import would silently lose its
+       * membership. `toPalette` already reads current state, and this makes the
+       * whole callback consistent about it.
+       */
+      const setId = useCaptureStore.getState().pending?.setId ?? null;
       // The frame is still in a purgeable cache at this point. Saving the record
       // without moving the file first is how a library ends up full of palettes
       // whose photos have quietly vanished.
@@ -57,6 +68,6 @@ export function useCaptureCommit(): (name: string) => Promise<Palette | null> {
       discard();
       return palette;
     },
-    [toPalette, save, sets, saveSet, setId, discard],
+    [toPalette, save, sets, saveSet, discard],
   );
 }

@@ -69,18 +69,6 @@ const hueForLab = (lab: Oklab): number => {
   return degrees < 0 ? degrees + 360 : degrees;
 };
 
-const circularHueDistance = (left: number, right: number): number => {
-  const distance = Math.abs(left - right);
-  return Math.min(distance, 360 - distance);
-};
-
-const temperatureForHue = (hue: number): number => {
-  const warmDistance = Math.min(circularHueDistance(hue, 45), circularHueDistance(hue, 15));
-  const coolDistance = circularHueDistance(hue, 230);
-  const total = warmDistance + coolDistance;
-  return total === 0 ? 0 : clamp((coolDistance - warmDistance) / total, -1, 1);
-};
-
 const makeInitialCentroids = (pixels: readonly Pixel[], count: number): Oklab[] => {
   const ordered = [...pixels].sort((left, right) => {
     const lightnessDelta = left.lab.lightness - right.lab.lightness;

@@ -1,4 +1,4 @@
-import type { Grade } from '@cw/domain';
+import { gradesEqual, type Grade } from '@cw/domain';
 import { useCallback, useState } from 'react';
 import { hapticsService } from '@/infrastructure/dependencies';
 import { saveGradedToPhotos, shareGraded, type GradeExportOutcome } from '@/lib/grade';
@@ -17,21 +17,37 @@ export type ExportStatus = 'idle' | 'working' | GradeExportOutcome;
  * available here, and it is the one that happens by default.
  */
 export function useGradedExport(photoUri: string | null, grade: Grade) {
-  const [status, setStatus] = useState<ExportStatus>('idle');
+  const [working, setWorking] = useState(false);
+  /**
+   * The last outcome, and the grade it belongs to.
+   *
+   * Kept together because an outcome is only true of the look that produced it.
+   * A bare status would leave "Saved to your photos" sitting under a look nobody
+   * has saved as soon as the user picks a different one — the message claiming
+   * something that did not happen.
+   */
+  const [done, setDone] = useState<{ outcome: GradeExportOutcome; grade: Grade } | null>(null);
+
+  const status: ExportStatus = working
+    ? 'working'
+    : done && gradesEqual(done.grade, grade)
+      ? done.outcome
+      : 'idle';
 
   const run = useCallback(
     (action: (uri: string, grade: Grade) => Promise<GradeExportOutcome>) => {
-      if (!photoUri || status === 'working') return;
-      setStatus('working');
+      if (!photoUri || working) return;
+      setWorking(true);
       void (async () => {
         const outcome = await action(photoUri, grade);
-        setStatus(outcome);
+        setDone({ outcome, grade });
+        setWorking(false);
         if (outcome === 'saved' || outcome === 'shared') {
           void hapticsService.fire('extractionComplete');
         }
       })();
     },
-    [photoUri, grade, status],
+    [photoUri, grade, working],
   );
 
   return {

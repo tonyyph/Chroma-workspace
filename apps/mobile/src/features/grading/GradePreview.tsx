@@ -12,6 +12,17 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { GRADE_SHADER, gradeUniforms } from '@/lib/grade';
 
 /**
+ * Compiled once for the whole app, not once per canvas.
+ *
+ * The source is a constant, and a `RuntimeEffect` is immutable and safe to share
+ * across canvases. It used to be memoised per component, which was fine when the
+ * only canvas was the hero preview — the look grid then puts six more on the same
+ * screen, and compiling the same SkSL seven times on every mount is seven times
+ * the work for one identical result.
+ */
+const EFFECT = Skia.RuntimeEffect.Make(GRADE_SHADER);
+
+/**
  * The photograph, graded, on the GPU.
  *
  * One Skia pass over the decoded frame: the image becomes a shader, the grade
@@ -33,10 +44,6 @@ export function GradePreview({
   width: number;
   height: number;
 }) {
-  // Compiling SkSL is not free and the source never changes, so it happens once
-  // for the life of the screen rather than once per slider frame.
-  const effect = useMemo(() => Skia.RuntimeEffect.Make(GRADE_SHADER), []);
-
   const uniforms = useMemo(
     () => gradeUniforms(resolveGrade(grade), width, height),
     [grade, width, height],
@@ -44,12 +51,12 @@ export function GradePreview({
 
   // A shader that did not compile is a bug in the shipped source, not a runtime
   // condition — but drawing nothing beats taking down the screen someone is on.
-  if (!effect) return null;
+  if (!EFFECT) return null;
 
   return (
     <Canvas style={{ width, height }}>
       <Fill>
-        <Shader source={effect} uniforms={uniforms}>
+        <Shader source={EFFECT} uniforms={uniforms}>
           {/* `cover` so the preview crops the frame the way the library card and
               the detail hero already do — a grade judged on a differently
               cropped image is a grade judged on a different picture. */}

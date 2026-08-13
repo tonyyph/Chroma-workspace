@@ -32,6 +32,7 @@ import {
   Text,
   useStyles,
 } from '@/ui';
+import { dialledLook } from './dialledLook';
 import { GradePreview, useGradeImage } from './GradePreview';
 import { LookGrid } from './LookGrid';
 import { useGradedExport } from './useGradedExport';
@@ -79,7 +80,9 @@ export function GradeScreen() {
   const [baking, setBaking] = useState(false);
   const [writeFailed, setWriteFailed] = useState(false);
 
-  const current = base ? scaleGrade(base, amount) : (palette?.grade ?? automatic);
+  // `scaleGrade(x, 1)` is `x`, so resolving the base up front costs nothing at
+  // full strength — and it is what stops the dial swapping a saved look out.
+  const current = scaleGrade(dialledLook(base, palette?.grade ?? null, automatic), amount);
   const shown = comparing ? NEUTRAL_GRADE : current;
 
   const { image, status } = useGradeImage(palette?.photoUri ?? null);
@@ -294,10 +297,6 @@ export function GradeScreen() {
           maximumValue={1}
           minimumValue={0}
           onChange={(next) => {
-            // A dial with no look under it has nothing to scale. Adopting the
-            // automatic grade as the base is what the user is plainly asking
-            // for by touching it.
-            if (!base) setBase(automatic);
             setAmount(Math.round(next * 100) / 100);
             setSaved(false);
           }}
