@@ -58,6 +58,23 @@ describe('LOOKS', () => {
     expect(look('nope')).toBeNull();
   });
 
+  /**
+   * A monochrome look cannot be warmed by the white balance.
+   *
+   * The pipeline is exposure → lift → contrast → white balance → saturation →
+   * split tone. At `saturation: -1`, saturation discards everything white
+   * balance did, so a warm `temperature` on a black-and-white look moves no
+   * pixel — while `describeGrade` cheerfully announces "warmer" to a screen
+   * reader. Toning comes from the split tone, which runs after, or it does not
+   * happen at all.
+   */
+  it('tones a monochrome look with split tone rather than white balance', () => {
+    for (const entry of LOOKS.filter((candidate) => candidate.grade.saturation <= -1)) {
+      expect(entry.grade.temperature).toBe(0);
+      expect(entry.grade.tint).toBe(0);
+    }
+  });
+
   it('stay schema-valid at every point the intensity dial can reach', () => {
     for (const entry of LOOKS) {
       for (const amount of [0, 0.13, 0.5, 0.87, 1]) {

@@ -185,6 +185,78 @@ export const LOOKS: readonly Look[] = [
     },
   },
   {
+    id: 'soft-mono',
+    name: 'Soft mono',
+    collection: 'monochrome',
+    free: false,
+    grade: { ...NEUTRAL_GRADE, contrast: -0.2, saturation: -1, lift: 0.1, grain: 0.08 },
+  },
+  {
+    id: 'hard-mono',
+    name: 'Hard mono',
+    collection: 'monochrome',
+    free: false,
+    grade: {
+      ...NEUTRAL_GRADE,
+      contrast: 0.4,
+      saturation: -1,
+      lift: -0.06,
+      vignette: 0.12,
+      grain: 0.06,
+    },
+  },
+  {
+    /**
+     * Warmth from the split tone, not from the white balance.
+     *
+     * Saturation runs after white balance and throws it away, so `temperature`
+     * on a monochrome look is a sentence `describeGrade` reads out and the
+     * renderer never honours. The split tone runs last, so it survives.
+     */
+    id: 'toned-warm',
+    name: 'Warm tone',
+    collection: 'monochrome',
+    free: false,
+    grade: {
+      ...NEUTRAL_GRADE,
+      contrast: 0.1,
+      saturation: -1,
+      lift: 0.08,
+      shadowTint: { hue: 30, strength: 0.34 },
+      highlightTint: { hue: 55, strength: 0.24 },
+      grain: 0.22,
+    },
+  },
+  {
+    id: 'toned-cool',
+    name: 'Cool tone',
+    collection: 'monochrome',
+    free: false,
+    grade: {
+      ...NEUTRAL_GRADE,
+      contrast: 0.26,
+      saturation: -1,
+      lift: 0.04,
+      shadowTint: { hue: 240, strength: 0.3 },
+      vignette: 0.22,
+      grain: 0.16,
+    },
+  },
+  {
+    id: 'newsprint',
+    name: 'Newsprint',
+    collection: 'monochrome',
+    free: false,
+    grade: {
+      ...NEUTRAL_GRADE,
+      exposure: 0.14,
+      contrast: 0.18,
+      saturation: -1,
+      lift: 0.12,
+      grain: 0.5,
+    },
+  },
+  {
     id: 'cinestill',
     name: 'Tungsten night',
     collection: 'after-dark',
