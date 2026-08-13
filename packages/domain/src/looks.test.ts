@@ -83,6 +83,15 @@ describe('LOOKS', () => {
     }
   });
 
+  it('offers five collections with six looks each, one of them free', () => {
+    expect(LOOKS).toHaveLength(30);
+    for (const id of lookCollectionIds) {
+      const members = looksIn(id);
+      expect(members).toHaveLength(6);
+      expect(members.filter((entry) => entry.free)).toHaveLength(1);
+    }
+  });
+
   it('keeps the six shipped stocks unchanged', () => {
     // These are in people's libraries. A tidy-up that moved a number would
     // silently re-grade every photograph already carrying one of them.

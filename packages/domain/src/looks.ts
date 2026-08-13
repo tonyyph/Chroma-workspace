@@ -17,7 +17,13 @@ import { NEUTRAL_GRADE, type Grade } from './grading';
  * more use to someone choosing than a word they may never have shot.
  */
 
-export const lookCollectionIds = ['negative', 'slide', 'monochrome', 'after-dark'] as const;
+export const lookCollectionIds = [
+  'negative',
+  'slide',
+  'monochrome',
+  'after-dark',
+  'early-digital',
+] as const;
 export type LookCollectionId = (typeof lookCollectionIds)[number];
 
 export type Look = Readonly<{
@@ -426,6 +432,116 @@ export const LOOKS: readonly Look[] = [
       highlightTint: { hue: 40, strength: 0.2 },
       vignette: 0.1,
       grain: 0.14,
+    },
+  },
+
+  /**
+   * Early digital dates a photograph rather than warming it.
+   *
+   * The other four collections are film, and film is what people reach for when
+   * they want a picture to look *better*. This one is for wanting it to look
+   * like it was taken at a particular time — green casts, blown flash, crushed
+   * shadows, the artefacts of a sensor that was not very good yet.
+   */
+  {
+    id: 'camcorder',
+    name: 'Camcorder',
+    collection: 'early-digital',
+    free: true,
+    grade: {
+      ...NEUTRAL_GRADE,
+      exposure: 0.1,
+      contrast: -0.16,
+      saturation: -0.14,
+      temperature: -0.06,
+      tint: -0.24,
+      shadowTint: { hue: 110, strength: 0.26 },
+      highlightTint: { hue: 95, strength: 0.2 },
+      vignette: 0.16,
+      grain: 0.1,
+    },
+  },
+  {
+    id: 'tape',
+    name: 'Tape',
+    collection: 'early-digital',
+    free: false,
+    grade: {
+      ...NEUTRAL_GRADE,
+      exposure: 0.04,
+      contrast: -0.18,
+      lift: 0.14,
+      saturation: 0.12,
+      temperature: 0.06,
+      tint: 0.22,
+      shadowTint: { hue: 325, strength: 0.28 },
+      highlightTint: { hue: 185, strength: 0.2 },
+      vignette: 0.2,
+      grain: 0.34,
+    },
+  },
+  {
+    id: 'direct-flash',
+    name: 'Direct flash',
+    collection: 'early-digital',
+    free: false,
+    grade: {
+      ...NEUTRAL_GRADE,
+      exposure: 0.16,
+      contrast: 0.28,
+      lift: -0.05,
+      saturation: -0.18,
+      temperature: -0.14,
+      shadowTint: { hue: 170, strength: 0.18 },
+      vignette: 0.24,
+      grain: 0.08,
+    },
+  },
+  {
+    id: 'low-res',
+    name: 'Low resolution',
+    collection: 'early-digital',
+    free: false,
+    grade: {
+      ...NEUTRAL_GRADE,
+      exposure: -0.06,
+      contrast: 0.22,
+      lift: -0.04,
+      saturation: -0.26,
+      temperature: 0.1,
+      shadowTint: { hue: 295, strength: 0.2 },
+      highlightTint: { hue: 65, strength: 0.18 },
+      grain: 0.38,
+    },
+  },
+  {
+    id: 'screen-glow',
+    name: 'Screen glow',
+    collection: 'early-digital',
+    free: false,
+    grade: {
+      ...NEUTRAL_GRADE,
+      exposure: 0.08,
+      contrast: -0.2,
+      lift: 0.16,
+      saturation: 0.14,
+      temperature: -0.22,
+      shadowTint: { hue: 215, strength: 0.24 },
+      grain: 0.2,
+    },
+  },
+  {
+    id: 'early-web',
+    name: 'Early web',
+    collection: 'early-digital',
+    free: false,
+    grade: {
+      ...NEUTRAL_GRADE,
+      contrast: 0.34,
+      saturation: 0.34,
+      temperature: 0.14,
+      highlightTint: { hue: 45, strength: 0.2 },
+      vignette: 0.22,
     },
   },
 ];
