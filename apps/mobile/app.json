@@ -63,6 +63,15 @@
         }
       ],
       [
+        "expo-media-library",
+        {
+          "photosPermission": "Chroma Wave reads colour from a photo you choose. The photo is analysed on device and only the palette is kept.",
+          "savePhotosPermission": "Chroma Wave saves the graded photograph you made back to your library.",
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": ["photo"]
+        }
+      ],
+      [
         "expo-notifications",
         {
           "color": "#7C5CFF",

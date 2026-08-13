@@ -13,3 +13,4 @@ export {
   renderGraded,
   targetSize,
 } from './bakeGrade';
+export { saveGradedToPhotos, shareGraded, type GradeExportOutcome } from './saveGraded';

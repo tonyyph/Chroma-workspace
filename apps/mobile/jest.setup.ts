@@ -23,6 +23,14 @@ jest.mock('expo-notifications', () => ({
   useLastNotificationResponse: jest.fn(() => null),
 }));
 
+// The photo library is a native capability with no JS fallback. The mock grants
+// permission and swallows the write, so the success path runs under test; tests
+// that care about refusal override `requestPermissionsAsync` themselves.
+jest.mock('expo-media-library', () => ({
+  requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
+  saveToLibraryAsync: jest.fn(async () => undefined),
+}));
+
 const { setUpTests } =
   jest.requireMock<typeof import('react-native-reanimated')>('react-native-reanimated');
 

@@ -98,6 +98,9 @@ importers:
       expo-linking:
         specifier: ~55.0.16
         version: 55.0.16(expo@55.0.28)(react-native@0.83.10(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
+      expo-media-library:
+        specifier: ~55.0.19
+        version: 55.0.19(expo@55.0.28)(react-native@0.83.10(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))
       expo-notifications:
         specifier: ~55.0.25
         version: 55.0.25(expo@55.0.28)(react-native@0.83.10(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
@@ -3369,6 +3372,12 @@ packages:
     resolution: {integrity: sha512-NmIoGapFzTTZhR46loLqTTnZfL8C6GQdQA47q1NjWiT3UeUPrGUrK7CEASMdhCFxaymkpbRFsbMECeSq6knIPg==}
     peerDependencies:
       expo: '*'
+
+  expo-media-library@55.0.19:
+    resolution: {integrity: sha512-IfRLfUkqdGx5grEuy4leWB2Gaa7fRP7RJ+VioluLglYTlZYQ/p0ugE0yypXzavv6UapgNEmIogGJhR+nPBjljQ==}
+    peerDependencies:
+      expo: '*'
+      react-native: '*'
 
   expo-modules-autolinking@55.0.25:
     resolution: {integrity: sha512-qO8se6zTxfdCGeuwc0dCTmnstW5r1tKSr9SoWtZn0mhlr5Qe5RSJa0vhzQ32eIwgMd77GJrc1yJtkktgN817vg==}
@@ -9489,6 +9498,11 @@ snapshots:
     dependencies:
       expo: 55.0.28(@babel/core@7.29.7)(@expo/dom-webview@55.0.6)(@expo/metro-runtime@55.0.12)(expo-router@55.0.17)(react-dom@19.2.0(react@19.2.0))(react-native-worklets@0.7.4(@babel/core@7.29.7)(react-native@0.83.10(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0))(react-native@0.83.10(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       expo-json-utils: 55.0.2
+
+  expo-media-library@55.0.19(expo@55.0.28)(react-native@0.83.10(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0)):
+    dependencies:
+      expo: 55.0.28(@babel/core@7.29.7)(@expo/dom-webview@55.0.6)(@expo/metro-runtime@55.0.12)(expo-router@55.0.17)(react-dom@19.2.0(react@19.2.0))(react-native-worklets@0.7.4(@babel/core@7.29.7)(react-native@0.83.10(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0))(react-native@0.83.10(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+      react-native: 0.83.10(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0)
 
   expo-modules-autolinking@55.0.25(typescript@5.9.3):
     dependencies:

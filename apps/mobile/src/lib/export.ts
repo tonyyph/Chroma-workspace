@@ -20,9 +20,12 @@ import { expand, type GradientKind, type Interpolation } from '@/ui/GradientCanv
  * 390pt is not a 4K wallpaper. Drawing again at the target size costs one frame
  * and produces the real thing.
  *
- * Nothing here writes to the photo library — that needs a permission and a
- * native module this build does not carry. Files land in the cache directory and
- * go out through the system share sheet, which offers "Save Image" itself.
+ * Nothing *here* writes to the photo library: these are share cards and
+ * gradients, and they go out through the system share sheet, which offers
+ * "Save Image" itself. A graded photograph is the exception and has its own
+ * module — see `lib/grade/saveGraded.ts`, which carries `expo-media-library`
+ * and the permission that comes with it. The distinction is deliberate: a card
+ * about a palette is something you send, and a photograph is something you keep.
  */
 
 export type ShareOutcome = 'shared' | 'dismissed' | 'failed';
