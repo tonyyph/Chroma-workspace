@@ -365,6 +365,7 @@ export const en = {
   'import.hint': 'Tap the photo to add at least two sample points. Tap a point to remove it.',
   'import.tapLabel': 'Photo, tap to sample',
   'import.tapHint': 'Adds a sample point',
+  'import.cinematic': 'Make cinematic',
 
   'compare.title': 'Compare',
   'compare.meta': '2 palettes · ΔE matrix',

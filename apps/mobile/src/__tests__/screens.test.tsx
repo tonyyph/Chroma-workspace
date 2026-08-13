@@ -186,7 +186,10 @@ const cases: readonly [string, () => ReactElement][] = [
   ['Living memory', () => <LivingMemoryScreen memory={memory()} />],
   ['Rewind', () => <RewindScreen />],
   ['Camera studio', () => <CameraStudioScreen />],
-  ['Import & pick', () => <ImportPickScreen onCancel={jest.fn()} onExtract={jest.fn()} />],
+  [
+    'Import & pick',
+    () => <ImportPickScreen onCancel={jest.fn()} onCinematic={jest.fn()} onExtract={jest.fn()} />,
+  ],
 ];
 
 describe('every screen mounts', () => {

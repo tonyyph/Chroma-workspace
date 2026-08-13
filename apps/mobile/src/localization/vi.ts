@@ -366,6 +366,7 @@ export const vi: Record<MessageKey, string> = {
   'import.hint': 'Chạm vào ảnh để thêm ít nhất hai điểm lấy mẫu. Chạm một điểm để bỏ nó.',
   'import.tapLabel': 'Ảnh, chạm để lấy mẫu',
   'import.tapHint': 'Thêm một điểm lấy mẫu',
+  'import.cinematic': 'Làm điện ảnh',
 
   'compare.title': 'So sánh',
   'compare.meta': '2 bảng màu · ma trận ΔE',

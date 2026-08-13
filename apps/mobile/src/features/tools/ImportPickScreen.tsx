@@ -8,7 +8,18 @@ import { useImageSampler } from '@/hooks';
 import { hapticsService } from '@/infrastructure/dependencies';
 import { readPalette, toDecodableUri } from '@/lib';
 import { usePreferences } from '@/providers';
-import { Card, Chip, NavBar, Pressable, Screen, Slider, Text, useStyles } from '@/ui';
+import {
+  Button,
+  Card,
+  Chip,
+  Gutter,
+  NavBar,
+  Pressable,
+  Screen,
+  Slider,
+  Text,
+  useStyles,
+} from '@/ui';
 
 const MODES = ['AUTO', 'MANUAL', 'EDGES'] as const;
 const MAX_POINTS = 8;
@@ -25,10 +36,19 @@ type Point = { x: number; y: number; hex: string };
 export function ImportPickScreen({
   onCancel,
   onExtract,
+  onCinematic,
 }: {
   onCancel: () => void;
   /** The photo travels with the colours — the result sheet and card both show it. */
   onExtract: (colors: readonly Color[], photoUri: string | null) => void;
+  /**
+   * The same two things, going somewhere else: straight to the grade.
+   *
+   * Two intents rather than two screens. Someone importing a photo either wants
+   * the colours out of it or wants the photograph itself to look like something,
+   * and making them guess which button means which is worse than having two.
+   */
+  onCinematic: (colors: readonly Color[], photoUri: string | null) => void;
 }) {
   const styles = useStyles(makeStyles);
   const { t } = usePreferences();
@@ -175,6 +195,15 @@ export function ImportPickScreen({
     if (auto?.colors.length) onExtract(auto.colors, uri);
   };
 
+  /** The same choice of colours, handed to the grade instead of the result sheet. */
+  const cinematic = () => {
+    if (usingPoints) {
+      onCinematic(evenlyWeightedColors(points.map((point) => point.hex)), uri);
+      return;
+    }
+    if (auto?.colors.length) onCinematic(auto.colors, uri);
+  };
+
   /** What the swatch row previews: the placed points, or the automatic read. */
   const preview: readonly string[] = usingPoints
     ? points.map((point) => point.hex)
@@ -289,6 +318,12 @@ export function ImportPickScreen({
         })}
       </View>
 
+      {canExtract ? (
+        <Gutter style={styles.cinematic}>
+          <Button label={t('import.cinematic')} onPress={cinematic} size="lg" variant="contrast" />
+        </Gutter>
+      ) : null}
+
       {canExtract ? null : (
         <Card style={styles.hint}>
           <Text tone="secondary" variant="body">
@@ -344,5 +379,6 @@ const makeStyles = (skin: Skin) =>
       borderColor: skin.ui.border.control,
       borderStyle: 'dashed',
     },
+    cinematic: { paddingTop: space.md },
     hint: { marginHorizontal: space.gutter, marginTop: space.md },
   });

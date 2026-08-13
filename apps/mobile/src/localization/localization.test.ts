@@ -70,6 +70,8 @@ const BUTTON_KEYS = messageKeys.filter(
     key === 'onboarding.importInstead' ||
     key === 'result.tune' ||
     key === 'result.save' ||
+    // The import screen's second primary action, full width under the swatches.
+    key === 'import.cinematic' ||
     key === 'tune.apply' ||
     key === 'tune.cancel' ||
     key === 'palette.share' ||
