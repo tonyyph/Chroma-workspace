@@ -8,11 +8,7 @@ import {
   gradeSchema,
   NEUTRAL_GRADE,
   type Grade,
-  FILM_STOCKS,
-  filmStock,
-  filmStockIds,
   scaleGrade,
-  type FilmStockId,
 } from './grading';
 
 /**
@@ -192,45 +188,37 @@ describe('describeGrade', () => {
   });
 });
 
-describe('FILM_STOCKS', () => {
-  it('are grades, not a separate kind of thing', () => {
-    for (const stock of FILM_STOCKS) {
-      expect(() => gradeSchema.parse(stock.grade)).not.toThrow();
-    }
-  });
-
-  it('name every id exactly once', () => {
-    expect(FILM_STOCKS.map((stock) => stock.id)).toEqual([...filmStockIds]);
-    expect(new Set(FILM_STOCKS.map((stock) => stock.id)).size).toBe(filmStockIds.length);
-  });
-
-  it('are each distinguishable from neutral', () => {
-    for (const stock of FILM_STOCKS) {
-      expect(describeGrade(stock.grade)).not.toEqual(['untouched']);
-    }
-  });
-
-  it('look up by id, and refuse an unknown one', () => {
-    expect(filmStock('portra')?.name).toBe('Warm skin');
-    expect(filmStock('nope' as FilmStockId)).toBeNull();
-  });
-
-  it('offer looks that actually differ from each other', () => {
-    const described = FILM_STOCKS.map((stock) => describeGrade(stock.grade).join(', '));
-    expect(new Set(described).size).toBe(FILM_STOCKS.length);
-  });
-});
+/**
+ * A grade with every kind of parameter switched on, written out here rather
+ * than taken from the look library.
+ *
+ * The catalogue is data that will keep changing; what this file tests is the
+ * arithmetic. Reaching into `LOOKS` for a fixture would make an editorial edit
+ * able to break a test about `scaleGrade`, which is a coupling nobody wants to
+ * debug at the moment they are adding a look.
+ */
+const LOADED: Grade = {
+  ...NEUTRAL_GRADE,
+  exposure: -0.08,
+  contrast: 0.16,
+  lift: 0.1,
+  temperature: -0.24,
+  saturation: 0.06,
+  shadowTint: { hue: 250, strength: 0.28 },
+  highlightTint: { hue: 15, strength: 0.22 },
+  vignette: 0.24,
+  grain: 0.26,
+};
 
 describe('gradesEqual', () => {
   it('matches a grade against a copy of itself', () => {
     // A stored grade is a different object holding the same numbers; a picker
     // comparing references would show nothing selected after a reload.
-    const stock = FILM_STOCKS[0]!.grade;
-    expect(gradesEqual(stock, JSON.parse(JSON.stringify(stock)) as Grade)).toBe(true);
+    expect(gradesEqual(LOADED, JSON.parse(JSON.stringify(LOADED)) as Grade)).toBe(true);
   });
 
   it('separates two different looks', () => {
-    expect(gradesEqual(FILM_STOCKS[0]!.grade, FILM_STOCKS[1]!.grade)).toBe(false);
+    expect(gradesEqual(LOADED, { ...LOADED, contrast: 0.32 })).toBe(false);
   });
 
   it('notices a change in any single parameter', () => {
@@ -252,7 +240,7 @@ describe('gradesEqual', () => {
 });
 
 describe('scaleGrade', () => {
-  const look = FILM_STOCKS.find((stock) => stock.id === 'cinestill')!.grade;
+  const look = LOADED;
 
   it('returns the grade unchanged at full strength', () => {
     expect(scaleGrade(look, 1)).toEqual(look);
@@ -289,11 +277,11 @@ describe('scaleGrade', () => {
     expect(scaleGrade(look, -1)).toEqual(NEUTRAL_GRADE);
   });
 
-  it('produces a schema-valid grade across the range for every stock', () => {
-    for (const stock of FILM_STOCKS) {
-      for (const amount of [0, 0.13, 0.5, 0.87, 1]) {
-        expect(() => gradeSchema.parse(scaleGrade(stock.grade, amount))).not.toThrow();
-      }
+  // Scaling every look in the catalogue is asserted in `looks.test.ts`, where
+  // the catalogue lives. This file owns the arithmetic, not the contents.
+  it('produces a schema-valid grade at every point across the range', () => {
+    for (const amount of [0, 0.13, 0.5, 0.87, 1]) {
+      expect(() => gradeSchema.parse(scaleGrade(LOADED, amount))).not.toThrow();
     }
   });
 

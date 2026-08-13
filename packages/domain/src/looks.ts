@@ -1,0 +1,144 @@
+import { NEUTRAL_GRADE, type Grade } from './grading';
+
+/**
+ * The look library.
+ *
+ * Separate from `grading.ts` on purpose: that module defines what a grade *is*
+ * and how one is derived from a photograph, and thirty sets of numbers sitting
+ * on top of it would bury the argument. This module is the catalogue.
+ *
+ * Every look is the same `Grade` an automatic read produces. That is the whole
+ * design: choosing a look and letting the photograph choose for itself yield the
+ * same kind of object, so the picker, the dial, the storage and the renderer
+ * never learn the difference.
+ *
+ * Names say what a look does rather than which film it nods at — partly because
+ * a stock name is a trademark, and partly because "warm skin, lifted shadows" is
+ * more use to someone choosing than a word they may never have shot.
+ */
+
+export const lookCollectionIds = ['negative', 'slide', 'monochrome', 'after-dark'] as const;
+export type LookCollectionId = (typeof lookCollectionIds)[number];
+
+export type Look = Readonly<{
+  id: string;
+  /** What it does, in the app's own words. Never a film's name. */
+  name: string;
+  collection: LookCollectionId;
+  /**
+   * One look per collection is free.
+   *
+   * A wall of locked chips tells someone the app is not for them. One working
+   * look per collection tells them what the collection *is*, which is the thing
+   * worth paying to unlock.
+   */
+  free: boolean;
+  grade: Grade;
+}>;
+
+export const LOOKS: readonly Look[] = [
+  {
+    id: 'portra',
+    name: 'Warm skin',
+    collection: 'negative',
+    free: true,
+    grade: {
+      ...NEUTRAL_GRADE,
+      exposure: 0.06,
+      contrast: -0.18,
+      lift: 0.08,
+      saturation: -0.12,
+      temperature: 0.2,
+      shadowTint: { hue: 30, strength: 0.14 },
+      highlightTint: { hue: 45, strength: 0.12 },
+      grain: 0.18,
+    },
+  },
+  {
+    id: 'polaroid',
+    name: 'Instant',
+    collection: 'negative',
+    free: false,
+    grade: {
+      ...NEUTRAL_GRADE,
+      exposure: 0.1,
+      contrast: -0.24,
+      lift: 0.14,
+      saturation: -0.2,
+      temperature: 0.1,
+      tint: 0.08,
+      shadowTint: { hue: 190, strength: 0.2 },
+      highlightTint: { hue: 55, strength: 0.18 },
+      vignette: 0.18,
+      grain: 0.2,
+    },
+  },
+  {
+    id: 'ektachrome',
+    name: 'Clean slide',
+    collection: 'slide',
+    free: true,
+    grade: {
+      ...NEUTRAL_GRADE,
+      contrast: 0.22,
+      saturation: 0.08,
+      temperature: -0.08,
+      lift: -0.02,
+      shadowTint: { hue: 225, strength: 0.16 },
+      grain: 0.08,
+    },
+  },
+  {
+    id: 'velvia',
+    name: 'Saturated landscape',
+    collection: 'slide',
+    free: false,
+    grade: {
+      ...NEUTRAL_GRADE,
+      contrast: 0.32,
+      saturation: 0.28,
+      lift: -0.05,
+      temperature: 0.06,
+      shadowTint: { hue: 240, strength: 0.12 },
+      vignette: 0.22,
+      grain: 0.05,
+    },
+  },
+  {
+    id: 'tri-x',
+    name: 'Black and grain',
+    collection: 'monochrome',
+    free: true,
+    grade: {
+      ...NEUTRAL_GRADE,
+      contrast: 0.3,
+      saturation: -1,
+      lift: 0.06,
+      vignette: 0.2,
+      grain: 0.4,
+    },
+  },
+  {
+    id: 'cinestill',
+    name: 'Tungsten night',
+    collection: 'after-dark',
+    free: true,
+    grade: {
+      ...NEUTRAL_GRADE,
+      exposure: -0.08,
+      contrast: 0.16,
+      lift: 0.1,
+      temperature: -0.24,
+      saturation: 0.06,
+      shadowTint: { hue: 250, strength: 0.28 },
+      highlightTint: { hue: 15, strength: 0.22 },
+      vignette: 0.24,
+      grain: 0.26,
+    },
+  },
+];
+
+export const looksIn = (collection: LookCollectionId): readonly Look[] =>
+  LOOKS.filter((entry) => entry.collection === collection);
+
+export const look = (id: string): Look | null => LOOKS.find((entry) => entry.id === id) ?? null;

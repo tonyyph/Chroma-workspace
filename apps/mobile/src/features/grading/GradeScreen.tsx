@@ -1,7 +1,7 @@
 import {
   describeGrade,
   gradesEqual,
-  FILM_STOCKS,
+  LOOKS,
   gradeForAtmosphere,
   NEUTRAL_GRADE,
   readAtmosphere,
@@ -246,7 +246,7 @@ export function GradeScreen() {
         </Text>
       </Gutter>
       <Gutter style={styles.rail}>
-        {FILM_STOCKS.map((stock) => (
+        {LOOKS.map((stock) => (
           <Chip
             key={stock.id}
             label={stock.name}

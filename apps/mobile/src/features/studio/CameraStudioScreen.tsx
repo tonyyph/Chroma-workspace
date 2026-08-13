@@ -1,5 +1,5 @@
 import {
-  FILM_STOCKS,
+  LOOKS,
   gradeForAtmosphere,
   gradesEqual,
   NEUTRAL_GRADE,
@@ -253,7 +253,7 @@ export function CameraStudioScreen() {
                 onPress={() => setGrade(NEUTRAL_GRADE)}
                 tone={gradesEqual(grade, NEUTRAL_GRADE) ? 'selected' : 'default'}
               />
-              {FILM_STOCKS.map((stock) => (
+              {LOOKS.map((stock) => (
                 <Chip
                   key={stock.id}
                   label={stock.name}
