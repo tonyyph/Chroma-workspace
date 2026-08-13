@@ -1,7 +1,7 @@
 import {
-  LOOKS,
   gradeForAtmosphere,
   gradesEqual,
+  look,
   NEUTRAL_GRADE,
   readAtmosphere,
   type Grade,
@@ -21,9 +21,10 @@ import {
 import { BrandMark } from '@/components';
 import { PermissionGate } from '@/features/capture/PermissionGate';
 import { GradePreview, useGradeImage } from '@/features/grading/GradePreview';
+import { LookGrid } from '@/features/grading/LookGrid';
 import { usePhotoRead } from '@/hooks';
 import { hapticsService, soundService } from '@/infrastructure/dependencies';
-import { usePreferences, useSkin } from '@/providers';
+import { useEntitlement, usePreferences, useSkin } from '@/providers';
 import { useCaptureStore } from '@/store';
 import { Button, Chip, Icon, Meta, Pressable, Slider, Text, Toggle, useStyles } from '@/ui';
 import { useCameraControls } from './useCameraControls';
@@ -71,6 +72,7 @@ export function CameraStudioScreen() {
   const [grade, setGrade] = useState<Grade>(NEUTRAL_GRADE);
 
   const { image, status } = useGradeImage(shot);
+  const canAdjust = useEntitlement('advanced_grading');
 
   const automatic = useMemo(
     () => (colors.length ? gradeForAtmosphere(readAtmosphere(colors, deltaE)) : NEUTRAL_GRADE),
@@ -253,15 +255,22 @@ export function CameraStudioScreen() {
                 onPress={() => setGrade(NEUTRAL_GRADE)}
                 tone={gradesEqual(grade, NEUTRAL_GRADE) ? 'selected' : 'default'}
               />
-              {LOOKS.map((stock) => (
-                <Chip
-                  key={stock.id}
-                  label={stock.name}
-                  onPress={() => setGrade(stock.grade)}
-                  tone={gradesEqual(grade, stock.grade) ? 'selected' : 'default'}
-                />
-              ))}
             </View>
+
+            {/*
+              The same grid the grade screen shows, on the frame just captured.
+              It gates the same way too: this rail used to hand out every look
+              for free, which made the paywall next door a formality.
+            */}
+            {status === 'ready' && image ? (
+              <LookGrid
+                current={grade}
+                image={image}
+                isLocked={(lookId) => !canAdjust && !(look(lookId)?.free ?? false)}
+                onChoose={setGrade}
+                onLocked={() => router.push('/paywall?trigger=advanced-grading')}
+              />
+            ) : null}
 
             <View style={styles.reviewActions}>
               <Button label={t('studio.retake')} onPress={retake} variant="ghost" />

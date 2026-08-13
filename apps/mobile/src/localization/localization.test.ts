@@ -50,6 +50,8 @@ const CHIP_KEYS = messageKeys.filter(
     key.startsWith('trending.sort.') ||
     key.startsWith('tune.preset.') ||
     key.startsWith('import.mode.') ||
+    // The look grid's collection rail, in the same row shape as the filters.
+    key.startsWith('look.collection.') ||
     key.startsWith('capture.mode.') ||
     key === 'collection.exportSet' ||
     key === 'collection.invite' ||

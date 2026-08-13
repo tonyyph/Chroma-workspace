@@ -3,6 +3,7 @@ import {
   gradesEqual,
   LOOKS,
   gradeForAtmosphere,
+  look,
   NEUTRAL_GRADE,
   readAtmosphere,
   scaleGrade,
@@ -32,6 +33,7 @@ import {
   useStyles,
 } from '@/ui';
 import { GradePreview, useGradeImage } from './GradePreview';
+import { LookGrid } from './LookGrid';
 import { useGradedExport } from './useGradedExport';
 
 /**
@@ -245,18 +247,41 @@ export function GradeScreen() {
           {t('grade.stocks')}
         </Text>
       </Gutter>
-      <Gutter style={styles.rail}>
-        {LOOKS.map((stock) => (
-          <Chip
-            key={stock.id}
-            label={stock.name}
-            onPress={() =>
-              canAdjust ? choose(stock.grade) : router.push('/paywall?trigger=advanced-grading')
-            }
-            tone={!canAdjust ? 'pro' : gradesEqual(current, stock.grade) ? 'selected' : 'default'}
-          />
-        ))}
-      </Gutter>
+      {/*
+        The grid needs the decoded photograph to preview on. Without one there is
+        nothing to show a look *doing*, and a rail of names is the honest
+        fallback rather than thirty empty squares.
+      */}
+      {status === 'ready' && image ? (
+        <LookGrid
+          current={current}
+          image={image}
+          isLocked={(lookId) => !canAdjust && !(look(lookId)?.free ?? false)}
+          onChoose={choose}
+          onLocked={() => router.push('/paywall?trigger=advanced-grading')}
+        />
+      ) : (
+        <Gutter style={styles.rail}>
+          {LOOKS.map((entry) => (
+            <Chip
+              key={entry.id}
+              label={entry.name}
+              onPress={() =>
+                canAdjust || entry.free
+                  ? choose(entry.grade)
+                  : router.push('/paywall?trigger=advanced-grading')
+              }
+              tone={
+                !canAdjust && !entry.free
+                  ? 'pro'
+                  : gradesEqual(current, entry.grade)
+                    ? 'selected'
+                    : 'default'
+              }
+            />
+          ))}
+        </Gutter>
+      )}
 
       {/*
         Free, and outside the Pro gate on purpose: the automatic grade has to
