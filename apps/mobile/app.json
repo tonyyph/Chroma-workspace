@@ -79,6 +79,7 @@
           "enableBackgroundRemoteNotifications": false
         }
       ],
+      "./plugins/withIosResourceBundleSigning",
       "./plugins/withChromawaveWidget"
     ],
     "experiments": {
