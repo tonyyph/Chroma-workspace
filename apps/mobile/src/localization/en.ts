@@ -571,6 +571,7 @@ export const en = {
   'grade.grain': 'Grain',
   'grade.stops': '{value} stops',
   'grade.amount': '{value} per cent',
+  'grade.intensity': 'Intensity',
   'grade.save': 'Save photo',
   'grade.share': 'Share',
   'grade.exporting': 'Rendering…',

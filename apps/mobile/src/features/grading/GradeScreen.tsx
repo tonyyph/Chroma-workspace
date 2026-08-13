@@ -5,6 +5,7 @@ import {
   gradeForAtmosphere,
   NEUTRAL_GRADE,
   readAtmosphere,
+  scaleGrade,
   type Grade,
 } from '@cw/domain';
 import { space, type Skin } from '@cw/tokens';
@@ -61,13 +62,22 @@ export function GradeScreen() {
     [palette],
   );
 
-  const [grade, setGrade] = useState<Grade | null>(null);
+  /**
+   * The look, and how much of it.
+   *
+   * They are separate pieces of state because the slider has to be able to go
+   * back up: scaling the shown grade in place would lose the look at 20% and
+   * leave nothing to return to. `base` is what was chosen, `amount` is the dial,
+   * and `current` is the only thing anything else on this screen sees.
+   */
+  const [base, setBase] = useState<Grade | null>(null);
+  const [amount, setAmount] = useState(1);
   const [comparing, setComparing] = useState(false);
   const [saved, setSaved] = useState(false);
   const [baking, setBaking] = useState(false);
   const [writeFailed, setWriteFailed] = useState(false);
 
-  const current = grade ?? palette?.grade ?? automatic;
+  const current = base ? scaleGrade(base, amount) : (palette?.grade ?? automatic);
   const shown = comparing ? NEUTRAL_GRADE : current;
 
   const { image, status } = useGradeImage(palette?.photoUri ?? null);
@@ -76,8 +86,15 @@ export function GradeScreen() {
   const previewWidth = width - space.gutter * 2;
   const previewHeight = Math.round(previewWidth * 1.25);
 
+  /**
+   * Choosing a look resets the dial to full.
+   *
+   * Anything else means tapping a look and being shown a weakened version of it
+   * for reasons invisible on screen.
+   */
   const choose = (next: Grade) => {
-    setGrade(next);
+    setBase(next);
+    setAmount(1);
     setSaved(false);
     void hapticsService.fire('colourPinned');
   };
@@ -108,7 +125,8 @@ export function GradeScreen() {
     setWriteFailed(false);
     try {
       await save({ ...palette, grade: null, thumbnailUri: null });
-      setGrade(NEUTRAL_GRADE);
+      setBase(NEUTRAL_GRADE);
+      setAmount(1);
       setSaved(false);
     } catch {
       setWriteFailed(true);
@@ -240,11 +258,41 @@ export function GradeScreen() {
         ))}
       </Gutter>
 
+      {/*
+        Free, and outside the Pro gate on purpose: the automatic grade has to
+        stay free, and a dial is what turns it from take-it-or-leave-it into
+        something anyone can actually place.
+      */}
+      <Gutter style={styles.intensity}>
+        <Slider
+          label={t('grade.intensity')}
+          maximumValue={1}
+          minimumValue={0}
+          onChange={(next) => {
+            // A dial with no look under it has nothing to scale. Adopting the
+            // automatic grade as the base is what the user is plainly asking
+            // for by touching it.
+            if (!base) setBase(automatic);
+            setAmount(Math.round(next * 100) / 100);
+            setSaved(false);
+          }}
+          value={amount}
+          valueText={t('grade.amount', { value: Math.round(amount * 100) })}
+        />
+      </Gutter>
+
       <Gutter style={styles.sectionHead}>
         <Text tone="tertiary" variant="eyebrow">
           {t('grade.controls')}
         </Text>
       </Gutter>
+
+      {/*
+        A manual edit takes over: `choose` receives the already-scaled grade and
+        makes it the base at full strength. Nothing on screen jumps — the numbers
+        are identical — and the dial honestly reads 100%, because a grade someone
+        set by hand is not a percentage of anything.
+      */}
 
       {canAdjust ? (
         <Gutter style={styles.controls}>
@@ -440,6 +488,7 @@ const makeStyles = (skin: Skin) =>
     },
     reason: { paddingTop: space.sm },
     rail: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, paddingTop: space.sm },
+    intensity: { paddingTop: space.md },
     sectionHead: { paddingTop: space.sectionGap },
     controls: { paddingTop: space.sm, gap: space.md },
     proCard: { gap: space.sm, marginTop: space.sm, alignItems: 'flex-start' },

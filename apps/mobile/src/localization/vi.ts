@@ -569,6 +569,7 @@ export const vi: Record<MessageKey, string> = {
   'grade.grain': 'Hạt phim',
   'grade.stops': '{value} khẩu',
   'grade.amount': '{value} phần trăm',
+  'grade.intensity': 'Cường độ',
   'grade.save': 'Lưu ảnh',
   'grade.share': 'Chia sẻ',
   'grade.exporting': 'Đang kết xuất…',
