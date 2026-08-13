@@ -176,8 +176,17 @@ const MOOD_BASE: Record<AtmosphereMood, Grade> = {
 
 const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
 
-/** Three decimal places, so a grade round-trips through storage unchanged. */
-const round = (value: number) => Math.round(value * 1000) / 1000;
+/**
+ * Three decimal places, so a grade round-trips through storage unchanged.
+ *
+ * Negative zero is normalised away: `-0.08 * 0` is `-0`, which serialises as
+ * `-0`, reads as `-0` in a diff, and is a distinct value to `toEqual` — none of
+ * which is anything a grade means.
+ */
+const round = (value: number) => {
+  const rounded = Math.round(value * 1000) / 1000;
+  return rounded === 0 ? 0 : rounded;
+};
 
 /**
  * The grade this reading asks for.
@@ -375,6 +384,58 @@ export function gradesEqual(a: Grade, b: Grade): boolean {
     a.highlightTint.hue === b.highlightTint.hue &&
     a.highlightTint.strength === b.highlightTint.strength
   );
+}
+
+/* ------------------------------------------------------------------ scaling */
+
+/**
+ * The same look, turned down.
+ *
+ * Linear interpolation towards `NEUTRAL_GRADE`, which is what "50% of this look"
+ * means when the identity grade is all zeros: every parameter simply gets
+ * smaller. That makes a look library into a continuum, and it is the control
+ * every photo app has because it is the one people reach for after "which one" —
+ * "yes, but less".
+ *
+ * **A tint's hue does not interpolate; its strength does.** A hue is a position
+ * on a circle, and dragging one towards zero takes the wrong way round — a blue
+ * shadow would travel through green and amber on its way to nothing. The hue is
+ * already the right hue at any strength.
+ *
+ * The result is a `Grade` like any other. Nothing stores the amount: the screen
+ * uses this to produce a grade, and what gets saved is that grade. An intensity
+ * kept alongside would mean a migration, and every reader — the shader, the
+ * bake, `describeGrade` — would have to learn to multiply before looking.
+ */
+export function scaleGrade(grade: Grade, amount: number): Grade {
+  const factor = clamp(amount, 0, 1);
+  const scale = (value: number) => round(value * factor);
+  /**
+   * A tint keeps its hue at every strength it actually has — and a tint with no
+   * strength is not a tint, so it collapses to the neutral one.
+   *
+   * That last part is not pedantry. `gradesEqual` compares hues, so a grade
+   * scaled to nothing while still carrying a hue would fail to match
+   * `NEUTRAL_GRADE`, and the "Original" chip would sit unlit next to a
+   * photograph that is visibly original.
+   */
+  const fade = (tint: GradeTint): GradeTint => {
+    const strength = round(tint.strength * factor);
+    return strength === 0 ? NO_TINT : { hue: tint.hue, strength };
+  };
+
+  return {
+    exposure: scale(grade.exposure),
+    contrast: scale(grade.contrast),
+    lift: scale(grade.lift),
+    saturation: scale(grade.saturation),
+    temperature: scale(grade.temperature),
+    tint: scale(grade.tint),
+    shadowTint: fade(grade.shadowTint),
+    highlightTint: fade(grade.highlightTint),
+    vignette: scale(grade.vignette),
+    grain: scale(grade.grain),
+  };
 }
 
 /* --------------------------------------------------------------- describing */

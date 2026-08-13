@@ -11,6 +11,7 @@ import {
   FILM_STOCKS,
   filmStock,
   filmStockIds,
+  scaleGrade,
   type FilmStockId,
 } from './grading';
 
@@ -247,5 +248,57 @@ describe('gradesEqual', () => {
     ]) {
       expect(gradesEqual(NEUTRAL_GRADE, { ...NEUTRAL_GRADE, ...change })).toBe(false);
     }
+  });
+});
+
+describe('scaleGrade', () => {
+  const look = FILM_STOCKS.find((stock) => stock.id === 'cinestill')!.grade;
+
+  it('returns the grade unchanged at full strength', () => {
+    expect(scaleGrade(look, 1)).toEqual(look);
+  });
+
+  it('returns the neutral grade at zero', () => {
+    expect(scaleGrade(look, 0)).toEqual(NEUTRAL_GRADE);
+  });
+
+  it('lands halfway between at a half', () => {
+    const half = scaleGrade(look, 0.5);
+    expect(half.temperature).toBeCloseTo(look.temperature / 2, 3);
+    expect(half.contrast).toBeCloseTo(look.contrast / 2, 3);
+    expect(half.grain).toBeCloseTo(look.grain / 2, 3);
+  });
+
+  /**
+   * The one rule that is not "multiply everything".
+   *
+   * A hue is a position on a circle, and interpolating one towards zero takes
+   * the wrong way round: a blue shadow at 250° would pass through green, amber
+   * and red on its way to nothing. The hue is already correct at every strength;
+   * it is the strength that means "how much of it".
+   */
+  it('weakens a tint without moving its hue', () => {
+    const half = scaleGrade(look, 0.5);
+    expect(half.shadowTint.hue).toBe(look.shadowTint.hue);
+    expect(half.highlightTint.hue).toBe(look.highlightTint.hue);
+    expect(half.shadowTint.strength).toBeCloseTo(look.shadowTint.strength / 2, 3);
+  });
+
+  it('clamps an amount outside the range rather than producing an invalid grade', () => {
+    expect(scaleGrade(look, 2)).toEqual(look);
+    expect(scaleGrade(look, -1)).toEqual(NEUTRAL_GRADE);
+  });
+
+  it('produces a schema-valid grade across the range for every stock', () => {
+    for (const stock of FILM_STOCKS) {
+      for (const amount of [0, 0.13, 0.5, 0.87, 1]) {
+        expect(() => gradeSchema.parse(scaleGrade(stock.grade, amount))).not.toThrow();
+      }
+    }
+  });
+
+  it('is describable at full strength and untouched at zero', () => {
+    expect(describeGrade(scaleGrade(look, 0))).toEqual(['untouched']);
+    expect(describeGrade(scaleGrade(look, 1))).not.toEqual(['untouched']);
   });
 });
