@@ -5,7 +5,7 @@ const {
   withDangerousMod,
   withEntitlementsPlist,
   withXcodeProject,
-} = require('@expo/config-plugins');
+} = require('expo/config-plugins');
 
 /**
  * Adds the WidgetKit extension target, reproducibly.
@@ -31,6 +31,7 @@ const {
 
 const TARGET_NAME = 'ChromawaveWidget';
 const SOURCE_DIR = 'targets/ChromawaveWidget';
+const DEVELOPMENT_TEAM = process.env.CHROMAWAVE_IOS_DEVELOPMENT_TEAM || 'YC5GD8U2GQ';
 
 /**
  * The shared container, and the reason there is one.
@@ -106,11 +107,12 @@ const withWidgetTarget = (config) =>
      */
     writeSupportingFiles(platformRoot, bundleIdentifier);
 
-    // The *target* is what must not be added twice. `expo prebuild` without
-    // `--clean` runs the mods against a project that may already have been
-    // through them, and a second target with the same name builds an app that
-    // fails App Store validation.
-    if (findTarget(project, TARGET_NAME)) return config;
+    // The *target* is what must not be added twice. Build settings still run on
+    // every prebuild so signing/config corrections reach reused native output.
+    if (findTarget(project, TARGET_NAME)) {
+      applyBuildSettings(project, bundleIdentifier, widgetBundleId);
+      return config;
+    }
 
     const target = project.addTarget(TARGET_NAME, 'app_extension', TARGET_NAME, widgetBundleId);
 
@@ -210,10 +212,11 @@ function applyBuildSettings(project, bundleIdentifier, widgetBundleId) {
     settings.SKIP_INSTALL = 'YES';
     settings.CURRENT_PROJECT_VERSION = '1';
     settings.MARKETING_VERSION = '1.0.0';
-    // Signing is left to the build pipeline. EAS manages the extension's profile
-    // from the bundle id; hard-coding a team here would break every other
-    // machine that builds this.
+    // EAS still needs the extension target to declare the Apple team before
+    // archive signing begins. The profile itself is generated from the app
+    // extension declaration in app.json.
     settings.CODE_SIGN_STYLE = 'Automatic';
+    settings.DEVELOPMENT_TEAM = DEVELOPMENT_TEAM;
   }
 }
 

@@ -1,4 +1,4 @@
-const { withPodfile } = require('@expo/config-plugins');
+const { withPodfile } = require('expo/config-plugins');
 
 const TAG = 'chromawave-ios-resource-bundle-signing';
 const BEGIN = `@generated begin ${TAG} - expo prebuild (DO NOT MODIFY)`;

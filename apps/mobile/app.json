@@ -89,7 +89,22 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "d6cc3c4e-e6c7-456b-8a3f-482a23401abc"
+        "projectId": "d6cc3c4e-e6c7-456b-8a3f-482a23401abc",
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "ChromawaveWidget",
+                  "bundleIdentifier": "com.chromawave.app.widget",
+                  "entitlements": {
+                    "com.apple.security.application-groups": ["group.com.chromawave.app"]
+                  }
+                }
+              ]
+            }
+          }
+        }
       }
     },
     "owner": "cuongphan2",
