@@ -1,14 +1,14 @@
 import { makeColor, type Palette } from '@cw/domain';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { useChromaticSurface, usePalettes, useSets } from '@/hooks';
-import { analytics, hapticsService, soundService } from '@/infrastructure/dependencies';
-import { persistPhoto } from '@/lib';
+import { useChromaticSurface } from '@/hooks';
+import { analytics } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers';
 import { useCaptureStore } from '@/store';
 import { Button, EmptyGlyph, Gutter, Screen, ScreenHeader, Text } from '@/ui';
 import { ResultScreen } from './ResultScreen';
 import { TuneScreen } from './TuneScreen';
+import { useCaptureCommit } from './useCaptureCommit';
 
 /**
  * B2 → B3. Owns the pending capture: the result sheet shows it, Tune replaces its
@@ -17,14 +17,12 @@ import { TuneScreen } from './TuneScreen';
  */
 export default function ResultRoute() {
   const router = useRouter();
-  const { save } = usePalettes();
-  const { sets, save: saveSet } = useSets();
   const { t } = usePreferences();
   const pending = useCaptureStore((state) => state.pending);
-  const setId = useCaptureStore((state) => state.pending?.setId ?? null);
   const retune = useCaptureStore((state) => state.retune);
   const discard = useCaptureStore((state) => state.discard);
   const toPalette = useCaptureStore((state) => state.toPalette);
+  const commitCapture = useCaptureCommit();
   const [tuning, setTuning] = useState(false);
 
   // The tune screen edits a Palette, so the pending capture is presented as one.
@@ -42,38 +40,8 @@ export default function ResultRoute() {
 
   const commit = useCallback(
     async (name: string) => {
-      const draft = toPalette(name);
-      if (!draft) return;
-      // The frame is still in a purgeable cache at this point. Saving the record
-      // without moving the file first is how a library ends up full of palettes
-      // whose photos have quietly vanished.
-      const palette = { ...draft, photoUri: persistPhoto(draft.photoUri, draft.id) };
-      await save(palette);
-
-      /**
-       * A capture started from a project belongs to it. Membership is written
-       * here rather than left for the user to do afterwards, because the whole
-       * point of the gap line is that answering it closes the gap — a palette
-       * that silently missed its set would leave the same sentence on screen.
-       */
-      const target = setId ? (sets.find((entry) => entry.id === setId) ?? null) : null;
-      if (target && !target.paletteIds.includes(palette.id)) {
-        try {
-          await saveSet({
-            ...target,
-            paletteIds: [...target.paletteIds, palette.id],
-            updatedAt: new Date().toISOString(),
-          });
-        } catch {
-          // The palette is saved and carries the set id on its own record, so
-          // nothing was lost — only the set's list missed this write.
-        }
-      }
-
-      void hapticsService.fire('paletteSaved');
-      void soundService.play('save');
-      analytics.track('palette_saved', { tuned: palette.tuned, source: palette.source });
-      discard();
+      const palette = await commitCapture(name);
+      if (!palette) return;
       /**
        * Back to the project when there is one: the merged band re-proportioning
        * to include this capture is the result of the action, and landing on the
@@ -84,10 +52,15 @@ export default function ResultRoute() {
        * memory store has never seen — so this is not "finish the record", it is
        * the second half of what the product is for. Backing out of that screen
        * lands on the memory, which is a finished thing either way.
+       *
+       * The set is read off the committed palette rather than the store: the
+       * commit clears the pending capture, and `toPalette` already copied the
+       * id onto `setIds`.
        */
-      router.replace(target ? `/set/${target.id}` : `/pair?id=${palette.id}`);
+      const set = palette.setIds[0];
+      router.replace(set ? `/set/${set}` : `/pair?id=${palette.id}`);
     },
-    [toPalette, save, sets, saveSet, setId, discard, router],
+    [commitCapture, router],
   );
 
   if (!pending || !draft) {
