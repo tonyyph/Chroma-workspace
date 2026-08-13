@@ -26,9 +26,103 @@ import { GRADE_SHADER, GRADE_UNIFORM_ORDER, gradeUniforms } from './gradeShader'
  * Comfortably above the largest card the app draws on a 3x screen, and far below
  * the frame itself: this is a thumbnail with a look, not a second master.
  */
-const LONG_EDGE = 1024;
+export const THUMBNAIL_LONG_EDGE = 1024;
+
+/**
+ * Long edge of an exported copy.
+ *
+ * Not the frame's own size. A 48MP photograph through `Skia.Surface.MakeOffscreen`
+ * is the shortest route to an out-of-memory crash on an older phone, and a crash
+ * while saving is a worse outcome than a ceiling. 4096px prints A3 at 300dpi,
+ * which is past where anyone is taking a phone photograph.
+ */
+export const EXPORT_LONG_EDGE = 4096;
 
 const FOLDER = 'palette-photos';
+
+/**
+ * The size a frame is rendered at, and the scale that gets it there.
+ *
+ * Null for a frame with no area: a zero-dimension surface is not an error worth
+ * throwing about, but it is certainly not something to hand to the GPU.
+ */
+export function targetSize(
+  width: number,
+  height: number,
+  longEdge: number,
+): { width: number; height: number; scale: number } | null {
+  if (width <= 0 || height <= 0) return null;
+  // `min(1, …)` is the no-upscaling rule: a frame already inside the ceiling is
+  // rendered at its own size, because enlarging it invents detail it never had.
+  const scale = Math.min(1, longEdge / Math.max(width, height));
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+    scale,
+  };
+}
+
+/**
+ * Renders a graded copy in memory and returns its PNG bytes, or null.
+ *
+ * The bytes rather than a file, because the two callers want different things
+ * done with them — one writes beside the palette, the other hands them to the
+ * photo library or the share sheet — and a renderer that also decided where
+ * things live would have to be asked twice.
+ */
+export async function renderGraded(
+  sourceUri: string,
+  grade: Grade,
+  longEdge: number,
+): Promise<Uint8Array | null> {
+  try {
+    const image = await decodeImage(sourceUri);
+    if (!image) return null;
+
+    try {
+      const size = targetSize(image.width(), image.height(), longEdge);
+      if (!size) return null;
+
+      const surface = Skia.Surface.MakeOffscreen(size.width, size.height);
+      if (!surface) return null;
+
+      const effect = Skia.RuntimeEffect.Make(GRADE_SHADER);
+      if (!effect) return null;
+
+      const matrix = Skia.Matrix();
+      matrix.scale(size.scale, size.scale);
+      const source = image.makeShaderOptions(
+        TileMode.Clamp,
+        TileMode.Clamp,
+        FilterMode.Linear,
+        MipmapMode.Linear,
+        matrix,
+      );
+
+      const named = gradeUniforms(resolveGrade(grade), size.width, size.height);
+      const flat: number[] = [];
+      for (const name of GRADE_UNIFORM_ORDER) {
+        const value = named[name];
+        if (Array.isArray(value)) flat.push(...value);
+        else flat.push(value as number);
+      }
+
+      const paint = Skia.Paint();
+      paint.setShader(effect.makeShaderWithChildren(flat, [source]));
+
+      const canvas = surface.getCanvas();
+      canvas.drawRect(Skia.XYWHRect(0, 0, size.width, size.height), paint);
+      surface.flush();
+
+      const bytes = surface.makeImageSnapshot().encodeToBytes();
+      return bytes && bytes.length > 0 ? bytes : null;
+    } finally {
+      image.dispose();
+    }
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Writes the graded copy and returns its uri, or null if anything on the way
@@ -43,60 +137,8 @@ export async function bakeGradedThumbnail(
   grade: Grade,
   paletteId: string,
 ): Promise<string | null> {
-  try {
-    const image = await decodeImage(sourceUri);
-    if (!image) return null;
-
-    try {
-      const width = image.width();
-      const height = image.height();
-      if (width <= 0 || height <= 0) return null;
-
-      const scale = Math.min(1, LONG_EDGE / Math.max(width, height));
-      const targetWidth = Math.max(1, Math.round(width * scale));
-      const targetHeight = Math.max(1, Math.round(height * scale));
-
-      const surface = Skia.Surface.MakeOffscreen(targetWidth, targetHeight);
-      if (!surface) return null;
-
-      const effect = Skia.RuntimeEffect.Make(GRADE_SHADER);
-      if (!effect) return null;
-
-      const matrix = Skia.Matrix();
-      matrix.scale(scale, scale);
-      const source = image.makeShaderOptions(
-        TileMode.Clamp,
-        TileMode.Clamp,
-        FilterMode.Linear,
-        MipmapMode.Linear,
-        matrix,
-      );
-
-      const named = gradeUniforms(resolveGrade(grade), targetWidth, targetHeight);
-      const flat: number[] = [];
-      for (const name of GRADE_UNIFORM_ORDER) {
-        const value = named[name];
-        if (Array.isArray(value)) flat.push(...value);
-        else flat.push(value as number);
-      }
-
-      const paint = Skia.Paint();
-      paint.setShader(effect.makeShaderWithChildren(flat, [source]));
-
-      const canvas = surface.getCanvas();
-      canvas.drawRect(Skia.XYWHRect(0, 0, targetWidth, targetHeight), paint);
-      surface.flush();
-
-      const bytes = surface.makeImageSnapshot().encodeToBytes();
-      if (!bytes || bytes.length === 0) return null;
-
-      return write(bytes, paletteId);
-    } finally {
-      image.dispose();
-    }
-  } catch {
-    return null;
-  }
+  const bytes = await renderGraded(sourceUri, grade, THUMBNAIL_LONG_EDGE);
+  return bytes ? write(bytes, paletteId) : null;
 }
 
 /**
