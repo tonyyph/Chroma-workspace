@@ -243,5 +243,5 @@ const styles = StyleSheet.create({
   shimmerRoot: { overflow: 'hidden', position: 'relative' },
   shimmerBand: { position: 'absolute', top: 0, bottom: 0 },
   pulseRow: { flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center' },
-  pulseDot: { width: 34, height: 34, borderRadius: 17 },
+  pulseDot: { width: 20, height: 20, borderRadius: 17 },
 });

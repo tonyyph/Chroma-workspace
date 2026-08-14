@@ -366,6 +366,7 @@ export function Screen({
         }
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
+        style={styles.screen}
       >
         {children}
       </Animated.ScrollView>

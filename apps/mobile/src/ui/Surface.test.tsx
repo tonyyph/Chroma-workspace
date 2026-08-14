@@ -1,9 +1,10 @@
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
 import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
 import { PreferencesProvider } from '@/providers';
 import { Pressable } from './Pressable';
-import { CardGroup } from './Surface';
+import { CardGroup, Screen } from './Surface';
 import { Text } from './Text';
 
 /**
@@ -91,4 +92,21 @@ it('keeps a row bound to its own handler when an earlier row disappears', async 
   await user.press(screen.getByLabelText('Second'));
 
   expect(onSecond).toHaveBeenCalledTimes(1);
+});
+
+it('makes the scroll gesture area fill the whole screen', async () => {
+  const view = render(
+    <SafeAreaProvider initialMetrics={metrics}>
+      <PreferencesProvider>
+        <Screen>
+          <Text>Top</Text>
+        </Screen>
+      </PreferencesProvider>
+    </SafeAreaProvider>,
+  );
+
+  await waitFor(() => expect(screen.getByText('Top')).toBeTruthy());
+
+  const scrollView = view.UNSAFE_getByProps({ keyboardShouldPersistTaps: 'handled' });
+  expect(StyleSheet.flatten(scrollView.props.style)).toMatchObject({ flex: 1 });
 });

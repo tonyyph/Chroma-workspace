@@ -7,15 +7,13 @@ import { EntitlementProvider, PreferencesProvider } from '@/providers';
 /**
  * Leaving the sheet.
  *
- * The source sheet is presented as a form sheet sized to its own contents, and
- * it used to `replace` itself with whatever it opened. Replacing hands the next
- * screen that same container: the grade rendered *inside* the sheet, clipped at
- * the height the detent had measured, with its nav bar under the status bar —
- * a sheet reports no top inset, because it believes something else already
- * covers that strip.
+ * The source sheet used to be a native form sheet sized to its own contents.
+ * Opening the grade from there handed the next screen that same fit-to-contents
+ * container: the grade rendered *inside* the sheet, clipped at the sheet's
+ * height, with its nav bar under the status bar.
  *
- * Dismissing first is also what the flow means. A question should not be
- * sitting behind its own answer.
+ * The route is now a full-screen transparent modal that draws its own bottom
+ * sheet, and it exits with one dismiss-to-destination stack operation.
  */
 
 const mockRouter = {
@@ -23,6 +21,7 @@ const mockRouter = {
   replace: jest.fn(),
   back: jest.fn(),
   dismiss: jest.fn(),
+  dismissTo: jest.fn(),
   canDismiss: jest.fn(() => true),
   navigate: jest.fn(),
 };
@@ -72,27 +71,26 @@ const draw = () =>
     </SafeAreaProvider>,
   );
 
-it('closes itself before opening the grade, and never replaces into its own sheet', async () => {
+it('dismisses itself to the grade, and never opens the grade inside its own sheet', async () => {
   const user = userEvent.setup();
   draw();
 
   await waitFor(() => expect(screen.getByLabelText('Frame 01')).toBeTruthy());
   await user.press(screen.getByLabelText('Frame 01'));
 
-  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith('/tools/grade?id=palette-1'));
+  await waitFor(() =>
+    expect(mockRouter.dismissTo).toHaveBeenCalledWith('/tools/grade?id=palette-1'),
+  );
 
   /**
-   * The order is the whole fix.
+   * The operation is the whole fix.
    *
-   * A push issued while the sheet is still presented is presented *inside* it,
-   * so closing has to come first. Jest cannot see the native dismissal this
-   * waits on — `runAfterInteractions` fires at once when nothing is animating —
-   * but it can see which call was made first, and that is the contract.
+   * A push issued from a modal can be presented *inside* it. `dismissTo` asks
+   * the stack to leave the source route and land on the destination in one
+   * operation, so no destination inherits the source presentation.
    */
-  expect(mockRouter.back).toHaveBeenCalledTimes(1);
-  expect(mockRouter.back.mock.invocationCallOrder[0]).toBeLessThan(
-    mockRouter.push.mock.invocationCallOrder[0]!,
-  );
+  expect(mockRouter.back).not.toHaveBeenCalled();
+  expect(mockRouter.push).not.toHaveBeenCalled();
   // The original regression: `replace` is what put the grade inside the sheet.
   expect(mockRouter.replace).not.toHaveBeenCalled();
 });
@@ -106,10 +104,9 @@ it('leaves for the camera the same way it leaves for the grade', async () => {
 
   // The viewfinder is a full screen too, and inherited the same container when
   // the sheet opened it without closing first.
-  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith('/capture'));
-  expect(mockRouter.back.mock.invocationCallOrder[0]).toBeLessThan(
-    mockRouter.push.mock.invocationCallOrder[0]!,
-  );
+  await waitFor(() => expect(mockRouter.dismissTo).toHaveBeenCalledWith('/capture'));
+  expect(mockRouter.back).not.toHaveBeenCalled();
+  expect(mockRouter.push).not.toHaveBeenCalled();
   expect(mockRouter.replace).not.toHaveBeenCalled();
 });
 
@@ -126,6 +123,7 @@ it('stays put and says so when the photograph does not become anything', async (
   await waitFor(() => expect(screen.getByText('Too little colour to work with')).toBeTruthy());
   expect(mockRouter.back).not.toHaveBeenCalled();
   expect(mockRouter.push).not.toHaveBeenCalled();
+  expect(mockRouter.dismissTo).not.toHaveBeenCalled();
 });
 
 it('opens scan the same way, so no exit can regress on its own', async () => {
@@ -135,8 +133,7 @@ it('opens scan the same way, so no exit can regress on its own', async () => {
   await waitFor(() => expect(screen.getByLabelText('SCAN')).toBeTruthy());
   await user.press(screen.getByLabelText('SCAN'));
 
-  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith('/tools/scan'));
-  expect(mockRouter.back.mock.invocationCallOrder[0]).toBeLessThan(
-    mockRouter.push.mock.invocationCallOrder[0]!,
-  );
+  await waitFor(() => expect(mockRouter.dismissTo).toHaveBeenCalledWith('/tools/scan'));
+  expect(mockRouter.back).not.toHaveBeenCalled();
+  expect(mockRouter.push).not.toHaveBeenCalled();
 });

@@ -131,24 +131,20 @@ function AppNavigator() {
         <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
         <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
         {/*
-          The door — a sheet the height of its own contents.
+          The door — a bottom sheet drawn by the route, not by native
+          `formSheet`.
 
-          `formSheet` with `fitToContents` rather than a full-screen modal. As a
-          modal it filled the display and left the bottom 45% of the screen
-          empty, because four rows and a strip are not a screenful; the sheet
-          also brings the grabber and the drag-to-dismiss that a question
-          deserves and a place does not.
-
-          It still leaves by `replace`, so the stack never holds a question that
-          has already been answered.
+          Native `formSheet` measures itself to fit the source controls. Opening
+          the grade from that presentation can hand the next screen the same
+          fit-to-contents container, clipping it to the sheet's height. A
+          transparent modal gives the route a full-screen presentation context,
+          and the route draws the compact sheet at the bottom itself.
         */}
         <Stack.Screen
           name="source"
           options={{
-            presentation: 'formSheet',
-            sheetAllowedDetents: 'fitToContents',
-            sheetGrabberVisible: true,
-            sheetCornerRadius: 28,
+            animation: 'fade',
+            presentation: 'transparentModal',
           }}
         />
         <Stack.Screen

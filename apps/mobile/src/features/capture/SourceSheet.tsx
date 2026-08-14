@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePreferences, useSkin } from '@/providers';
 import {
   BandSweepCanvas,
@@ -11,6 +12,7 @@ import {
   LiveReadPulse,
   Meta,
   Pressable,
+  SheetGrabber,
   Text,
   useStyles,
 } from '@/ui';
@@ -66,6 +68,7 @@ export function SourceSheet({
 }) {
   const styles = useStyles(makeStyles);
   const skin = useSkin();
+  const insets = useSafeAreaInsets();
   const { t } = usePreferences();
   const { state, photos, ask, chooseMore } = useRecentPhotos();
   const [working, setWorking] = useState(false);
@@ -106,7 +109,8 @@ export function SourceSheet({
   const face = granted ? photos[0]?.uri : undefined;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, space.lg) }]}>
+      <SheetGrabber />
       <View style={styles.head}>
         <Text style={styles.wordmark} variant="section">
           {t('source.input')}
@@ -154,13 +158,6 @@ export function SourceSheet({
           {t('source.recent')}
         </Text>
         {state === 'unasked' ? (
-          /**
-           * The ask is a readout, not a dashed square in an empty row.
-           *
-           * iOS asks once, so it is raised from a tap rather than on open: a
-           * dialog that appears because a sheet opened is one the user cannot
-           * connect to anything they did, and they refuse it on that basis.
-           */
           <Pressable
             accessibilityLabel={t('source.showRecent')}
             accessibilityRole="button"
@@ -185,8 +182,6 @@ export function SourceSheet({
         <ScrollView
           contentContainerStyle={styles.strip}
           horizontal
-          // The channels below are reachable while a keyboard is up elsewhere in
-          // the stack; without this the first tap only dismisses it.
           keyboardShouldPersistTaps="handled"
           showsHorizontalScrollIndicator={false}
         >
@@ -201,13 +196,7 @@ export function SourceSheet({
           ))}
         </ScrollView>
       ) : (
-        /* The strip keeps its height in every state. A row that appears when a
-           permission lands would shove the channels down under the thumb that
-           was already reaching for them. */
         <View style={styles.stripEmpty}>
-          {/* A sentence, so it is set as one. Mono caps on wide tracking is a
-              legend for a control, not a line of prose — run a clause through
-              it and it becomes the widest thing on the screen. */}
           <Text tone="quaternary" variant="body">
             {t(`source.strip.${state}`)}
           </Text>
@@ -261,9 +250,7 @@ function Channel({
       accessibilityLabel={label}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
-      // Guarded inside rather than by withholding the handler: a channel that
-      // keeps its `onPress` while a read is running still announces itself as
-      // the button it is, and `accessibilityState` is what says it is busy.
+
       onPress={() => {
         if (!disabled) onPress();
       }}
@@ -278,7 +265,9 @@ function Channel({
             testID="channel-face"
           />
         ) : null}
-        {signature === 'sweep' ? <BandSweepCanvas height={SIGNATURE} width={SIGNATURE} /> : null}
+        {signature === 'sweep' ? (
+          <BandSweepCanvas height={SIGNATURE} width={SIGNATURE + 200} />
+        ) : null}
         {signature === 'pulse' ? <LiveReadPulse /> : null}
         {!face && !signature ? <Icon color={skin.ui.text.tertiary} name="library" /> : null}
         <Text style={styles.index} tone="quaternary" variant="monoSmall">
@@ -330,9 +319,15 @@ const FRAME = 72;
 
 const makeStyles = (skin: Skin) =>
   StyleSheet.create({
-    // No `flex: 1`. The sheet is sized to fit these contents, so a root that
-    // grew to fill the display would defeat the detent that measures it.
-    root: { backgroundColor: skin.ui.bg.base, paddingBottom: space.lg },
+    // No `flex: 1`. The route owns the full-screen modal; this view stays the
+    // compact bottom sheet inside it.
+    root: {
+      backgroundColor: skin.ui.bg.base,
+      borderTopLeftRadius: skin.round.sheet,
+      borderTopRightRadius: skin.round.sheet,
+      overflow: 'hidden',
+      paddingTop: space.cardGap,
+    },
     head: {
       flexDirection: 'row',
       alignItems: 'center',
