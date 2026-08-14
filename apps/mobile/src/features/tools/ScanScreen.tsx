@@ -10,6 +10,7 @@ import {
   useCameraPermission,
   usePhotoOutput,
 } from 'react-native-vision-camera';
+import { PermissionGate } from '@/features/capture/PermissionGate';
 import { usePhotoRead } from '@/hooks';
 import { analytics, hapticsService } from '@/infrastructure/dependencies';
 import { usePreferences } from '@/providers';
@@ -53,7 +54,7 @@ export function ScanScreen({
   const { t } = usePreferences();
   const [pins, setPins] = useState<readonly string[]>([]);
   const [pinFailed, setPinFailed] = useState(false);
-  const { hasPermission } = useCameraPermission();
+  const { hasPermission, requestPermission, canRequestPermission } = useCameraPermission();
   const device = useCameraDevice('back');
   const photoOutput = usePhotoOutput(PHOTO_OUTPUT);
   /**
@@ -69,6 +70,22 @@ export function ScanScreen({
   const { read, colors, reading } = usePhotoRead();
 
   const dominant = colors.find((color) => color.role === 'dominant') ?? colors[0];
+
+  /**
+   * Scan needs the camera as much as the viewfinder does, and used to say so
+   * with a line of grey text and no way to act on it — the screen simply sat
+   * there, permanently useless, with a pin button over a black rectangle. The
+   * viewfinder's gate is the same question, so it asks it the same way.
+   */
+  if (!hasPermission) {
+    return (
+      <PermissionGate
+        canRequest={canRequestPermission}
+        onCancel={onExit}
+        onRequest={() => void requestPermission()}
+      />
+    );
+  }
 
   /**
    * Each tap grabs a low-resolution frame and pins its dominant colour. A live
@@ -109,7 +126,7 @@ export function ScanScreen({
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {device && hasPermission ? (
+      {device ? (
         <Camera
           device={device}
           isActive={focused}
@@ -119,7 +136,7 @@ export function ScanScreen({
       ) : (
         <View style={styles.sceneLabel}>
           <Text tone="quaternary" variant="chip">
-            {t(hasPermission ? 'capture.noDevice' : 'capture.cameraNeeded')}
+            {t('capture.noDevice')}
           </Text>
         </View>
       )}

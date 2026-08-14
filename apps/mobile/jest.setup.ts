@@ -141,12 +141,14 @@ jest.mock('react-native-vision-camera', () => {
     Camera: ({ children }: { children?: unknown }) =>
       React.createElement('VisionCamera', null, children),
     useCameraDevice: () => ({ id: 'mock-back', position: 'back' }),
-    useCameraPermission: () => ({
+    // A `jest.fn`, not a plain arrow: the permission gates are a real branch of
+    // these screens, and a test that wants to see one has to be able to say no.
+    useCameraPermission: jest.fn(() => ({
       hasPermission: true,
       canRequestPermission: true,
       requestPermission: jest.fn(async () => true),
       status: 'authorized',
-    }),
+    })),
     // The options are recorded, not ignored: which container format a screen
     // asks for decides whether the frame can be decoded at all, and that is
     // asserted in `photoContainerFormat.test.tsx`.

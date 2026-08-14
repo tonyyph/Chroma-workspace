@@ -47,15 +47,13 @@ it('starts unasked, and asks nobody', async () => {
 });
 
 it('asks only when told to, and loads the strip on a yes', async () => {
-  jest
-    .mocked(MediaLibrary.requestPermissionsAsync)
-    .mockResolvedValue(
-      answer({
-        granted: true,
-        status: MediaLibrary.PermissionStatus.GRANTED,
-        accessPrivileges: 'all',
-      }),
-    );
+  jest.mocked(MediaLibrary.requestPermissionsAsync).mockResolvedValue(
+    answer({
+      granted: true,
+      status: MediaLibrary.PermissionStatus.GRANTED,
+      accessPrivileges: 'all',
+    }),
+  );
 
   const { result } = renderHook(() => useRecentPhotos(12));
   await waitFor(() => expect(result.current.state).toBe('unasked'));
@@ -73,15 +71,13 @@ it('asks only when told to, and loads the strip on a yes', async () => {
 });
 
 it('reports limited access as its own state, not as granted', async () => {
-  jest
-    .mocked(MediaLibrary.getPermissionsAsync)
-    .mockResolvedValue(
-      answer({
-        granted: true,
-        status: MediaLibrary.PermissionStatus.GRANTED,
-        accessPrivileges: 'limited',
-      }),
-    );
+  jest.mocked(MediaLibrary.getPermissionsAsync).mockResolvedValue(
+    answer({
+      granted: true,
+      status: MediaLibrary.PermissionStatus.GRANTED,
+      accessPrivileges: 'limited',
+    }),
+  );
 
   const { result } = renderHook(() => useRecentPhotos());
 
@@ -92,15 +88,13 @@ it('reports limited access as its own state, not as granted', async () => {
 });
 
 it('reloads the strip after the user picks more photos', async () => {
-  jest
-    .mocked(MediaLibrary.getPermissionsAsync)
-    .mockResolvedValue(
-      answer({
-        granted: true,
-        status: MediaLibrary.PermissionStatus.GRANTED,
-        accessPrivileges: 'limited',
-      }),
-    );
+  jest.mocked(MediaLibrary.getPermissionsAsync).mockResolvedValue(
+    answer({
+      granted: true,
+      status: MediaLibrary.PermissionStatus.GRANTED,
+      accessPrivileges: 'limited',
+    }),
+  );
 
   const { result } = renderHook(() => useRecentPhotos());
   await waitFor(() => expect(result.current.state).toBe('limited'));
@@ -156,15 +150,13 @@ it('reports an unavailable library rather than an empty one', async () => {
 });
 
 it('survives a library that throws while listing', async () => {
-  jest
-    .mocked(MediaLibrary.getPermissionsAsync)
-    .mockResolvedValue(
-      answer({
-        granted: true,
-        status: MediaLibrary.PermissionStatus.GRANTED,
-        accessPrivileges: 'all',
-      }),
-    );
+  jest.mocked(MediaLibrary.getPermissionsAsync).mockResolvedValue(
+    answer({
+      granted: true,
+      status: MediaLibrary.PermissionStatus.GRANTED,
+      accessPrivileges: 'all',
+    }),
+  );
   jest.mocked(MediaLibrary.getAssetsAsync).mockRejectedValue(new Error('nope'));
 
   const { result } = renderHook(() => useRecentPhotos());

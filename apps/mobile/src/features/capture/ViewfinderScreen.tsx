@@ -18,12 +18,25 @@ import { LiveReadPanel } from './LiveReadPanel';
 import { PermissionGate } from './PermissionGate';
 import { useCaptureSession } from './useCaptureSession';
 
-/** The four capture paths, each with its own message key. */
+/**
+ * The three things a camera can be, and where each one lives.
+ *
+ * **These are modes, which is why they `replace`.** There used to be four, and
+ * selecting one both set local state and *pushed* a route — so returning from
+ * PHOTO left the underline sitting on PHOTO while the screen showed LIVE, and
+ * the camera underneath kept running. PHOTO is gone entirely: choosing a
+ * photograph belongs to the source sheet, which is now the way in and does not
+ * need a camera on screen to offer it.
+ *
+ * Replacing rather than pushing is the whole of the fix. There is no state to
+ * keep in sync because the route *is* the state, nothing stacks, and Back
+ * returns to wherever the camera was opened from rather than to a mode the user
+ * already left.
+ */
 const MODES = [
-  { key: 'live', labelKey: 'capture.mode.live' },
-  { key: 'studio', labelKey: 'studio.mode' },
-  { key: 'photo', labelKey: 'capture.mode.photo' },
-  { key: 'scan', labelKey: 'capture.mode.scan' },
+  { key: 'live', labelKey: 'capture.mode.live', route: '/capture' },
+  { key: 'studio', labelKey: 'studio.mode', route: '/capture/studio' },
+  { key: 'scan', labelKey: 'capture.mode.scan', route: '/tools/scan' },
 ] as const;
 
 type Mode = (typeof MODES)[number]['key'];
@@ -85,7 +98,6 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
    */
   const focused = useIsFocused();
 
-  const [mode, setMode] = useState<Mode>('live');
   const [flash, setFlash] = useState<Flash>('off');
   const [ratioIndex, setRatioIndex] = useState(0);
   const ratio = RATIOS[ratioIndex] ?? RATIOS[0];
@@ -94,17 +106,21 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
     useCaptureSession({ photoOutput, flash, setId });
 
   /**
-   * Each mode is a different capture path, so selecting one routes to it. LIVE
-   * is this screen, which is why it alone stays put.
+   * The mode this screen *is* — read from the route rather than held in state,
+   * which is what stops the row from claiming one thing while showing another.
    */
+  const mode: Mode = 'live';
+
   const selectMode = useCallback(
     (next: Mode) => {
-      setMode(next);
-      if (next === 'studio') router.push('/capture/studio');
-      if (next === 'photo') router.push('/tools/import');
-      if (next === 'scan') router.push('/tools/scan');
+      if (next === mode) return;
+      const target = MODES.find((entry) => entry.key === next);
+      // `replace`: a mode is a different camera, not a screen on top of this
+      // one. Pushing left the previous session running and put a mode the user
+      // had already left behind the back button.
+      if (target) router.replace(target.route);
     },
-    [router],
+    [mode, router],
   );
 
   if (!hasPermission) {
@@ -200,18 +216,11 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
             swatchStyle={sequence.swatchStyle}
           />
 
+          {/* One shutter, centred and alone. The IMPORT and SCAN buttons that
+              used to flank it were the mode row again in a second shape —
+              four controls, two destinations — and IMPORT no longer belongs on
+              a camera screen at all now that the source sheet is the way in. */}
           <View style={styles.shutterRow}>
-            <Pressable
-              accessibilityLabel={t('capture.import')}
-              accessibilityRole="button"
-              onPress={() => router.push('/tools/import')}
-              style={styles.sideButton}
-            >
-              <Text tone="secondary" variant="monoSmall">
-                {t('capture.import')}
-              </Text>
-            </Pressable>
-
             <Animated.View style={sequence.shutterStyle}>
               <Pressable
                 accessibilityHint={t('capture.shutterHint')}
@@ -224,17 +233,6 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
                 <BrandMark size={64} />
               </Pressable>
             </Animated.View>
-
-            <Pressable
-              accessibilityLabel={t('capture.scan')}
-              accessibilityRole="button"
-              onPress={() => router.push('/tools/scan')}
-              style={styles.sideButton}
-            >
-              <Text tone="secondary" variant="monoSmall">
-                {t('capture.scan')}
-              </Text>
-            </Pressable>
           </View>
 
           <View style={styles.modes}>
@@ -310,22 +308,7 @@ const makeStyles = (skin: Skin) =>
     },
     reticleDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFFFFF' },
     bottom: { paddingHorizontal: space.gutter, gap: space.cardGap },
-    shutterRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 6,
-    },
-    sideButton: {
-      width: 56,
-      height: 56,
-      borderRadius: skin.round.control,
-      backgroundColor: skin.ui.scrim.control,
-      borderWidth: 1,
-      borderColor: skin.ui.border.control,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
+    shutterRow: { alignItems: 'center' },
     shutter: {
       width: size.shutter,
       height: size.shutter,

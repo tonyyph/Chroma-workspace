@@ -68,15 +68,13 @@ beforeEach(() => {
 });
 
 const granted = () =>
-  jest
-    .mocked(MediaLibrary.getPermissionsAsync)
-    .mockResolvedValue(
-      permission({
-        granted: true,
-        status: MediaLibrary.PermissionStatus.GRANTED,
-        accessPrivileges: 'all',
-      }),
-    );
+  jest.mocked(MediaLibrary.getPermissionsAsync).mockResolvedValue(
+    permission({
+      granted: true,
+      status: MediaLibrary.PermissionStatus.GRANTED,
+      accessPrivileges: 'all',
+    }),
+  );
 
 it('offers the grant on a tile rather than raising it on open', async () => {
   draw();
@@ -97,15 +95,13 @@ it('sends a tapped photo to the importer', async () => {
 });
 
 it('offers a way to share more photos only under limited access', async () => {
-  jest
-    .mocked(MediaLibrary.getPermissionsAsync)
-    .mockResolvedValue(
-      permission({
-        granted: true,
-        status: MediaLibrary.PermissionStatus.GRANTED,
-        accessPrivileges: 'limited',
-      }),
-    );
+  jest.mocked(MediaLibrary.getPermissionsAsync).mockResolvedValue(
+    permission({
+      granted: true,
+      status: MediaLibrary.PermissionStatus.GRANTED,
+      accessPrivileges: 'limited',
+    }),
+  );
   draw();
 
   await waitFor(() => expect(screen.getByLabelText('Choose more')).toBeTruthy());
@@ -120,15 +116,13 @@ it('hides the choose-more affordance when access is already complete', async () 
 });
 
 it('keeps every row working when the photo library is refused outright', async () => {
-  jest
-    .mocked(MediaLibrary.getPermissionsAsync)
-    .mockResolvedValue(
-      permission({
-        granted: false,
-        canAskAgain: false,
-        status: MediaLibrary.PermissionStatus.DENIED,
-      }),
-    );
+  jest.mocked(MediaLibrary.getPermissionsAsync).mockResolvedValue(
+    permission({
+      granted: false,
+      canAskAgain: false,
+      status: MediaLibrary.PermissionStatus.DENIED,
+    }),
+  );
   const user = userEvent.setup();
   const props = draw();
 
