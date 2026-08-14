@@ -47,7 +47,6 @@ const metrics: Metrics = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockRouter.canDismiss.mockReturnValue(true);
   mockImport.mockResolvedValue({ ok: true, palette: { id: 'palette-1' } });
   jest.mocked(MediaLibrary.isAvailableAsync).mockResolvedValue(true);
   jest.mocked(MediaLibrary.getPermissionsAsync).mockResolvedValue({
@@ -73,7 +72,7 @@ const draw = () =>
     </SafeAreaProvider>,
   );
 
-it('dismisses itself before opening the grade, rather than replacing into its own sheet', async () => {
+it('closes itself before opening the grade, and never replaces into its own sheet', async () => {
   const user = userEvent.setup();
   draw();
 
@@ -81,8 +80,20 @@ it('dismisses itself before opening the grade, rather than replacing into its ow
   await user.press(screen.getByLabelText('Frame 01'));
 
   await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith('/tools/grade?id=palette-1'));
-  expect(mockRouter.dismiss).toHaveBeenCalledTimes(1);
-  // The regression: `replace` is what put the grade inside the sheet.
+
+  /**
+   * The order is the whole fix.
+   *
+   * A push issued while the sheet is still presented is presented *inside* it,
+   * so closing has to come first. Jest cannot see the native dismissal this
+   * waits on — `runAfterInteractions` fires at once when nothing is animating —
+   * but it can see which call was made first, and that is the contract.
+   */
+  expect(mockRouter.back).toHaveBeenCalledTimes(1);
+  expect(mockRouter.back.mock.invocationCallOrder[0]).toBeLessThan(
+    mockRouter.push.mock.invocationCallOrder[0]!,
+  );
+  // The original regression: `replace` is what put the grade inside the sheet.
   expect(mockRouter.replace).not.toHaveBeenCalled();
 });
 
@@ -93,10 +104,12 @@ it('leaves for the camera the same way it leaves for the grade', async () => {
   await waitFor(() => expect(screen.getByLabelText('CAMERA')).toBeTruthy());
   await user.press(screen.getByLabelText('CAMERA'));
 
-  // The viewfinder is a full screen too, and inherited the same clipped
-  // container when the sheet replaced itself with it.
-  expect(mockRouter.dismiss).toHaveBeenCalledTimes(1);
-  expect(mockRouter.push).toHaveBeenCalledWith('/capture');
+  // The viewfinder is a full screen too, and inherited the same container when
+  // the sheet opened it without closing first.
+  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith('/capture'));
+  expect(mockRouter.back.mock.invocationCallOrder[0]).toBeLessThan(
+    mockRouter.push.mock.invocationCallOrder[0]!,
+  );
   expect(mockRouter.replace).not.toHaveBeenCalled();
 });
 
@@ -111,19 +124,19 @@ it('stays put and says so when the photograph does not become anything', async (
   // Nothing was opened, so nothing should have been dismissed either — the
   // failure has to land on the sheet that is still up to report it.
   await waitFor(() => expect(screen.getByText('Too little colour to work with')).toBeTruthy());
-  expect(mockRouter.dismiss).not.toHaveBeenCalled();
+  expect(mockRouter.back).not.toHaveBeenCalled();
   expect(mockRouter.push).not.toHaveBeenCalled();
 });
 
-it('still opens the target when there is no sheet to dismiss', async () => {
-  // A deep link can land straight on this route with nothing beneath it.
-  mockRouter.canDismiss.mockReturnValue(false);
+it('opens scan the same way, so no exit can regress on its own', async () => {
   const user = userEvent.setup();
   draw();
 
   await waitFor(() => expect(screen.getByLabelText('SCAN')).toBeTruthy());
   await user.press(screen.getByLabelText('SCAN'));
 
-  expect(mockRouter.dismiss).not.toHaveBeenCalled();
-  expect(mockRouter.push).toHaveBeenCalledWith('/tools/scan');
+  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith('/tools/scan'));
+  expect(mockRouter.back.mock.invocationCallOrder[0]).toBeLessThan(
+    mockRouter.push.mock.invocationCallOrder[0]!,
+  );
 });

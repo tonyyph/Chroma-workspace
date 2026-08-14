@@ -1,5 +1,6 @@
 import { useRouter, type Href } from 'expo-router';
 import { useCallback } from 'react';
+import { InteractionManager } from 'react-native';
 import { ErrorBoundary } from '@/components';
 import { SourceSheet } from '@/features/capture/SourceSheet';
 import { useImportPhoto } from '@/features/capture/useImportPhoto';
@@ -18,22 +19,29 @@ export default function SourceRoute() {
   const importPhoto = useImportPhoto();
 
   /**
-   * Close the sheet, *then* open what it answered with.
+   * Close the sheet, let it finish closing, *then* open what it answered with.
    *
-   * **Not `replace`.** This route is presented as a form sheet sized to its own
-   * contents, and replacing it hands the next screen that same container: the
-   * grade opened inside the sheet, clipped at whatever height the detent had
-   * measured, with its nav bar under the status bar because a sheet reports no
-   * top inset — it believes something else is already covering that strip.
+   * **On iOS a modal is a presentation context, and anything opened from inside
+   * one is presented inside it.** This route is a form sheet sized to its own
+   * contents, so the grade opened as a child of that sheet: clipped at whatever
+   * height the detent had measured for three channels and a filmstrip, and with
+   * its nav bar under the status bar — a sheet reports no top inset, because it
+   * believes something else already covers that strip. `Screen` applies
+   * `insets.top` faithfully; there was nothing to apply.
    *
-   * Dismissing first is also what the flow means. The sheet asks a question;
-   * the answer belongs on a screen of its own, and the question should not be
-   * sitting behind it afterwards.
+   * `replace` had the same fault, and so did dismissing and pushing in one tick:
+   * the dismissal is a native animation, and a push issued before it lands still
+   * finds the sheet presented and attaches to it. `runAfterInteractions` is the
+   * wait for that animation — not a timeout guessing at its duration.
+   *
+   * Sequencing it is also what the flow means. The sheet asks a question; the
+   * answer belongs on a screen of its own, and the question should not still be
+   * open behind it.
    */
   const leaveFor = useCallback(
     (href: Href) => {
-      if (router.canDismiss()) router.dismiss();
-      router.push(href);
+      router.back();
+      InteractionManager.runAfterInteractions(() => router.push(href));
     },
     [router],
   );
