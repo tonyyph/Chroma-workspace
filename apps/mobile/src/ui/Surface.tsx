@@ -1,6 +1,6 @@
 import { size, space, type ElevationLevel, type Skin } from '@cw/tokens';
 import { BlurView } from 'expo-blur';
-import { useState } from 'react';
+import { isValidElement, useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 import Animated, {
   useAnimatedScrollHandler,
@@ -245,8 +245,21 @@ export function CardGroup({
           />
         ) : null}
         {rows.map((row, index) => (
+          /**
+           * Keyed by the row's own key where it has one, not by position.
+           *
+           * A group whose membership changes — a row that appears only while an
+           * offer is still open — shifts every later row up an index, and
+           * position keys make React reuse each wrapper for a different row.
+           * The observed result was a row rendering one label while pressing to
+           * another row's handler: tapping "All photos" opened the camera.
+           *
+           * Callers therefore pass a `key` on any row they render
+           * conditionally. Position remains the fallback for fixed lists, where
+           * it is what React would have used anyway.
+           */
           <View
-            key={index}
+            key={(isValidElement(row) && row.key) || index}
             style={[
               styles.groupRow,
               index < rows.length - 1 && {

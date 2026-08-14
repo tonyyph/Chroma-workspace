@@ -5,12 +5,11 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { usePreferences, useSkin } from '@/providers';
 import {
-  Card,
+  CardGroup,
   Icon,
   InlineError,
   Meta,
   Pressable,
-  Screen,
   Text,
   useStyles,
   type IconName,
@@ -41,9 +40,11 @@ const COPY = {
  * entirely. This screen is the door instead, and the camera is one of the
  * answers rather than the question.
  *
- * The commonest job is two taps: open this, touch a photograph. Nothing is
- * asked for and no system sheet appears. The camera costs one tap more than it
- * used to, which is the price of it being one job among several.
+ * **Laid out as a sheet the height of its contents**, and the rows use the same
+ * grouped-card shape as the palette workbench and the settings deck. The first
+ * version was a full-screen modal holding three floating cards with mono
+ * upper-case subtitles — which left the bottom half of the display empty and
+ * made the *subtitle* the widest thing in every row.
  */
 export function SourceSheet({
   onPhoto,
@@ -68,7 +69,7 @@ export function SourceSheet({
     async (uri: string) => {
       setFailure(null);
       setWorking(true);
-      // The screen stays up while the read runs. Routing first and reporting
+      // The sheet stays up while the read runs. Routing first and reporting
       // afterwards would put the failure on a screen the photo never reached.
       setFailure(await onPhoto(uri));
       setWorking(false);
@@ -94,10 +95,13 @@ export function SourceSheet({
     if (chosen) await take(chosen);
   }, [take]);
 
+  /** Only when there is something to draw does the strip earn its heading. */
+  const showStrip = state === 'granted' || state === 'limited';
+
   return (
-    <Screen>
+    <View style={styles.root}>
       <View style={styles.head}>
-        <Text variant="headline">{t('source.title')}</Text>
+        <Text variant="title">{t('source.title')}</Text>
         <Pressable
           accessibilityLabel={t('source.cancel')}
           accessibilityRole="button"
@@ -108,7 +112,7 @@ export function SourceSheet({
         </Pressable>
       </View>
 
-      {state === 'unavailable' ? null : (
+      {showStrip ? (
         <>
           <View style={styles.stripHead}>
             <Text tone="tertiary" variant="eyebrow">
@@ -120,7 +124,7 @@ export function SourceSheet({
                 accessibilityRole="button"
                 onPress={chooseMore}
               >
-                <Meta>{t('source.chooseMore')}</Meta>
+                <Meta tone="link">{t('source.chooseMore')}</Meta>
               </Pressable>
             ) : null}
           </View>
@@ -133,25 +137,6 @@ export function SourceSheet({
             keyboardShouldPersistTaps="handled"
             showsHorizontalScrollIndicator={false}
           >
-            {state === 'unasked' ? (
-              /**
-               * The ask lives on a tile, not in an effect.
-               *
-               * iOS asks once. A dialog raised because a sheet opened is one the
-               * user cannot connect to anything they did, and refusing it is
-               * permanent — so the question is attached to the thing it buys.
-               */
-              <Pressable
-                accessibilityLabel={t('source.showRecent')}
-                accessibilityRole="button"
-                onPress={ask}
-                style={[styles.tile, styles.tileAsk]}
-              >
-                <Icon name="photos" scale="control" />
-                <Meta style={styles.askCopy}>{t('source.showRecent')}</Meta>
-              </Pressable>
-            ) : null}
-
             {photos.map((photo) => (
               <Pressable
                 accessibilityLabel={t('source.photo')}
@@ -166,64 +151,85 @@ export function SourceSheet({
             ))}
           </ScrollView>
         </>
-      )}
+      ) : null}
+
+      <View style={styles.rows}>
+        <CardGroup>
+          {/*
+            The offer to show recent photos is a row, not a lonely dashed
+            square above an empty heading. It buys the strip, so it sits with
+            the other ways in — and it only exists while it can still be taken.
+          */}
+          {state === 'unasked' ? (
+            <SourceRow
+              disabled={working}
+              icon="photos"
+              key="show-recent"
+              label={t('source.showRecent')}
+              onPress={ask}
+            />
+          ) : null}
+          <SourceRow
+            disabled={working}
+            icon="library"
+            key="all-photos"
+            label={t('source.allPhotos')}
+            onPress={() => void pick()}
+          />
+          <SourceRow
+            disabled={working}
+            icon="capture"
+            key="camera"
+            label={t('source.camera')}
+            onPress={onCamera}
+          />
+          <SourceRow
+            disabled={working}
+            icon="scan"
+            key="scan"
+            label={t('source.scan')}
+            onPress={onScan}
+          />
+        </CardGroup>
+      </View>
 
       {working ? (
-        <View style={styles.working}>
+        <View style={styles.status}>
           <ActivityIndicator color={skin.ui.text.tertiary} />
           <Meta>{t('source.working')}</Meta>
         </View>
       ) : null}
 
       {failure ? (
-        <View style={styles.error}>
+        <View style={styles.status}>
           <InlineError detail={t(COPY[failure][1])} title={t(COPY[failure][0])} />
         </View>
       ) : null}
-
-      <View style={styles.rows}>
-        <SourceRow
-          detail={t('source.allPhotosDetail')}
-          disabled={working}
-          icon="photos"
-          label={t('source.allPhotos')}
-          onPress={() => void pick()}
-        />
-        <SourceRow
-          detail={t('source.cameraDetail')}
-          disabled={working}
-          icon="capture"
-          label={t('source.camera')}
-          onPress={onCamera}
-        />
-        <SourceRow
-          detail={t('source.scanDetail')}
-          disabled={working}
-          icon="scan"
-          label={t('source.scan')}
-          onPress={onScan}
-        />
-      </View>
-    </Screen>
+    </View>
   );
 }
 
+/**
+ * The same row the workbench and the settings deck draw: an icon, a label, a
+ * chevron. No subtitle — in the first version the mono upper-case explanation
+ * ran wider than the title it explained, which put the emphasis on the least
+ * important line. What a row does belongs in what it is called.
+ */
 function SourceRow({
   icon,
   label,
-  detail,
   onPress,
   disabled,
 }: {
   icon: IconName;
   label: string;
-  detail: string;
   onPress: () => void;
   disabled: boolean;
 }) {
   const styles = useStyles(makeStyles);
+  const skin = useSkin();
   return (
-    <Card
+    <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
@@ -235,20 +241,22 @@ function SourceRow({
       }}
       style={styles.row}
     >
-      <Icon name={icon} scale="control" />
-      <View style={styles.rowCopy}>
-        <Text variant="rowTitle">{label}</Text>
-        <Meta>{detail}</Meta>
-      </View>
-      <Icon name="forward" scale="inline" />
-    </Card>
+      <Icon color={skin.ui.text.secondary} name={icon} scale="control" />
+      <Text style={styles.rowLabel} variant="rowTitle">
+        {label}
+      </Text>
+      <Icon color={skin.ui.text.tertiary} name="forward" scale="inline" />
+    </Pressable>
   );
 }
 
-const TILE = 78;
+const TILE = 84;
 
 const makeStyles = (skin: Skin) =>
   StyleSheet.create({
+    // No `flex: 1`. The sheet is sized to fit these contents, so a root that
+    // grew to fill the display would defeat the detent that measures it.
+    root: { backgroundColor: skin.ui.bg.base, paddingBottom: space.lg },
     head: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -279,27 +287,15 @@ const makeStyles = (skin: Skin) =>
       overflow: 'hidden',
       backgroundColor: skin.ui.bg.media,
     },
-    tileAsk: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-      padding: space.xs,
-      borderWidth: 1,
-      borderColor: skin.ui.border.control,
-      borderStyle: 'dashed',
-      backgroundColor: skin.ui.fill.chipGhost,
-    },
-    askCopy: { textAlign: 'center' },
     tileImage: { width: '100%', height: '100%' },
-    working: {
+    rows: { paddingHorizontal: space.gutter, paddingTop: space.md },
+    row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+    rowLabel: { flex: 1 },
+    status: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: space.xs,
       paddingHorizontal: space.gutter,
       paddingTop: space.md,
     },
-    error: { paddingHorizontal: space.gutter, paddingTop: space.md },
-    rows: { paddingHorizontal: space.gutter, paddingTop: space.md, gap: space.cardGap },
-    row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-    rowCopy: { flex: 1, gap: 2 },
   });

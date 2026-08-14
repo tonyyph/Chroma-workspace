@@ -130,12 +130,26 @@ function AppNavigator() {
         <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
         <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
         <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
-        {/* The door. Modal because it is a question rather than a place, and it
-            leaves by `replace` — so the stack never holds a question that has
-            already been answered. */}
+        {/*
+          The door — a sheet the height of its own contents.
+
+          `formSheet` with `fitToContents` rather than a full-screen modal. As a
+          modal it filled the display and left the bottom 45% of the screen
+          empty, because four rows and a strip are not a screenful; the sheet
+          also brings the grabber and the drag-to-dismiss that a question
+          deserves and a place does not.
+
+          It still leaves by `replace`, so the stack never holds a question that
+          has already been answered.
+        */}
         <Stack.Screen
           name="source"
-          options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: 'fitToContents',
+            sheetGrabberVisible: true,
+            sheetCornerRadius: 28,
+          }}
         />
         <Stack.Screen
           name="capture"

@@ -76,7 +76,7 @@ const granted = () =>
     }),
   );
 
-it('offers the grant on a tile rather than raising it on open', async () => {
+it('offers the grant as a row rather than raising it on open', async () => {
   draw();
 
   await waitFor(() => expect(screen.getByLabelText('Show recent photos')).toBeTruthy());
@@ -169,7 +169,7 @@ it('routes the camera and scan rows where they claim to go', async () => {
 
   await waitFor(() => expect(screen.getByLabelText('Camera')).toBeTruthy());
   await user.press(screen.getByLabelText('Camera'));
-  await user.press(screen.getByLabelText('Scan'));
+  await user.press(screen.getByLabelText('Scan as you walk'));
 
   expect(props.onCamera).toHaveBeenCalledTimes(1);
   expect(props.onScan).toHaveBeenCalledTimes(1);
