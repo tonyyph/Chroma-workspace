@@ -130,6 +130,13 @@ function AppNavigator() {
         <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
         <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
         <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
+        {/* The door. Modal because it is a question rather than a place, and it
+            leaves by `replace` — so the stack never holds a question that has
+            already been answered. */}
+        <Stack.Screen
+          name="source"
+          options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
+        />
         <Stack.Screen
           name="capture"
           options={{ animation: 'slide_from_bottom', presentation: 'modal' }}

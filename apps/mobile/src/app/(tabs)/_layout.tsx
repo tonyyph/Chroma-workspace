@@ -45,7 +45,7 @@ export default function TabLayout() {
       tabBar={({ state, navigation }) => (
         <TabBar
           active={tabForRoute[state.routes[state.index]?.name ?? 'index'] ?? 'library'}
-          onCapture={() => router.push('/capture')}
+          onCapture={() => router.push('/source')}
           onSelect={(key) => navigation.navigate(routeForTab[key])}
         />
       )}

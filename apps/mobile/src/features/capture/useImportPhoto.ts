@@ -13,8 +13,7 @@ import { useCaptureCommit } from './useCaptureCommit';
  * is full sends them round a loop that cannot end.
  */
 export type ImportOutcome =
-  | { ok: true; palette: Palette }
-  | { ok: false; reason: 'decode' | 'tooFewColours' | 'write' };
+  { ok: true; palette: Palette } | { ok: false; reason: 'decode' | 'tooFewColours' | 'write' };
 
 /**
  * Everything that happens between choosing a photograph and having one.

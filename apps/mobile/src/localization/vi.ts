@@ -71,6 +71,26 @@ export const vi: Record<MessageKey, string> = {
     'Camera đang tắt. Bật lại trong Cài đặt, hoặc chọn một ảnh có sẵn.',
   'capture.notNow': 'Để sau',
 
+  /* ------------------------------------------------------ B0 · where to start */
+  'source.title': 'Bắt đầu từ',
+  'source.recent': 'GẦN ĐÂY',
+  'source.photo': 'Ảnh gần đây',
+  'source.showRecent': 'Xem ảnh gần đây',
+  'source.chooseMore': 'Chọn thêm',
+  'source.allPhotos': 'Tất cả ảnh',
+  'source.allPhotosDetail': 'Chọn bất kỳ ảnh nào trong máy',
+  'source.camera': 'Máy ảnh',
+  'source.cameraDetail': 'Đọc màu từ thứ bạn đang hướng vào',
+  'source.scan': 'Quét',
+  'source.scanDetail': 'Ghim màu trong lúc đi',
+  'source.working': 'ĐANG ĐỌC ẢNH',
+  'source.cancel': 'Huỷ',
+  'source.decodeFailed': 'Không mở được ảnh đó',
+  'source.decodeFailedDetail': 'Tệp không giải mã được. Thử ảnh khác xem sao.',
+  'source.tooFewColours': 'Ảnh quá ít màu',
+  'source.tooFewColoursDetail':
+    'Một palette cần ít nhất hai màu, ảnh này chỉ có một. Thử ảnh nhiều màu hơn.',
+
   'result.capture': 'ẢNH CHỤP',
   'result.close': 'ĐÓNG',
   'result.retake': 'CHỤP LẠI',

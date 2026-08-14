@@ -1,3 +1,4 @@
+import { evenlyWeightedColors } from '@cw/domain';
 import { renderHook } from '@testing-library/react-native';
 import { toDecodableUri } from '@/lib/decodable';
 import { readPalette } from '@/lib/readPalette';
@@ -30,13 +31,13 @@ jest.mock('./useCaptureCommit', () => ({
   useCaptureCommit: () => mockCommit,
 }));
 
+// Built through the domain rather than by hand: a `Color` carries its rgb and
+// oklch alongside the hex, and a fixture that invents the shape proves nothing
+// about the code that consumes it.
 const twoColours = {
   ok: true as const,
   result: {
-    colors: [
-      { hex: '#7C5CFF', weight: 0.6, role: 'dominant' },
-      { hex: '#22D3EE', weight: 0.4, role: 'support' },
-    ],
+    colors: evenlyWeightedColors(['#7C5CFF', '#22D3EE']),
     deltaE: 2.4,
     confidence: 0.94,
   },

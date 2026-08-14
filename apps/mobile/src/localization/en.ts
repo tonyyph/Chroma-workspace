@@ -68,6 +68,26 @@ export const en = {
     'Camera access is off. Turn it on in Settings, or import a photo instead.',
   'capture.notNow': 'Not now',
 
+  /* ------------------------------------------------------ B0 · where to start */
+  'source.title': 'Start from',
+  'source.recent': 'RECENT',
+  'source.photo': 'Recent photo',
+  'source.showRecent': 'Show recent photos',
+  'source.chooseMore': 'Choose more',
+  'source.allPhotos': 'All photos',
+  'source.allPhotosDetail': 'Pick anything in your library',
+  'source.camera': 'Camera',
+  'source.cameraDetail': 'Read colour from what you point at',
+  'source.scan': 'Scan',
+  'source.scanDetail': 'Pin colours as you walk',
+  'source.working': 'READING THE PHOTO',
+  'source.cancel': 'Cancel',
+  'source.decodeFailed': 'Could not open that photo',
+  'source.decodeFailedDetail': 'The file would not decode. Try another photo.',
+  'source.tooFewColours': 'Too little colour to work with',
+  'source.tooFewColoursDetail':
+    'A palette needs at least two colours and this photograph has one. Try a photo with more in it.',
+
   'result.capture': 'CAPTURE',
   'result.close': 'CLOSE',
   'result.retake': 'RETAKE',

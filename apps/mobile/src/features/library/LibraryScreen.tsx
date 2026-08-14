@@ -230,7 +230,7 @@ export function LibraryScreen() {
                 addingExamples={addingExamples}
                 filtered={filters.activeCount > 0}
                 onAddExamples={() => void addExamples()}
-                onCapture={() => router.push('/capture')}
+                onCapture={() => router.push('/source')}
                 onReset={filters.reset}
               />
             </Gutter>

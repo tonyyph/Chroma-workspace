@@ -42,6 +42,10 @@ const GLYPHS = {
   settings: 'settings',
   retry: 'refresh-cw',
   palette: 'droplet',
+  /** The photo library, as distinct from `library` — which is ours, not theirs. */
+  photos: 'image',
+  /** Scan mode: pinning colour off a scene while walking through it. */
+  scan: 'crosshair',
 } as const satisfies Record<string, React.ComponentProps<typeof Feather>['name']>;
 
 export type IconName = keyof typeof GLYPHS;

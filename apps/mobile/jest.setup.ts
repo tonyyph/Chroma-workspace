@@ -33,6 +33,9 @@ jest.mock('expo-notifications', () => ({
  * about a particular answer override these themselves.
  */
 jest.mock('expo-media-library', () => ({
+  // The enum is a value, not a type, so a mock that omits it turns every
+  // `PermissionStatus.GRANTED` in a fixture into a read of `undefined`.
+  PermissionStatus: { GRANTED: 'granted', DENIED: 'denied', UNDETERMINED: 'undetermined' },
   requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
   saveToLibraryAsync: jest.fn(async () => undefined),
   isAvailableAsync: jest.fn(async () => true),
