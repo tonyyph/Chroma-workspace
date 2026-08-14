@@ -51,7 +51,7 @@ export function NavBar({
         ) : null}
       </View>
       {title ? (
-        <Text accessibilityRole="header" variant="rowTitle">
+        <Text accessibilityRole="header" variant="section">
           {title}
         </Text>
       ) : null}

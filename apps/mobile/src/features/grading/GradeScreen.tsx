@@ -90,7 +90,7 @@ export function GradeScreen() {
   const exporter = useGradedExport(palette?.photoUri ?? null, current);
 
   const previewWidth = width - space.gutter * 2;
-  const previewHeight = Math.round(previewWidth * 1.25);
+  const previewHeight = Math.round(previewWidth * 1.15);
 
   /**
    * Choosing a look resets the dial to full.
@@ -522,6 +522,7 @@ const makeStyles = (skin: Skin) =>
       backgroundColor: skin.ui.bg.media,
       alignItems: 'center',
       justifyContent: 'center',
+      marginTop: space.sm,
     },
     stageState: { alignItems: 'center', gap: space.xs, paddingHorizontal: space.gutter },
     stateCopy: { textAlign: 'center' },
@@ -538,7 +539,7 @@ const makeStyles = (skin: Skin) =>
     reason: { paddingTop: space.sm },
     rail: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, paddingTop: space.sm },
     intensity: { paddingTop: space.md },
-    sectionHead: { paddingTop: space.sectionGap },
+    sectionHead: { paddingVertical: space.md },
     controls: { paddingTop: space.sm, gap: space.md },
     proCard: { gap: space.sm, marginTop: space.sm, alignItems: 'flex-start' },
     actions: { paddingTop: space.sectionGap, gap: space.xs },
