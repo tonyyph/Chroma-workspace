@@ -3,7 +3,7 @@ import { space, type Skin } from '@cw/tokens';
 import { useRouter } from 'expo-router';
 import type { ComponentProps, ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { usePreferences, useSkin } from '@/providers';
+import { useEntitlements, usePreferences, useSkin } from '@/providers';
 import {
   CardGroup,
   Gutter,
@@ -17,6 +17,9 @@ import {
 } from '@/ui';
 
 const EXPORT_TARGETS = exportTargetSchema.options;
+
+/** The row and its switch share a label, so the switch reads as the row. */
+const DEV_PRO_LABEL = 'Pro unlocked (dev)';
 
 /**
  * The controls, and the places to go from here.
@@ -41,6 +44,7 @@ export function ControlDeck({ unread }: { unread: number }) {
     busyAction,
     t,
   } = usePreferences();
+  const { tier, devSetTier } = useEntitlements();
 
   /**
    * Both settings rows cycle rather than opening a picker: each has a handful of
@@ -176,6 +180,32 @@ export function ControlDeck({ unread }: { unread: number }) {
           />
         </CardGroup>
       </Gutter>
+
+      {/* Untranslated on purpose: this is a workbench control, and dev-only
+          copy in the locale tables is copy someone has to translate and keep in
+          step for a row no user will ever see. Its absence in a shipped build is
+          `devSetTier` being null there, not this condition. */}
+      {devSetTier ? (
+        <>
+          <Gutter style={styles.sectionHead}>
+            <SectionHead meta="Not in release builds" title="Developer" />
+          </Gutter>
+          <Gutter style={styles.group}>
+            <CardGroup>
+              <Row
+                label={DEV_PRO_LABEL}
+                trailing={
+                  <Toggle
+                    label={DEV_PRO_LABEL}
+                    onValueChange={(value) => void devSetTier(value ? 'pro' : 'free')}
+                    value={tier === 'pro'}
+                  />
+                }
+              />
+            </CardGroup>
+          </Gutter>
+        </>
+      ) : null}
 
       <Gutter style={styles.footer}>
         <Meta tone="tertiary">{t('you.version', { version: '1.0.0' })}</Meta>

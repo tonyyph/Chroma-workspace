@@ -37,7 +37,11 @@ export class StoredEntitlements implements EntitlementProvider {
     return this.getTier();
   }
 
-  /** Not part of the interface: only a real purchase flow may grant a tier. */
+  /**
+   * Not part of the interface: only a real purchase flow may grant a tier —
+   * and, until there is one, the dev-only switch on the You screen that stands
+   * in for it. See `devSetTier` in `EntitlementProvider`.
+   */
   async grant(tier: SubscriptionTier): Promise<void> {
     await this.storage.setItem(ENTITLEMENT_STORAGE_KEY, tier);
   }

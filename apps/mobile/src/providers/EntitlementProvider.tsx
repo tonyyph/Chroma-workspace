@@ -20,6 +20,18 @@ type EntitlementState = {
   has: (entitlement: Entitlement) => boolean;
   /** Re-reads the tier. Returns it, so a caller can report what it found. */
   restore: () => Promise<SubscriptionTier>;
+  /**
+   * Grants a tier outright, with no purchase behind it. `null` in any build
+   * that is not a dev build.
+   *
+   * There is no billing provider yet, so `free` is the only tier a device can
+   * reach and every Pro surface is unreachable — including for whoever has to
+   * look at it. This is the stand-in. It is `null` rather than a no-op outside
+   * `__DEV__` so that the control which calls it cannot be rendered at all in a
+   * shipped build: a switch that hands out Pro must not be one bad condition
+   * away from being on screen.
+   */
+  devSetTier: ((tier: SubscriptionTier) => Promise<void>) | null;
 };
 
 const EntitlementContext = createContext<EntitlementState | null>(null);
@@ -53,6 +65,13 @@ export function EntitlementProvider({ children }: { children: React.ReactNode })
     return next;
   }, []);
 
+  // Writes through the repository rather than only holding it in state, so a
+  // reload during development does not put the tier back to free.
+  const devSetTier = useCallback(async (next: SubscriptionTier) => {
+    await entitlements.grant(next);
+    setTier(next);
+  }, []);
+
   const value = useMemo<EntitlementState>(
     () => ({
       tier,
@@ -61,8 +80,9 @@ export function EntitlementProvider({ children }: { children: React.ReactNode })
       // taking it away a frame later is worse than a beat of it being locked.
       has: (entitlement) => (ready ? hasEntitlement(tier, entitlement) : false),
       restore,
+      devSetTier: __DEV__ ? devSetTier : null,
     }),
-    [tier, ready, restore],
+    [tier, ready, restore, devSetTier],
   );
 
   return <EntitlementContext.Provider value={value}>{children}</EntitlementContext.Provider>;
