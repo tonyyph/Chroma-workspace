@@ -25,6 +25,9 @@ jest.mock('expo-router', () => ({
   }),
   useLocalSearchParams: () => ({}),
   useFocusEffect: jest.fn(),
+  // The viewfinder holds its capture session open only while focused, and a
+  // screen rendered on its own is the screen on top. See `no-hot-cameras`.
+  useIsFocused: () => true,
   Redirect: () => null,
 }));
 

@@ -1,5 +1,5 @@
 import { size, space, uiMotion, type Skin } from '@cw/tokens';
-import { useRouter } from 'expo-router';
+import { useRouter, useIsFocused } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -75,6 +75,16 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
   const { hasPermission, requestPermission, canRequestPermission } = useCameraPermission();
   const device = useCameraDevice('back');
   const photoOutput = usePhotoOutput(PHOTO_OUTPUT);
+  /**
+   * The camera runs only while this screen is the one on top.
+   *
+   * A screen pushed over this one does not unmount it, so a hard-coded
+   * `isActive` keeps the capture session open underneath — two live cameras at
+   * once, a battery draining for a preview nobody can see, and two claims on a
+   * sensor that has one. Guarded by the `no-hot-cameras` source scan.
+   */
+  const focused = useIsFocused();
+
   const [mode, setMode] = useState<Mode>('live');
   const [flash, setFlash] = useState<Flash>('off');
   const [ratioIndex, setRatioIndex] = useState(0);
@@ -112,7 +122,7 @@ export function ViewfinderScreen({ setId = null }: { setId?: string | null }) {
       {device ? (
         <Camera
           device={device}
-          isActive
+          isActive={focused}
           outputs={[photoOutput]}
           ref={camera}
           style={StyleSheet.absoluteFill}

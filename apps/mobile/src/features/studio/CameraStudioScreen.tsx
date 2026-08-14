@@ -7,7 +7,7 @@ import {
   type Grade,
 } from '@cw/domain';
 import { size, space, type Skin } from '@cw/tokens';
-import { useRouter } from 'expo-router';
+import { useRouter, useIsFocused } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -62,6 +62,16 @@ export function CameraStudioScreen() {
   const { hasPermission, requestPermission, canRequestPermission } = useCameraPermission();
   const device = useCameraDevice('back');
   const photoOutput = usePhotoOutput(PHOTO_OUTPUT);
+  /**
+   * The camera runs only while this screen is the one on top.
+   *
+   * A screen pushed over this one does not unmount it, so a hard-coded
+   * `isActive` keeps the capture session open underneath — two live cameras at
+   * once, a battery draining for a preview nobody can see, and two claims on a
+   * sensor that has one. Guarded by the `no-hot-cameras` source scan.
+   */
+  const focused = useIsFocused();
+
   const controls = useCameraControls(camera);
 
   const { read, colors, deltaE, confidence, reading } = usePhotoRead();
@@ -149,7 +159,7 @@ export function CameraStudioScreen() {
             >
               <Camera
                 device={device}
-                isActive
+                isActive={focused}
                 outputs={[photoOutput]}
                 ref={camera}
                 style={StyleSheet.absoluteFill}

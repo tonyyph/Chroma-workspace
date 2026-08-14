@@ -1,3 +1,4 @@
+import { useIsFocused } from 'expo-router';
 import { evenlyWeightedColors, type Color } from '@cw/domain';
 import { space, type Skin } from '@cw/tokens';
 import { useState } from 'react';
@@ -55,6 +56,16 @@ export function ScanScreen({
   const { hasPermission } = useCameraPermission();
   const device = useCameraDevice('back');
   const photoOutput = usePhotoOutput(PHOTO_OUTPUT);
+  /**
+   * The camera runs only while this screen is the one on top.
+   *
+   * A screen pushed over this one does not unmount it, so a hard-coded
+   * `isActive` keeps the capture session open underneath — two live cameras at
+   * once, a battery draining for a preview nobody can see, and two claims on a
+   * sensor that has one. Guarded by the `no-hot-cameras` source scan.
+   */
+  const focused = useIsFocused();
+
   const { read, colors, reading } = usePhotoRead();
 
   const dominant = colors.find((color) => color.role === 'dominant') ?? colors[0];
@@ -99,7 +110,12 @@ export function ScanScreen({
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       {device && hasPermission ? (
-        <Camera device={device} isActive outputs={[photoOutput]} style={StyleSheet.absoluteFill} />
+        <Camera
+          device={device}
+          isActive={focused}
+          outputs={[photoOutput]}
+          style={StyleSheet.absoluteFill}
+        />
       ) : (
         <View style={styles.sceneLabel}>
           <Text tone="quaternary" variant="chip">

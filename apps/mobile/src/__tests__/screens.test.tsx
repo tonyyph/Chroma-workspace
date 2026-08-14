@@ -47,6 +47,10 @@ jest.mock('expo-router', () => ({
   }),
   useLocalSearchParams: () => ({}),
   useFocusEffect: jest.fn(),
+  // A screen rendered on its own is the screen on top. The camera screens read
+  // this to decide whether to hold a capture session open — see
+  // `no-hot-cameras`, which is the scan that made them ask.
+  useIsFocused: () => true,
   Redirect: () => null,
 }));
 

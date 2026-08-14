@@ -1,6 +1,6 @@
 import { extractPaletteFromRgba } from '@cw/domain';
 import { space, type Skin } from '@cw/tokens';
-import { useRouter } from 'expo-router';
+import { useRouter, useIsFocused } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -127,6 +127,16 @@ export default function LiveReadSpikeRoute() {
   const camera = useRef<CameraRef>(null);
   const device = useCameraDevice('back');
   const photoOutput = usePhotoOutput();
+  /**
+   * The camera runs only while this screen is the one on top.
+   *
+   * A screen pushed over this one does not unmount it, so a hard-coded
+   * `isActive` keeps the capture session open underneath — two live cameras at
+   * once, a battery draining for a preview nobody can see, and two claims on a
+   * sensor that has one. Guarded by the `no-hot-cameras` source scan.
+   */
+  const focused = useIsFocused();
+
   const { hasPermission, requestPermission } = useCameraPermission();
 
   const [running, setRunning] = useState(false);
@@ -261,7 +271,7 @@ export default function LiveReadSpikeRoute() {
         {device ? (
           <Camera
             device={device}
-            isActive
+            isActive={focused}
             outputs={[photoOutput]}
             ref={camera}
             style={StyleSheet.absoluteFill}
