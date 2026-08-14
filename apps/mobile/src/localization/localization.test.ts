@@ -72,8 +72,8 @@ const BUTTON_KEYS = messageKeys.filter(
     key === 'onboarding.importInstead' ||
     key === 'result.tune' ||
     key === 'result.save' ||
-    // The import screen's second primary action, full width under the swatches.
-    key === 'import.cinematic' ||
+    // The sampler's one action, full width under the swatches.
+    key === 'import.extract' ||
     // The grade screen's two ways out.
     key === 'grade.save' ||
     key === 'grade.share' ||

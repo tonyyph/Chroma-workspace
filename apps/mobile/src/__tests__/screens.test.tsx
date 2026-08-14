@@ -191,8 +191,15 @@ const cases: readonly [string, () => ReactElement][] = [
   ['Rewind', () => <RewindScreen />],
   ['Camera studio', () => <CameraStudioScreen />],
   [
-    'Import & pick',
-    () => <ImportPickScreen onCancel={jest.fn()} onCinematic={jest.fn()} onExtract={jest.fn()} />,
+    'Pick points',
+    () => (
+      <ImportPickScreen
+        colors={palette().colors}
+        onCancel={jest.fn()}
+        onPick={jest.fn()}
+        uri="file:///tmp/photo.jpg"
+      />
+    ),
   ],
 ];
 

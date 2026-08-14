@@ -28,6 +28,7 @@ import {
   NavBar,
   Pressable,
   Screen,
+  SwatchStrip,
   Slider,
   Text,
   useStyles,
@@ -230,6 +231,29 @@ export function GradeScreen() {
             {describeGrade(shown).join(' · ')}
           </Meta>
         </View>
+
+        {/*
+          The palette, on the screen the photograph landed on.
+
+          Importing writes a palette record and then opens the grade, so the
+          colours exist whether or not anyone asked for them — and without this
+          they were invisible from here, which made the record look like
+          bookkeeping rather than the other half of what was made. Tapping goes
+          to the sampler, because someone looking hard enough at these five
+          swatches to tap them is someone who disagrees with one.
+        */}
+        {palette?.colors.length ? (
+          <Pressable
+            accessibilityHint={t('grade.paletteHint')}
+            accessibilityLabel={t('grade.palette', { count: palette.colors.length })}
+            accessibilityRole="button"
+            onPress={() => router.push(`/tools/pick?id=${palette.id}`)}
+            style={styles.palette}
+          >
+            <SwatchStrip colors={palette.colors} height={28} radius={skin.round.control} />
+            <Meta>{t('grade.palette', { count: palette.colors.length })}</Meta>
+          </Pressable>
+        ) : null}
       </Gutter>
 
       <Gutter style={styles.rail}>
@@ -510,6 +534,7 @@ const makeStyles = (skin: Skin) =>
       paddingHorizontal: space.xs,
       paddingVertical: 4,
     },
+    palette: { paddingTop: space.md, gap: 6 },
     reason: { paddingTop: space.sm },
     rail: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, paddingTop: space.sm },
     intensity: { paddingTop: space.md },

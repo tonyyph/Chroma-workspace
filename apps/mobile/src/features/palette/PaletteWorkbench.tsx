@@ -18,6 +18,10 @@ const TOOLS = [
   { route: 'theme', labelKey: 'theme.title' },
   { route: 'gradient', labelKey: 'gradient.title' },
   { route: 'compare', labelKey: 'compare.title' },
+  // Last: it argues with the automatic read rather than building on it, and
+  // most palettes never need it. It used to be the import screen — the way into
+  // the app — which is why it opened a picker nobody had asked for.
+  { route: 'pick', labelKey: 'import.title' },
 ] as const;
 
 /**

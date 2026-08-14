@@ -18,7 +18,15 @@ import { Button, Card, Gradient, InlineError, SwatchStrip, Text, useStyles } fro
 const welcomePhoto: number = require('../../../assets/brand/library/harbour-dusk.jpg');
 const steps = [1, 2, 3, 4, 5] as const;
 type Step = (typeof steps)[number];
-type Destination = '/(tabs)' | '/tools/import';
+/**
+ * Where the last step can send someone.
+ *
+ * "Import a photo instead" used to go to `/tools/import`, which opened the
+ * system picker from an effect on mount — a first-run experience that began
+ * with a modal nobody had asked for. It goes to the source sheet now, which is
+ * the same offer with the question asked first.
+ */
+type Destination = '/(tabs)' | '/source';
 
 /** Five-step first-launch flow: value, model, tune, share, then permission. */
 export function OnboardingScreen() {
@@ -89,7 +97,7 @@ export function OnboardingScreen() {
             <Button
               disabled={completing}
               label={t('onboarding.importInstead')}
-              onPress={() => void finish('/tools/import')}
+              onPress={() => void finish('/source')}
               size="xs"
               variant="secondary"
             />

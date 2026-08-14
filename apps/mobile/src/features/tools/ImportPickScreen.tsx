@@ -1,12 +1,10 @@
-import { evenlyWeightedColors, type Color, type ExtractionResult } from '@cw/domain';
+import { evenlyWeightedColors, type Color } from '@cw/domain';
 import { space, type Skin } from '@cw/tokens';
 import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useImageSampler } from '@/hooks';
 import { hapticsService } from '@/infrastructure/dependencies';
-import { readPalette, toDecodableUri } from '@/lib';
 import { usePreferences } from '@/providers';
 import {
   Button,
@@ -27,89 +25,39 @@ const MAX_POINTS = 8;
 type Point = { x: number; y: number; hex: string };
 
 /**
- * G2 · IMPORT & PICK · "manual sample points, adjustable radius".
+ * G2 · PICK POINTS — the refinement, not the way in.
  *
- * Sampling is real: Skia decodes the imported photo and `sampleAt` averages a
- * disc of pixels — in linear light — around the tapped point, which is what the
- * "SAMPLE RADIUS · AVERAGED" control adjusts.
+ * This screen used to be the import path: it launched the system picker from an
+ * effect on mount, and cancelling that picker left an empty canvas above a
+ * radius slider and three mode chips that could do nothing without a photo. It
+ * was also titled for its advanced case — the automatic whole-image read had
+ * already produced a palette before anyone tapped anything.
+ *
+ * So it takes the photograph as a prop now. It is reached from a palette that
+ * exists, by someone who has seen the colours it found and wants different
+ * ones. There is no picker to cancel and nothing to be stranded by.
  */
 export function ImportPickScreen({
+  uri,
+  colors: found,
   onCancel,
-  onExtract,
-  onCinematic,
+  onPick,
 }: {
+  /** The photograph, already local and already decodable. */
+  uri: string;
+  /** What the automatic read found — what these points are an argument with. */
+  colors: readonly Color[];
   onCancel: () => void;
-  /** The photo travels with the colours — the result sheet and card both show it. */
-  onExtract: (colors: readonly Color[], photoUri: string | null) => void;
-  /**
-   * The same two things, going somewhere else: straight to the grade.
-   *
-   * Two intents rather than two screens. Someone importing a photo either wants
-   * the colours out of it or wants the photograph itself to look like something,
-   * and making them guess which button means which is worse than having two.
-   */
-  onCinematic: (colors: readonly Color[], photoUri: string | null) => void;
+  /** The hand-placed colours, replacing the ones the palette carries. */
+  onPick: (colors: readonly Color[]) => void;
 }) {
   const styles = useStyles(makeStyles);
   const { t } = usePreferences();
-  const [uri, setUri] = useState<string | null>(null);
   const [points, setPoints] = useState<readonly Point[]>([]);
   const [radius, setRadius] = useState(12);
   const [mode, setMode] = useState<(typeof MODES)[number]>('AUTO');
   const [layout, setLayout] = useState({ width: 0, height: 0 });
-  const [pickFailed, setPickFailed] = useState(false);
-  /** The whole-image read, which is what AUTO extracts. */
-  const [auto, setAuto] = useState<ExtractionResult | null>(null);
-  const [autoFailed, setAutoFailed] = useState(false);
-  const [extracting, setExtracting] = useState(false);
   const { sampleAt, dimensions, ready, failed } = useImageSampler(uri);
-
-  /**
-   * Opens the photo library. Exposed as an action as well as run on mount: if
-   * the first pick is cancelled, or is simply the wrong photo, the screen would
-   * otherwise be a dead end with no way back to the picker.
-   */
-  const pick = useCallback(async () => {
-    setPickFailed(false);
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({ quality: 1 });
-      // The picker can resolve to nothing at all when the sheet is dismissed by
-      // the system rather than by the user, so the shape is checked, not assumed.
-      const chosen = result?.canceled === false ? result.assets?.[0]?.uri : undefined;
-      if (!chosen) return;
-      // An iPhone's library is mostly HEIC, and the picker hands those back
-      // untouched — a container the Skia build has no codec for. Converting here
-      // rather than at the read means the tap sampler decodes the same file.
-      const picked = await toDecodableUri(chosen);
-      setUri(picked);
-      // Points are positions in the old photo; keeping them would label the new
-      // one with colours it does not contain.
-      setPoints([]);
-      setMode('AUTO');
-
-      /**
-       * Read the whole photo straight away, the same way the shutter does.
-       *
-       * Picking a photo and being handed an empty canvas that demands two taps
-       * before it will do anything is not what "import a photo" means — the
-       * palette is already determined by the image. Manual points remain as a
-       * refinement on top of the automatic read, not a precondition for it.
-       */
-      setAutoFailed(false);
-      setExtracting(true);
-      const outcome = await readPalette(picked, 5);
-      setExtracting(false);
-      if (outcome.ok && outcome.result.colors.length) setAuto(outcome.result);
-      else setAutoFailed(true);
-    } catch {
-      setPickFailed(true);
-      setExtracting(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void pick();
-  }, [pick]);
 
   /**
    * Samples one view coordinate. The photo is drawn with `cover`, so view
@@ -178,46 +126,36 @@ export function ImportPickScreen({
   };
 
   /**
-   * Points take precedence when there are any: a user who placed them is asking
-   * for those exact colours. Otherwise the automatic read is what ships, which
-   * is what makes picking a photo a one-tap operation.
+   * Two points is the floor. Below that this screen has nothing to say that the
+   * palette does not already say better, so the action stays off rather than
+   * quietly replacing five measured colours with one tapped one.
    */
   const usingPoints = points.length >= 2;
-  const canExtract = usingPoints || Boolean(auto?.colors.length);
 
-  const extract = () => {
-    if (usingPoints) {
-      // A tapped point is a deliberate choice, so the points split the palette
-      // evenly and take their roles from the order they were placed in.
-      onExtract(evenlyWeightedColors(points.map((point) => point.hex)), uri);
-      return;
-    }
-    if (auto?.colors.length) onExtract(auto.colors, uri);
+  const pick = () => {
+    if (!usingPoints) return;
+    // A tapped point is a deliberate choice, so the points split the palette
+    // evenly and take their roles from the order they were placed in.
+    onPick(evenlyWeightedColors(points.map((point) => point.hex)));
   };
 
-  /** The same choice of colours, handed to the grade instead of the result sheet. */
-  const cinematic = () => {
-    if (usingPoints) {
-      onCinematic(evenlyWeightedColors(points.map((point) => point.hex)), uri);
-      return;
-    }
-    if (auto?.colors.length) onCinematic(auto.colors, uri);
-  };
-
-  /** What the swatch row previews: the placed points, or the automatic read. */
+  /** What the swatch row shows: the placed points, or what is being replaced. */
   const preview: readonly string[] = usingPoints
     ? points.map((point) => point.hex)
-    : (auto?.colors.map((color) => color.hex) ?? []);
+    : found.map((color) => color.hex);
 
   return (
     <Screen>
-      <NavBar
-        leading={t('import.cancel')}
-        onLeading={onCancel}
-        onTrailing={canExtract ? extract : undefined}
-        title={t('import.title')}
-        trailing={t('import.extract')}
-      />
+      {/*
+        No trailing action.
+
+        `NavBar` draws its trailing label as a link whatever it is handed, so an
+        `onTrailing` that is conditionally undefined leaves an EXTRACT that
+        looks live and does nothing until two points exist. The button at the
+        bottom was already the same action in the same condition — one action in
+        one place, and it appears only when it can be taken.
+      */}
+      <NavBar leading={t('import.cancel')} onLeading={onCancel} title={t('import.title')} />
 
       <View style={styles.canvasWrap}>
         <Pressable
@@ -228,13 +166,7 @@ export function ImportPickScreen({
           onPress={(event) => addPoint(event.nativeEvent.locationX, event.nativeEvent.locationY)}
           style={styles.canvas}
         >
-          {uri ? (
-            <Image contentFit="cover" source={{ uri }} style={StyleSheet.absoluteFill} />
-          ) : (
-            <Text tone="quaternary" variant="chip">
-              {t('import.photo')}
-            </Text>
-          )}
+          <Image contentFit="cover" source={{ uri }} style={StyleSheet.absoluteFill} />
           {points.map((point, index) => (
             <Pressable
               accessibilityLabel={t('import.removePoint', { hex: point.hex })}
@@ -256,15 +188,11 @@ export function ImportPickScreen({
           ))}
           <View style={styles.canvasHint}>
             <Text tone="secondary" variant="chip">
-              {failed || pickFailed || autoFailed
+              {failed
                 ? t('import.failed')
-                : extracting
-                  ? t('import.reading')
-                  : usingPoints || !auto
-                    ? ready
-                      ? t('import.points', { count: points.length, max: MAX_POINTS })
-                      : t('import.decoding')
-                    : t('import.autoRead', { count: auto.colors.length })}
+                : ready
+                  ? t('import.points', { count: points.length, max: MAX_POINTS })
+                  : t('import.decoding')}
             </Text>
           </View>
         </Pressable>
@@ -296,11 +224,6 @@ export function ImportPickScreen({
             />
           ))}
         </View>
-        <Chip
-          fill
-          label={t(uri ? 'import.changePhoto' : 'import.choosePhoto')}
-          onPress={() => void pick()}
-        />
       </View>
 
       <View style={styles.preview}>
@@ -318,13 +241,11 @@ export function ImportPickScreen({
         })}
       </View>
 
-      {canExtract ? (
+      {usingPoints ? (
         <Gutter style={styles.cinematic}>
-          <Button label={t('import.cinematic')} onPress={cinematic} size="lg" variant="contrast" />
+          <Button label={t('import.extract')} onPress={pick} size="lg" variant="contrast" />
         </Gutter>
-      ) : null}
-
-      {canExtract ? null : (
+      ) : (
         <Card style={styles.hint}>
           <Text tone="secondary" variant="body">
             {t('import.hint')}
