@@ -2,8 +2,8 @@ import { render, screen, userEvent, waitFor } from '@testing-library/react-nativ
 import { useEffect, useState } from 'react';
 import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
 import { PreferencesProvider } from '@/providers';
-import { CardGroup } from './Surface';
 import { Pressable } from './Pressable';
+import { CardGroup } from './Surface';
 import { Text } from './Text';
 
 /**

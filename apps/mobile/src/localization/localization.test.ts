@@ -53,6 +53,10 @@ const CHIP_KEYS = messageKeys.filter(
     // The look grid's collection rail, in the same row shape as the filters.
     key.startsWith('look.collection.') ||
     key.startsWith('capture.mode.') ||
+    // The input sheet's three channel names, side by side in one row.
+    key === 'source.allPhotos' ||
+    key === 'source.camera' ||
+    key === 'source.scan' ||
     key === 'collection.exportSet' ||
     key === 'collection.invite' ||
     key === 'trending.save' ||

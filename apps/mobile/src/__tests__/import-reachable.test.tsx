@@ -81,8 +81,8 @@ it('lets someone who refused the camera still choose a photo', async () => {
     </SafeAreaProvider>,
   );
 
-  await waitFor(() => expect(screen.getByLabelText('All photos')).toBeTruthy());
-  await user.press(screen.getByLabelText('All photos'));
+  await waitFor(() => expect(screen.getByLabelText('LIBRARY')).toBeTruthy());
+  await user.press(screen.getByLabelText('LIBRARY'));
 
   expect(ImagePicker.launchImageLibraryAsync).toHaveBeenCalled();
   await waitFor(() => expect(onPhoto).toHaveBeenCalledWith('file:///tmp/picked.heic'));

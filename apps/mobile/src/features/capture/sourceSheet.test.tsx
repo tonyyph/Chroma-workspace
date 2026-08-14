@@ -76,10 +76,10 @@ const granted = () =>
     }),
   );
 
-it('offers the grant as a row rather than raising it on open', async () => {
+it('offers the grant as a readout rather than raising it on open', async () => {
   draw();
 
-  await waitFor(() => expect(screen.getByLabelText('Show recent photos')).toBeTruthy());
+  await waitFor(() => expect(screen.getByLabelText('Show recent')).toBeTruthy());
   expect(MediaLibrary.requestPermissionsAsync).not.toHaveBeenCalled();
 });
 
@@ -88,8 +88,8 @@ it('sends a tapped photo to the importer', async () => {
   const user = userEvent.setup();
   const props = draw();
 
-  await waitFor(() => expect(screen.getByLabelText('Recent photo')).toBeTruthy());
-  await user.press(screen.getByLabelText('Recent photo'));
+  await waitFor(() => expect(screen.getByLabelText('Frame 01')).toBeTruthy());
+  await user.press(screen.getByLabelText('Frame 01'));
 
   expect(props.onPhoto).toHaveBeenCalledWith('ph://a');
 });
@@ -111,7 +111,7 @@ it('hides the choose-more affordance when access is already complete', async () 
   granted();
   draw();
 
-  await waitFor(() => expect(screen.getByLabelText('Recent photo')).toBeTruthy());
+  await waitFor(() => expect(screen.getByLabelText('Frame 01')).toBeTruthy());
   expect(screen.queryByLabelText('Choose more')).toBeNull();
 });
 
@@ -127,11 +127,11 @@ it('keeps every row working when the photo library is refused outright', async (
   const props = draw();
 
   // The strip is gone — there is nothing to draw and nothing left to ask for.
-  await waitFor(() => expect(screen.queryByLabelText('Show recent photos')).toBeNull());
-  expect(screen.queryByLabelText('Recent photo')).toBeNull();
+  await waitFor(() => expect(screen.queryByLabelText('Show recent')).toBeNull());
+  expect(screen.queryByLabelText('Frame 01')).toBeNull();
 
   // And the way in survives it, because the system picker never needed a grant.
-  await user.press(screen.getByLabelText('All photos'));
+  await user.press(screen.getByLabelText('LIBRARY'));
   await waitFor(() => expect(props.onPhoto).toHaveBeenCalledWith('file:///tmp/picked.heic'));
 });
 
@@ -140,8 +140,8 @@ it('says which failure happened rather than pooling them', async () => {
   const user = userEvent.setup();
   draw({ onPhoto: jest.fn(async () => 'tooFewColours' as const) });
 
-  await waitFor(() => expect(screen.getByLabelText('Recent photo')).toBeTruthy());
-  await user.press(screen.getByLabelText('Recent photo'));
+  await waitFor(() => expect(screen.getByLabelText('Frame 01')).toBeTruthy());
+  await user.press(screen.getByLabelText('Frame 01'));
 
   // Not "could not open that photo" — the file opened perfectly well.
   await waitFor(() => expect(screen.getByText('Too little colour to work with')).toBeTruthy());
@@ -154,8 +154,8 @@ it('says nothing about a picker the user simply dismissed', async () => {
   const user = userEvent.setup();
   const props = draw();
 
-  await waitFor(() => expect(screen.getByLabelText('All photos')).toBeTruthy());
-  await user.press(screen.getByLabelText('All photos'));
+  await waitFor(() => expect(screen.getByLabelText('LIBRARY')).toBeTruthy());
+  await user.press(screen.getByLabelText('LIBRARY'));
 
   // Cancelling is not a failure, and a screen that reports it as one teaches
   // people that backing out of anything breaks something.
@@ -167,10 +167,37 @@ it('routes the camera and scan rows where they claim to go', async () => {
   const user = userEvent.setup();
   const props = draw();
 
-  await waitFor(() => expect(screen.getByLabelText('Camera')).toBeTruthy());
-  await user.press(screen.getByLabelText('Camera'));
-  await user.press(screen.getByLabelText('Scan as you walk'));
+  await waitFor(() => expect(screen.getByLabelText('CAMERA')).toBeTruthy());
+  await user.press(screen.getByLabelText('CAMERA'));
+  await user.press(screen.getByLabelText('SCAN'));
 
   expect(props.onCamera).toHaveBeenCalledTimes(1);
   expect(props.onScan).toHaveBeenCalledTimes(1);
+});
+
+it('wears the newest photograph on the channel that would open it', async () => {
+  granted();
+  draw();
+
+  // The signature is the argument for the tile: a channel showing the picture
+  // it would hand you says what taking that route gets you, which an icon in a
+  // box does not.
+  await waitFor(() => expect(screen.getByTestId('channel-face')).toBeTruthy());
+  // expo-image normalises `source` into an array of sources.
+  expect(screen.getByTestId('channel-face').props.source).toEqual([{ uri: 'ph://a' }]);
+});
+
+it('says what the strip is doing in every state rather than collapsing', async () => {
+  jest.mocked(MediaLibrary.getPermissionsAsync).mockResolvedValue(
+    permission({
+      granted: false,
+      canAskAgain: false,
+      status: MediaLibrary.PermissionStatus.DENIED,
+    }),
+  );
+  draw();
+
+  // A strip that vanishes on refusal shortens the sheet, which moves the
+  // channels under a thumb already on its way to one of them.
+  await waitFor(() => expect(screen.getByText(/channel 01 still opens the picker/)).toBeTruthy());
 });

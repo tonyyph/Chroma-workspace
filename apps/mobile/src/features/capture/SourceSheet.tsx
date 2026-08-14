@@ -5,16 +5,16 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { usePreferences, useSkin } from '@/providers';
 import {
-  CardGroup,
+  BandSweepCanvas,
   Icon,
   InlineError,
+  LiveReadPulse,
   Meta,
   Pressable,
   Text,
   useStyles,
-  type IconName,
 } from '@/ui';
-import { useRecentPhotos } from './useRecentPhotos';
+import { useRecentPhotos, type RecentPhoto } from './useRecentPhotos';
 
 /**
  * What went wrong, in the words the sheet has for it.
@@ -31,20 +31,26 @@ const COPY = {
   write: ['palette.writeFailed', 'palette.writeFailedDetail'],
 } as const;
 
+/** Frame numbers in the strip: 01, 02 … rather than 1, 2. */
+const pad = (index: number) => String(index + 1).padStart(2, '0');
+
 /**
- * B0 · WHERE TO START.
+ * B0 · INPUT SELECT.
  *
  * The app used to open the camera and keep everything else behind it: importing
  * a photograph meant granting camera access, watching a live preview, and then
  * finding a button — and refusing the camera made importing unreachable
- * entirely. This screen is the door instead, and the camera is one of the
- * answers rather than the question.
+ * entirely. This is the door instead, and the camera is one of the answers
+ * rather than the question.
  *
- * **Laid out as a sheet the height of its contents**, and the rows use the same
- * grouped-card shape as the palette workbench and the settings deck. The first
- * version was a full-screen modal holding three floating cards with mono
- * upper-case subtitles — which left the bottom half of the display empty and
- * made the *subtitle* the widest thing in every row.
+ * **Three channels, not three menu items.** An earlier version drew a grouped
+ * settings list, which is what every app's share sheet looks like and says
+ * nothing about what this one measures. The app already owns an instrument
+ * vocabulary — ΔE readouts, band sweeps, mono at 8pt on wide tracking, the live
+ * read pulse — and none of it appeared on the screen people meet first. Each
+ * source now shows its own signature: the library shows the photograph it would
+ * open with, the camera shows the sweep it reads light with, scan shows the
+ * pulse it pins colour with.
  */
 export function SourceSheet({
   onPhoto,
@@ -80,8 +86,8 @@ export function SourceSheet({
   /**
    * The system picker, which needs no permission at all.
    *
-   * This is why a refusal above costs only the strip: `launchImageLibraryAsync`
-   * runs out of process, so this row works in every state the sheet can be in.
+   * This is why a refusal costs only the strip: `launchImageLibraryAsync` runs
+   * out of process, so channel 01 works in every state the sheet can be in.
    */
   const pick = useCallback(async () => {
     setFailure(null);
@@ -95,103 +101,118 @@ export function SourceSheet({
     if (chosen) await take(chosen);
   }, [take]);
 
-  /** Only when there is something to draw does the strip earn its heading. */
-  const showStrip = state === 'granted' || state === 'limited';
+  const granted = state === 'granted' || state === 'limited';
+  /** Channel 01 wears the newest photograph, when it is allowed to see one. */
+  const face = granted ? photos[0]?.uri : undefined;
 
   return (
     <View style={styles.root}>
       <View style={styles.head}>
-        <Text variant="title">{t('source.title')}</Text>
-        <Pressable
-          accessibilityLabel={t('source.cancel')}
-          accessibilityRole="button"
-          onPress={onCancel}
-          style={styles.close}
-        >
-          <Icon name="close" scale="inline" />
-        </Pressable>
-      </View>
-
-      {showStrip ? (
-        <>
-          <View style={styles.stripHead}>
-            <Text tone="tertiary" variant="eyebrow">
-              {t('source.recent')}
-            </Text>
-            {state === 'limited' ? (
-              <Pressable
-                accessibilityLabel={t('source.chooseMore')}
-                accessibilityRole="button"
-                onPress={chooseMore}
-              >
-                <Meta tone="link">{t('source.chooseMore')}</Meta>
-              </Pressable>
-            ) : null}
-          </View>
-
-          <ScrollView
-            contentContainerStyle={styles.strip}
-            horizontal
-            // The rows below are reachable while a keyboard is up elsewhere in
-            // the stack; without this the first tap only dismisses it.
-            keyboardShouldPersistTaps="handled"
-            showsHorizontalScrollIndicator={false}
+        <Text style={styles.wordmark} variant="section">
+          {t('source.input')}
+        </Text>
+        <View style={styles.headRight}>
+          <Meta>{t('source.channels', { count: 3 })}</Meta>
+          <Pressable
+            accessibilityLabel={t('source.cancel')}
+            accessibilityRole="button"
+            onPress={onCancel}
+            style={styles.close}
           >
-            {photos.map((photo) => (
-              <Pressable
-                accessibilityLabel={t('source.photo')}
-                accessibilityRole="button"
-                disabled={working}
-                key={photo.id}
-                onPress={() => void take(photo.uri)}
-                style={styles.tile}
-              >
-                <Image contentFit="cover" source={{ uri: photo.uri }} style={styles.tileImage} />
-              </Pressable>
-            ))}
-          </ScrollView>
-        </>
-      ) : null}
-
-      <View style={styles.rows}>
-        <CardGroup>
-          {/*
-            The offer to show recent photos is a row, not a lonely dashed
-            square above an empty heading. It buys the strip, so it sits with
-            the other ways in — and it only exists while it can still be taken.
-          */}
-          {state === 'unasked' ? (
-            <SourceRow
-              disabled={working}
-              icon="photos"
-              key="show-recent"
-              label={t('source.showRecent')}
-              onPress={ask}
-            />
-          ) : null}
-          <SourceRow
-            disabled={working}
-            icon="library"
-            key="all-photos"
-            label={t('source.allPhotos')}
-            onPress={() => void pick()}
-          />
-          <SourceRow
-            disabled={working}
-            icon="capture"
-            key="camera"
-            label={t('source.camera')}
-            onPress={onCamera}
-          />
-          <SourceRow
-            disabled={working}
-            icon="scan"
-            key="scan"
-            label={t('source.scan')}
-            onPress={onScan}
-          />
-        </CardGroup>
+            <Icon name="close" scale="inline" />
+          </Pressable>
+        </View>
       </View>
+      <View style={styles.rule} />
+
+      <View style={styles.channels}>
+        <Channel
+          disabled={working}
+          face={face}
+          index={0}
+          label={t('source.allPhotos')}
+          onPress={() => void pick()}
+        />
+        <Channel
+          disabled={working}
+          index={1}
+          label={t('source.camera')}
+          onPress={onCamera}
+          signature="sweep"
+        />
+        <Channel
+          disabled={working}
+          index={2}
+          label={t('source.scan')}
+          onPress={onScan}
+          signature="pulse"
+        />
+      </View>
+
+      <View style={styles.stripHead}>
+        <Text tone="tertiary" variant="eyebrow">
+          {t('source.recent')}
+        </Text>
+        {state === 'unasked' ? (
+          /**
+           * The ask is a readout, not a dashed square in an empty row.
+           *
+           * iOS asks once, so it is raised from a tap rather than on open: a
+           * dialog that appears because a sheet opened is one the user cannot
+           * connect to anything they did, and they refuse it on that basis.
+           */
+          <Pressable
+            accessibilityLabel={t('source.showRecent')}
+            accessibilityRole="button"
+            onPress={ask}
+          >
+            <Meta tone="link">{t('source.showRecent')}</Meta>
+          </Pressable>
+        ) : null}
+        {state === 'limited' ? (
+          <Pressable
+            accessibilityLabel={t('source.chooseMore')}
+            accessibilityRole="button"
+            onPress={chooseMore}
+          >
+            <Meta tone="link">{t('source.chooseMore')}</Meta>
+          </Pressable>
+        ) : null}
+        {granted ? <Meta>{t('source.frames', { count: photos.length })}</Meta> : null}
+      </View>
+
+      {granted && photos.length ? (
+        <ScrollView
+          contentContainerStyle={styles.strip}
+          horizontal
+          // The channels below are reachable while a keyboard is up elsewhere in
+          // the stack; without this the first tap only dismisses it.
+          keyboardShouldPersistTaps="handled"
+          showsHorizontalScrollIndicator={false}
+        >
+          {photos.map((photo, index) => (
+            <Frame
+              disabled={working}
+              index={index}
+              key={photo.id}
+              onPress={() => void take(photo.uri)}
+              photo={photo}
+            />
+          ))}
+        </ScrollView>
+      ) : (
+        /* The strip keeps its height in every state. A row that appears when a
+           permission lands would shove the channels down under the thumb that
+           was already reaching for them. */
+        <View style={styles.stripEmpty}>
+          {/* A sentence, so it is set as one. Mono caps on wide tracking is a
+              legend for a control, not a line of prose — run a clause through
+              it and it becomes the widest thing on the screen. */}
+          <Text tone="quaternary" variant="body">
+            {t(`source.strip.${state}`)}
+          </Text>
+        </View>
+      )}
 
       {working ? (
         <View style={styles.status}>
@@ -210,47 +231,102 @@ export function SourceSheet({
 }
 
 /**
- * The same row the workbench and the settings deck draw: an icon, a label, a
- * chevron. No subtitle — in the first version the mono upper-case explanation
- * ran wider than the title it explained, which put the emphasis on the least
- * important line. What a row does belongs in what it is called.
+ * One channel: an index, a signature, a name.
+ *
+ * The signature is the point. A tile with an icon in it is a menu item drawn
+ * larger; a tile showing the photograph it would open, or the sweep the lens
+ * reads with, tells you what taking that route gets you before you take it.
  */
-function SourceRow({
-  icon,
+function Channel({
+  index,
   label,
   onPress,
   disabled,
+  face,
+  signature,
 }: {
-  icon: IconName;
+  index: number;
   label: string;
   onPress: () => void;
   disabled: boolean;
+  /** Channel 01 only: the newest photograph, when the library is readable. */
+  face?: string | undefined;
+  signature?: 'sweep' | 'pulse';
 }) {
   const styles = useStyles(makeStyles);
   const skin = useSkin();
+
   return (
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
-      // Guarded inside rather than by withholding the handler: a row that keeps
-      // its `onPress` while a read is running still announces itself as the
-      // button it is, and `accessibilityState` is what says it is busy.
+      // Guarded inside rather than by withholding the handler: a channel that
+      // keeps its `onPress` while a read is running still announces itself as
+      // the button it is, and `accessibilityState` is what says it is busy.
       onPress={() => {
         if (!disabled) onPress();
       }}
-      style={styles.row}
+      style={styles.channel}
     >
-      <Icon color={skin.ui.text.secondary} name={icon} scale="control" />
-      <Text style={styles.rowLabel} variant="rowTitle">
+      <View style={styles.signature}>
+        {face ? (
+          <Image
+            contentFit="cover"
+            source={{ uri: face }}
+            style={StyleSheet.absoluteFill}
+            testID="channel-face"
+          />
+        ) : null}
+        {signature === 'sweep' ? <BandSweepCanvas height={SIGNATURE} width={SIGNATURE} /> : null}
+        {signature === 'pulse' ? <LiveReadPulse /> : null}
+        {!face && !signature ? <Icon color={skin.ui.text.tertiary} name="library" /> : null}
+        <Text style={styles.index} tone="quaternary" variant="monoSmall">
+          {pad(index)}
+        </Text>
+      </View>
+      <Text style={styles.channelLabel} tone="secondary" variant="chip">
         {label}
       </Text>
-      <Icon color={skin.ui.text.tertiary} name="forward" scale="inline" />
     </Pressable>
   );
 }
 
-const TILE = 84;
+/** One frame in the strip, numbered the way a contact sheet numbers them. */
+function Frame({
+  photo,
+  index,
+  onPress,
+  disabled,
+}: {
+  photo: RecentPhoto;
+  index: number;
+  onPress: () => void;
+  disabled: boolean;
+}) {
+  const styles = useStyles(makeStyles);
+  const { t } = usePreferences();
+
+  return (
+    <Pressable
+      accessibilityLabel={t('source.photo', { index: pad(index) })}
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      onPress={() => {
+        if (!disabled) onPress();
+      }}
+      style={styles.frame}
+    >
+      <Image contentFit="cover" source={{ uri: photo.uri }} style={styles.frameImage} />
+      <Text tone="quaternary" variant="monoSmall">
+        {pad(index)}
+      </Text>
+    </Pressable>
+  );
+}
+
+const SIGNATURE = 96;
+const FRAME = 72;
 
 const makeStyles = (skin: Skin) =>
   StyleSheet.create({
@@ -263,34 +339,61 @@ const makeStyles = (skin: Skin) =>
       justifyContent: 'space-between',
       paddingHorizontal: space.gutter,
       paddingTop: space.md,
+      paddingBottom: space.sm,
     },
+    // Tracked wide, the way the panel legends on the capture screen are. This is
+    // a legend for an instrument, not a headline for an article.
+    wordmark: { letterSpacing: 4 },
+    headRight: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
     close: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      width: 30,
+      height: 30,
+      borderRadius: 15,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: skin.ui.fill.chipGhost,
     },
+    rule: { height: 1, backgroundColor: skin.ui.border.hairlineStrong },
+    channels: {
+      flexDirection: 'row',
+      gap: space.xs,
+      paddingHorizontal: space.gutter,
+      paddingTop: space.md,
+    },
+    channel: { flex: 1, gap: 8 },
+    signature: {
+      height: SIGNATURE,
+      borderRadius: skin.round.control,
+      borderWidth: 1,
+      borderColor: skin.ui.border.control,
+      backgroundColor: skin.ui.bg.media,
+      overflow: 'hidden',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    index: { position: 'absolute', top: 8, left: 8 },
+    channelLabel: { paddingHorizontal: 2 },
     stripHead: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: space.gutter,
-      paddingTop: space.md,
+      paddingTop: space.lg,
     },
     strip: { gap: space.xs, paddingHorizontal: space.gutter, paddingTop: space.sm },
-    tile: {
-      width: TILE,
-      height: TILE,
+    stripEmpty: {
+      height: FRAME + 20,
+      justifyContent: 'center',
+      paddingHorizontal: space.gutter,
+      paddingTop: space.sm,
+    },
+    frame: { gap: 4, alignItems: 'center' },
+    frameImage: {
+      width: FRAME,
+      height: FRAME,
       borderRadius: skin.round.control,
-      overflow: 'hidden',
       backgroundColor: skin.ui.bg.media,
     },
-    tileImage: { width: '100%', height: '100%' },
-    rows: { paddingHorizontal: space.gutter, paddingTop: space.md },
-    row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-    rowLabel: { flex: 1 },
     status: {
       flexDirection: 'row',
       alignItems: 'center',
