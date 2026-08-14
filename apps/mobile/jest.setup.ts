@@ -23,12 +23,27 @@ jest.mock('expo-notifications', () => ({
   useLastNotificationResponse: jest.fn(() => null),
 }));
 
-// The photo library is a native capability with no JS fallback. The mock grants
-// permission and swallows the write, so the success path runs under test; tests
-// that care about refusal override `requestPermissionsAsync` themselves.
+/**
+ * The photo library is a native capability with no JS fallback.
+ *
+ * Writing is mocked as granted and swallowed, so the save path runs under test.
+ * Reading defaults to *undetermined* rather than granted, because that is the
+ * state a first launch is actually in — a screen that only works once someone
+ * has said yes should show that in the tests that mount it. Tests that care
+ * about a particular answer override these themselves.
+ */
 jest.mock('expo-media-library', () => ({
   requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
   saveToLibraryAsync: jest.fn(async () => undefined),
+  isAvailableAsync: jest.fn(async () => true),
+  getPermissionsAsync: jest.fn(async () => ({
+    granted: false,
+    canAskAgain: true,
+    status: 'undetermined',
+    accessPrivileges: 'none',
+  })),
+  getAssetsAsync: jest.fn(async () => ({ assets: [], hasNextPage: false, totalCount: 0 })),
+  presentPermissionsPickerAsync: jest.fn(async () => undefined),
 }));
 
 const { setUpTests } =
