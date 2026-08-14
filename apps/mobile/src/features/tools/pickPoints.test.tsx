@@ -1,5 +1,5 @@
 import { makeColor } from '@cw/domain';
-import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
+import { render, screen, waitFor } from '@testing-library/react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
 import { ImportPickScreen } from '@/features/tools/ImportPickScreen';

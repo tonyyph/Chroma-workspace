@@ -1,6 +1,6 @@
-import { useIsFocused } from 'expo-router';
 import { evenlyWeightedColors, type Color } from '@cw/domain';
 import { space, type Skin } from '@cw/tokens';
+import { useIsFocused } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

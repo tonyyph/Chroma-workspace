@@ -38,7 +38,7 @@ without ever taking a frame.
    modes lives on the screen that draws them.
 
 3. **Three `<Camera>` elements hard-code `isActive`.** Viewfinder, Scan and
-   Studio each own a session, and mode switching *pushes*, so the previous
+   Studio each own a session, and mode switching _pushes_, so the previous
    camera keeps running underneath. Vision Camera expects `isActive` to follow
    screen focus. Costs battery, and contends for the sensor on device.
 
@@ -103,8 +103,7 @@ failures want three different sentences:
 
 ```ts
 type ImportOutcome =
-  | { ok: true; palette: Palette }
-  | { ok: false; reason: 'decode' | 'tooFewColours' | 'write' };
+  { ok: true; palette: Palette } | { ok: false; reason: 'decode' | 'tooFewColours' | 'write' };
 ```
 
 `'tooFewColours'` is the case `tools/import.tsx:32` currently swallows with a
@@ -115,14 +114,19 @@ state this flow can reach, so it gets a sentence.
 
 `apps/mobile/src/features/capture/useRecentPhotos.ts`
 
-Four states, four different strips:
+Five states, five different strips:
 
-| State | The strip shows |
-|---|---|
-| `unasked` | a single "Show recent photos" tile; asks on **tap**, not on open |
-| `granted` | the twelve newest photos |
+| State           | The strip shows                                                                                 |
+| --------------- | ----------------------------------------------------------------------------------------------- |
+| `unasked`       | a single "Show recent photos" tile; asks on **tap**, not on open                                |
+| `granted`       | the twelve newest photos                                                                        |
 | `limited` (iOS) | the shared assets, plus a trailing "Choose more" tile calling `presentPermissionsPickerAsync()` |
-| `denied` | nothing — the sheet collapses to its three rows |
+| `denied`        | nothing — the sheet collapses to its three rows                                                 |
+| `unavailable`   | nothing, and no offer to grant — `isAvailableAsync()` said there is no library here             |
+
+`unavailable` is separate from `denied` on purpose: "there is no photo library
+on this device" is not a decision anyone can revisit, and offering a permission
+button for it is offering a button that cannot work.
 
 Permission is never a precondition. `launchImageLibraryAsync` runs out of
 process and needs no grant, so **All photos works in every state**, including a

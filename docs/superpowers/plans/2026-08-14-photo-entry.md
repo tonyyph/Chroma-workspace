@@ -33,16 +33,18 @@ react-native-vision-camera, Zustand, Jest + @testing-library/react-native.
 ### Task 1: `useImportPhoto` — one uri in, one Palette out
 
 **Files:**
+
 - Create: `apps/mobile/src/features/capture/useImportPhoto.ts`
 - Create: `apps/mobile/src/features/capture/useImportPhoto.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `toDecodableUri`, `readPalette` (`ReadOutcome`), `useCaptureStore.begin`, `useCaptureCommit`
 - Produces:
+
   ```ts
   export type ImportOutcome =
-    | { ok: true; palette: Palette }
-    | { ok: false; reason: 'decode' | 'tooFewColours' | 'write' };
+    { ok: true; palette: Palette } | { ok: false; reason: 'decode' | 'tooFewColours' | 'write' };
   export function useImportPhoto(): (uri: string) => Promise<ImportOutcome>;
   ```
 
@@ -61,19 +63,22 @@ react-native-vision-camera, Zustand, Jest + @testing-library/react-native.
 ### Task 2: `useRecentPhotos` — the permission state machine
 
 **Files:**
+
 - Create: `apps/mobile/src/features/capture/useRecentPhotos.ts`
 - Create: `apps/mobile/src/features/capture/useRecentPhotos.test.tsx`
 - Modify: `apps/mobile/app.json` (add `preventAutomaticLimitedAccessAlert: true`)
 
 **Interfaces:**
+
 - Consumes: `expo-media-library` (`usePermissions`, `getAssetsAsync`, `presentPermissionsPickerAsync`)
 - Produces:
+
   ```ts
   export type RecentsState = 'unasked' | 'granted' | 'limited' | 'denied' | 'unavailable';
   export function useRecentPhotos(count?: number): {
     state: RecentsState;
     photos: readonly { id: string; uri: string }[];
-    ask: () => void;      // asks on tap, never on mount
+    ask: () => void; // asks on tap, never on mount
     chooseMore: () => void; // presentPermissionsPickerAsync
   };
   ```
@@ -89,6 +94,7 @@ react-native-vision-camera, Zustand, Jest + @testing-library/react-native.
 ### Task 3: `SourceSheet` and the `/source` route
 
 **Files:**
+
 - Create: `apps/mobile/src/features/capture/SourceSheet.tsx`
 - Create: `apps/mobile/src/app/source.tsx`
 - Create: `apps/mobile/src/features/capture/sourceSheet.test.tsx`
@@ -110,6 +116,7 @@ react-native-vision-camera, Zustand, Jest + @testing-library/react-native.
 ### Task 4: `no-hot-cameras` scan and the three lifecycles
 
 **Files:**
+
 - Create: `apps/mobile/src/__tests__/no-hot-cameras.test.ts`
 - Modify: `ViewfinderScreen.tsx:115`, `ScanScreen.tsx:102`, `CameraStudioScreen.tsx:152`
 
@@ -125,6 +132,7 @@ react-native-vision-camera, Zustand, Jest + @testing-library/react-native.
 ### Task 5: Real modes, and a gate on Scan
 
 **Files:**
+
 - Modify: `apps/mobile/src/features/capture/ViewfinderScreen.tsx`
 - Modify: `apps/mobile/src/features/tools/ScanScreen.tsx`
 - Modify: `apps/mobile/src/app/tools/scan.tsx`
@@ -145,6 +153,7 @@ react-native-vision-camera, Zustand, Jest + @testing-library/react-native.
 ### Task 6: The point sampler moves to `/tools/pick`
 
 **Files:**
+
 - Modify: `apps/mobile/src/features/tools/ImportPickScreen.tsx`
 - Create: `apps/mobile/src/app/tools/pick.tsx`
 - Delete: `apps/mobile/src/app/tools/import.tsx`
@@ -165,6 +174,7 @@ react-native-vision-camera, Zustand, Jest + @testing-library/react-native.
 ### Task 7: The reachability test
 
 **Files:**
+
 - Create: `apps/mobile/src/__tests__/import-reachable.test.tsx`
 
 - [ ] **Step 1:** With camera permission denied, assert a user can still reach
