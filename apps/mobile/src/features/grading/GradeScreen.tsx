@@ -1,7 +1,6 @@
 import {
   describeGrade,
   gradesEqual,
-  LOOKS,
   gradeForAtmosphere,
   look,
   NEUTRAL_GRADE,
@@ -276,39 +275,17 @@ export function GradeScreen() {
       </Gutter>
       {/*
         The grid needs the decoded photograph to preview on. Without one there is
-        nothing to show a look *doing*, and a rail of names is the honest
-        fallback rather than thirty empty squares.
+        nothing to show a look *doing*, so it falls back to a rail of names — but
+        it keeps the collections either way, because the alternative is a
+        hundred and ten chips wrapped down the screen.
       */}
-      {status === 'ready' && image ? (
-        <LookGrid
-          current={current}
-          image={image}
-          isLocked={(lookId) => !canAdjust && !(look(lookId)?.free ?? false)}
-          onChoose={choose}
-          onLocked={() => router.push('/paywall?trigger=advanced-grading')}
-        />
-      ) : (
-        <Gutter style={styles.rail}>
-          {LOOKS.map((entry) => (
-            <Chip
-              key={entry.id}
-              label={entry.name}
-              onPress={() =>
-                canAdjust || entry.free
-                  ? choose(entry.grade)
-                  : router.push('/paywall?trigger=advanced-grading')
-              }
-              tone={
-                !canAdjust && !entry.free
-                  ? 'pro'
-                  : gradesEqual(current, entry.grade)
-                    ? 'selected'
-                    : 'default'
-              }
-            />
-          ))}
-        </Gutter>
-      )}
+      <LookGrid
+        current={current}
+        image={status === 'ready' ? image : null}
+        isLocked={(lookId) => !canAdjust && !(look(lookId)?.free ?? false)}
+        onChoose={choose}
+        onLocked={() => router.push('/paywall?trigger=advanced-grading')}
+      />
 
       {/*
         Free, and outside the Pro gate on purpose: the automatic grade has to

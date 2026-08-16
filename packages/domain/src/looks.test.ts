@@ -83,11 +83,22 @@ describe('LOOKS', () => {
     }
   });
 
-  it('offers five collections with six looks each, one of them free', () => {
-    expect(LOOKS).toHaveLength(30);
+  it('name every look exactly once', () => {
+    // The id keeps storage honest; the name is the only thing the person
+    // choosing ever sees, so two looks sharing one is the same failure.
+    expect(new Set(LOOKS.map((entry) => entry.name)).size).toBe(LOOKS.length);
+  });
+
+  it('offers a collection small enough to show at once, one look of it free', () => {
+    expect(LOOKS).toHaveLength(110);
+    expect(lookCollectionIds).toHaveLength(15);
     for (const id of lookCollectionIds) {
       const members = looksIn(id);
-      expect(members).toHaveLength(6);
+      // The grid renders a whole collection as live Skia previews — see
+      // `LookGrid`. Eight is the ceiling that keeps that affordable, and six is
+      // the floor below which a collection is not a collection.
+      expect(members.length).toBeGreaterThanOrEqual(6);
+      expect(members.length).toBeLessThanOrEqual(8);
       expect(members.filter((entry) => entry.free)).toHaveLength(1);
     }
   });
