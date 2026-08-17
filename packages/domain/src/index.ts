@@ -19,5 +19,6 @@ export * from './preferences';
 export * from './ranking';
 export * from './rewind';
 export * from './snapshot';
+export * from './story';
 export * from './styleDna';
 export * from './weights';
