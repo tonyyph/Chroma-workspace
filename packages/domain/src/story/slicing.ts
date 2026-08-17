@@ -1,6 +1,6 @@
 import { formatOf, type StoryFormat } from './formats';
 import { isVisible, type StoryElement } from './elements';
-import { rectsIntersect, sliceBounds, type Rect } from './geometry';
+import { containsPoint, rectsIntersect, sliceBounds, type Rect } from './geometry';
 import type { StoryProject } from './project';
 
 /**
@@ -102,6 +102,36 @@ export function crossingElements(
       isVisible(layer) &&
       plans.filter((plan) => rectsIntersect(layer.frame, plan.bounds)).length > 1,
   );
+}
+
+/**
+ * The topmost element under a point, or null.
+ *
+ * **Topmost, because the array is the z-order** — the search runs backwards, so
+ * a tap on overlapping elements selects the one actually visible rather than the
+ * one that happens to be first. Getting this backwards produces an editor where
+ * tapping a photograph selects the background behind it, which reads as the tap
+ * not working at all.
+ *
+ * Hidden and fully transparent elements are skipped: they are not on screen, and
+ * selecting something invisible by tapping where it used to be is worse than the
+ * tap doing nothing. Locked elements *are* returned — locking prevents moving,
+ * not selecting, and being unable to select a locked element means being unable
+ * to unlock it.
+ *
+ * Takes a point in logical canvas coordinates. The caller converts from screen
+ * points, which is the one place a scale factor is involved.
+ */
+export function elementAt(
+  layers: readonly StoryElement[],
+  point: { x: number; y: number },
+): StoryElement | null {
+  for (let index = layers.length - 1; index >= 0; index -= 1) {
+    const layer = layers[index];
+    if (layer === undefined || !isVisible(layer)) continue;
+    if (containsPoint(layer.frame, point)) return layer;
+  }
+  return null;
 }
 
 export type TilingProblem =

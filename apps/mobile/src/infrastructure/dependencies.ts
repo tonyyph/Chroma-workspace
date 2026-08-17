@@ -12,6 +12,7 @@ import { StoredEntitlements } from './StoredEntitlements';
 import { StoredMemoryRepository } from './StoredMemoryRepository';
 import { StoredPreferencesRepository } from './StoredPreferencesRepository';
 import { StoredSetRepository } from './StoredSetRepository';
+import { StoredStoryRepository } from './story/StoredStoryRepository';
 import { ExpoSharedContainer, ExpoTimelineReloader } from './widgets/ExpoSharedContainer';
 import { WidgetSnapshotWriter } from './widgets/WidgetSnapshotWriter';
 
@@ -43,6 +44,16 @@ export const memoryRepository = new StoredMemoryRepository(storage);
  * interface did not.
  */
 export const paletteRepository = new MemoryBackedPaletteRepository(memoryRepository);
+
+/**
+ * Story projects.
+ *
+ * Shares the one MMKV instance — there is no reason for a second — but lays its
+ * data out differently: one key per project rather than one key for the library,
+ * because autosave writes during editing and must not serialise every story a
+ * person has ever made to record one moved element. See the class comment.
+ */
+export const storyRepository = new StoredStoryRepository(storage);
 
 export const preferencesRepository = new StoredPreferencesRepository(storage);
 export const setRepository = new StoredSetRepository(storage);

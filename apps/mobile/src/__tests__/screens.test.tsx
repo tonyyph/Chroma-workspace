@@ -13,6 +13,9 @@ import { PaletteDetailScreen } from '@/features/palette/PaletteDetailScreen';
 import { PaywallScreen } from '@/features/paywall/PaywallScreen';
 import { RewindScreen } from '@/features/rewind/RewindScreen';
 import { CollectionScreen } from '@/features/sets/CollectionScreen';
+import { NewStoryScreen } from '@/features/story/NewStoryScreen';
+import { StoryEditorScreen } from '@/features/story/StoryEditorScreen';
+import { StoryPreviewScreen } from '@/features/story/StoryPreviewScreen';
 import { CameraStudioScreen } from '@/features/studio/CameraStudioScreen';
 import { ActivityScreen } from '@/features/tools/ActivityScreen';
 import { ApplyThemeScreen } from '@/features/tools/ApplyThemeScreen';
@@ -190,6 +193,15 @@ const cases: readonly [string, () => ReactElement][] = [
   ['Living memory', () => <LivingMemoryScreen memory={memory()} />],
   ['Rewind', () => <RewindScreen />],
   ['Camera studio', () => <CameraStudioScreen />],
+  ['New story', () => <NewStoryScreen onClose={jest.fn()} onCreated={jest.fn()} />],
+  [
+    'Story editor',
+    // A story id that is not in storage: the editor's `missing` branch is the
+    // one a deep link to a deleted draft actually lands on, so it is the one
+    // worth mounting here.
+    () => <StoryEditorScreen onClose={jest.fn()} onPreview={jest.fn()} storyId="absent" />,
+  ],
+  ['Story preview', () => <StoryPreviewScreen onClose={jest.fn()} />],
   [
     'Pick points',
     () => (

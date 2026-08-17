@@ -1,5 +1,5 @@
 import type { Storyboard } from '@cw/domain';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * The clock the performance runs on.
@@ -30,18 +30,31 @@ export function useMemoryClock({
 }): { elapsedMs: number; finished: boolean } {
   const [elapsedMs, setElapsedMs] = useState(0);
 
-  // Kept in a ref as well so the interval can advance from the last value
-  // without re-subscribing every tick.
-  const elapsedRef = useRef(0);
-  elapsedRef.current = elapsedMs;
-
   const following = audioPositionMs !== null;
 
+  /**
+   * Advances by the wall-clock time actually elapsed since the last tick.
+   *
+   * **The delta is measured, not assumed**, so a tick that arrives late — a busy
+   * frame, a backgrounded app — contributes what it really took rather than a
+   * flat 60ms, and the performance stays in step with the clock instead of
+   * accumulating the interval's drift.
+   *
+   * The functional updater is what lets the interval resume from wherever the
+   * clock currently is without the effect depending on `elapsedMs`. The previous
+   * version reached the same end through a ref assigned during render, which
+   * React forbids: a render that is thrown away still mutates the ref, so a
+   * discarded render could hand the committed effect the wrong baseline. It also
+   * bailed this hook out of React Compiler entirely.
+   */
   useEffect(() => {
     if (!playing || following) return;
-    const started = Date.now() - elapsedRef.current;
+    let last = Date.now();
     const timer = setInterval(() => {
-      setElapsedMs(Math.min(storyboard.totalMs, Date.now() - started));
+      const now = Date.now();
+      const advanced = now - last;
+      last = now;
+      setElapsedMs((current) => Math.min(storyboard.totalMs, current + advanced));
     }, TICK_MS);
     return () => clearInterval(timer);
   }, [following, playing, storyboard.totalMs]);

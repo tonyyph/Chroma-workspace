@@ -43,7 +43,43 @@ export type AnalyticsEventMap = {
   recap_viewed: { monthKey: string };
   gradient_studio_opened: { paletteId: string };
   palette_shared: { paletteId: string; format: ShareRatio };
+
+  /* ------------------------------------------------- Chroma Story Studio ---
+   *
+   * Only the events Phase 1 actually emits. The brief names twenty-one across
+   * all seven features; adding the other fifteen now would be the analytics
+   * equivalent of a control with no action — a dashboard column that is empty
+   * because nothing can fire it, which is indistinguishable from a column that
+   * is empty because nobody used the feature.
+   *
+   * Nothing here carries an image, a caption, a colour history or a file path.
+   * `format` and counts describe the shape of the work, not its content.
+   */
+  studio_opened: { source: StudioEntryPoint };
+  project_created: { format: StoryFormatKey; slideCount: number; photoCount: number };
+  /** `kind` is the element type, never the text typed or the photo chosen. */
+  element_added: { kind: 'photo' | 'text' | 'paletteStrip' };
+  export_started: { format: StoryFormatKey; slideCount: number };
+  export_completed: { format: StoryFormatKey; slideCount: number; ms: number };
+  export_failed: { format: StoryFormatKey; reason: ExportFailureReason };
+  share_started: { format: StoryFormatKey; slideCount: number };
 };
+
+/** How someone reached the studio, so the entry points can be compared. */
+export type StudioEntryPoint = 'library' | 'memory' | 'collection' | 'deep-link';
+
+/** Mirrors the domain's `StoryFormatId`, restated so analytics imports no schema. */
+export type StoryFormatKey = 'portrait' | 'square' | 'story';
+
+/**
+ * Mirrors `ExportFailure` in the app.
+ *
+ * Restated rather than imported because this package must not depend on the
+ * mobile app — but kept as a closed union so a new failure mode cannot be
+ * reported as a free-text string nobody can group by.
+ */
+export type ExportFailureReason =
+  'no-slides' | 'seam-detected' | 'surface-unavailable' | 'encode-failed' | 'write-failed';
 
 /** G7's four code targets, plus the palette formats from B4's export row. */
 export type ExportFormat = 'css' | 'tailwind' | 'swift' | 'json' | 'svg' | 'ase' | 'png' | 'theme';
