@@ -160,6 +160,19 @@ export function ControlDeck({ unread }: { unread: number }) {
             onPress={() => router.push('/tools/rewind')}
             value={t('you.open')}
           />
+          {/* The way into Story Studio.
+              One entry point, deliberately. The brief names four — memory
+              detail, collection, studio, remix — but three of those hand the
+              editor a starting selection it cannot use yet, and a row that
+              opens an empty project from a memory the user just chose would
+              look like it lost their choice. The others arrive with the phases
+              that give them something to carry. */}
+          <Row
+            icon="photos"
+            label={t('story.title')}
+            onPress={() => router.push('/story/new')}
+            value={t('you.open')}
+          />
           <Row
             icon="activity"
             label={t('activity.title')}
