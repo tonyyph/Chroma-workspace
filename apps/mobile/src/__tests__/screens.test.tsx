@@ -1,5 +1,5 @@
 import { makeColor, paletteToMemory, type Palette, type PaletteSet } from '@cw/domain';
-import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
+import { act, render, screen, userEvent, waitFor } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
 import { ResultScreen } from '@/features/capture/ResultScreen';
@@ -115,6 +115,20 @@ async function mount(node: ReactElement) {
     </SafeAreaProvider>,
   );
   await waitFor(() => expect(view.toJSON()).not.toBeNull(), { timeout: 5000 });
+  /**
+   * Let the providers finish reading storage before the test touches anything.
+   *
+   * `EntitlementProvider` resolves the tier asynchronously and calls `setReady`
+   * when it lands — which is *after* the first render has already satisfied the
+   * `waitFor` above, so the update happened outside `act` and React warned about
+   * it. That warning fired 57 times in this file alone, which is more than
+   * enough noise to hide the one that matters.
+   *
+   * Flushing here is also closer to what the screens actually experience: every
+   * Pro gate reads `ready`, and asserting against a tree that has not finished
+   * resolving the tier is asserting against a state the user never sees.
+   */
+  await act(async () => {});
   return view;
 }
 

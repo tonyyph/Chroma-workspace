@@ -1,4 +1,4 @@
-import { render, within } from '@testing-library/react-native';
+import { act, render, within } from '@testing-library/react-native';
 import RootLayout from '@/app/_layout';
 
 jest.mock('@expo-google-fonts/ibm-plex-mono', () => ({
@@ -77,10 +77,16 @@ jest.mock('@/providers/PreferencesProvider', () => {
 });
 
 describe('RootLayout', () => {
-  it('keeps the navigator inside GestureHandlerRootView', () => {
+  it('keeps the navigator inside GestureHandlerRootView', async () => {
     const view = render(<RootLayout />);
     const gestureRoot = view.getByTestId('gesture-handler-root');
 
     expect(within(gestureRoot).getByTestId('app-navigator')).toBeTruthy();
+
+    // `RootLayout` mounts `EntitlementProvider`, which reads the tier from
+    // storage and sets state once it lands — after this synchronous assertion.
+    // Flushing inside `act` keeps that update from arriving after the test has
+    // finished, which is what React was warning about.
+    await act(async () => {});
   });
 });
