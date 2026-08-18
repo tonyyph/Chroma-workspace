@@ -64,7 +64,9 @@ describe('paletteBands', () => {
 
   it('gives a single colour the whole span', () => {
     const bands = paletteBands(colors(1), 500, true);
-    expect(bands).toEqual([{ hex: '#7C5CFF', offset: 0, length: 500 }]);
+    // `opacity` is part of a band now: motion may modulate it, and a still band
+    // is one at full strength rather than one without the field.
+    expect(bands).toEqual([{ hex: '#7C5CFF', offset: 0, length: 500, opacity: 1 }]);
   });
 });
 

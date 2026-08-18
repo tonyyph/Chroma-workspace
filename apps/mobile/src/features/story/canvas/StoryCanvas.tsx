@@ -42,6 +42,8 @@ export function StoryCanvas({
   guides,
   guideColor,
   selectedId,
+  phase,
+  reduceMotion,
 }: {
   project: StoryProject;
   slideIndex: number;
@@ -54,6 +56,10 @@ export function StoryCanvas({
   guideColor?: string;
   /** Outlined so selection is visible without relying on colour alone. */
   selectedId?: string | null;
+  /** Where animated palettes are in their cycle, 0-1. */
+  phase?: number;
+  /** Draws palettes still and at full strength. */
+  reduceMotion?: boolean;
 }) {
   const plans = useMemo(() => planSlicesFor(project), [project]);
   const plan: SlicePlan | undefined = plans[slideIndex];
@@ -77,6 +83,8 @@ export function StoryCanvas({
       fonts,
       scale,
       background,
+      phase: phase ?? 0,
+      reduceMotion: reduceMotion ?? true,
     });
     onReport?.(report);
 

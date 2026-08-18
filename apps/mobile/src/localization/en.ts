@@ -750,6 +750,28 @@ export const en = {
   'story.layer.forward': 'Forward',
   'story.layer.backward': 'Back',
   'story.layer.panel': 'Layers',
+  'story.living.still': 'Still',
+  'story.living.calm': 'Calm',
+  'story.living.flow': 'Flow',
+  'story.living.pulse': 'Pulse',
+  'story.living.rush': 'Rush',
+  'story.living.reduced':
+    'Motion is off in your settings. The palette is shown complete and still.',
+  'story.new.fromMemories': 'From memories',
+  'story.new.fromPhotos': 'From photos',
+  'story.new.memoryCount': '{count} of {max} chosen',
+  'story.new.noMemories': 'Capture a memory first',
+  'story.pace.title': 'Pacing',
+  'story.pace.order': 'Order',
+  'story.order.chronological': 'In time',
+  'story.order.building': 'Building',
+  'story.order.colour-flow': 'Colour flow',
+  'story.pace.note': 'Pacing comes from the colour in your photographs, not from the music.',
+  'story.music.none': 'No track attached',
+  'story.music.metadata': 'The track is named on the story. It cannot be played from here.',
+  'story.music.external-link': 'The track is named, and links out to where you can hear it.',
+  'story.music.preview-playback':
+    'A short preview can be played in the app. Images still carry no audio.',
 } as const;
 
 export type MessageKey = keyof typeof en;

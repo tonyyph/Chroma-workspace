@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { colorSchema, hexSchema } from '../palette';
 import { cropSchema, rectSchema } from './geometry';
+import { livingPaletteConfigSchema } from './livingPalette';
 
 /**
  * The things a story is made of.
@@ -72,6 +73,18 @@ export const photoElementSchema = z.object({
   focal: z
     .object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) })
     .default({ x: 0.5, y: 0.5 }),
+  /**
+   * A subject mask to composite through, or null for the whole frame.
+   *
+   * An asset id, for the same reason the photograph itself is one: a mask for a
+   * 4096px frame is megabytes, and neither the document nor application state is
+   * a place for pixels.
+   *
+   * `.default(null)` is a widening — every existing project reads as unmasked,
+   * which is what it is. Nothing can set this yet: no extractor is implemented
+   * (decision D4), and the app offers no control that would produce one.
+   */
+  maskAssetId: z.string().min(1).max(64).nullable().default(null),
 });
 
 export type PhotoElement = z.infer<typeof photoElementSchema>;
@@ -143,6 +156,18 @@ export const paletteStripElementSchema = z
      * drops the "how much" half of that claim.
      */
     weighted: z.boolean(),
+    /**
+     * How this strip moves, or null for a still one.
+     *
+     * `.default(null)` rather than required — a widening, so every project
+     * written before Living Palette existed still parses, and reads as still,
+     * which is exactly what those projects meant.
+     *
+     * Motion is a property of *this element*, not of the project, because a
+     * story may hold a breathing palette on one slide and a still one on the
+     * next, and a single project-wide setting could not say that.
+     */
+    animation: livingPaletteConfigSchema.nullable().default(null),
   })
   .superRefine((element, context) => {
     // The same invariant `chromaticMemorySchema` enforces, for the same reason:

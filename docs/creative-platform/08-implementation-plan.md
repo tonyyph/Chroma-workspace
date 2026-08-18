@@ -6,16 +6,16 @@
 
 ## Status at a glance
 
-| Phase | Scope                                     | Status                               |
-| ----- | ----------------------------------------- | ------------------------------------ |
-| 0     | Repository audit, baseline, decisions     | **done**                             |
-| 1     | Story Studio vertical slice               | **code complete, device-unverified** |
-| 2     | Precision editing + Cross-Format Composer | **partly built** — see below         |
-| 3     | Living Palette, then Chroma Cutout        | not started (D4 decided)             |
-| 4     | Beat-Synced Memory (scoped by D1)         | not started                          |
-| 5     | AI Story Director                         | not started                          |
-| 6     | Color DNA (~60% pre-existing)             | not started (D6 decided)             |
-| 7     | Remixable Memories, local only (D5)       | not started                          |
+| Phase | Scope                                     | Status                                     |
+| ----- | ----------------------------------------- | ------------------------------------------ |
+| 0     | Repository audit, baseline, decisions     | **done**                                   |
+| 1     | Story Studio vertical slice               | **code complete, device-unverified**       |
+| 2     | Precision editing + Cross-Format Composer | **partly built** — see below               |
+| 3     | Living Palette, then Chroma Cutout        | **Living Palette built; Cutout seam only** |
+| 4     | Beat-Synced Memory (scoped by D1)         | not started                                |
+| 5     | AI Story Director                         | not started                                |
+| 6     | Color DNA (~60% pre-existing)             | not started (D6 decided)                   |
+| 7     | Remixable Memories, local only (D5)       | not started                                |
 
 Baseline was 832 tests. It is now **1073**, with `corepack pnpm check` at exit 0.
 
@@ -127,24 +127,81 @@ independent. Caught by a test, not by review.
 
 ## Phase 3 — Living Palette, then Chroma Cutout
 
-**Living Palette first** because it is unblocked and already has a deterministic
-foundation. Presets (Calm / Flow / Pulse / Rush), user controls for intensity,
-speed, palette order and loop, a reduced-motion path that produces a complete
-static composition rather than removing content, and deterministic export.
+### Living Palette — built
 
-**Cutout second, and blocked on decision D4.** Build the provider interface,
-request state, validated response model and a deterministic development fallback
-regardless. Ship a real implementation only once the route is chosen: iOS Vision
-(best quality, native code, iOS-only), a cross-platform ML runtime (heavier,
-lower quality), or a backend (does not exist, conflicts with local-first).
+`domain/livingPalette.ts` (29 tests) plus the renderer and editor controls.
+
+**The invariant it is built around: motion never changes what the palette
+claims.** `LivingBands` in the existing Living Memory screen had already found
+this — "a band that changed width would change what the palette claims about the
+photograph" — and the widths are the product's central assertion, measured from
+real pixels. So `breathe` modulates opacity only, and `flow` moves bands along
+the strip while every band keeps its own width. Tests assert that total covered
+length is exactly the span at every phase, and that each colour's share survives
+the wrap when a band is split at the seam.
+
+**Two styles, not the nine the brief lists.** Rings, particles, light leaks and
+topographic motion need a renderer this palette strip does not have; they arrive
+with one rather than as enum values nothing draws.
+
+**Deterministic**: every style is a pure function of `(colors, config, phase)`.
+No randomness, no clock inside the module — the caller owns time. That is what
+makes an export reproducible.
+
+**Reduced motion is a complete composition, not a frozen animation.**
+`bandsToDraw` short-circuits to the _static_ bands rather than evaluating the
+animation at phase zero. This mattered: a staggered breathe at phase zero leaves
+later bands part-way dimmed, which is a diminished palette. A test caught it.
+
+**Honest limitation, written into the code.** The palette is drawn inside the
+Skia picture, so animating it means re-recording the scene. `usePalettePhase`
+therefore ticks at 12fps and says so in its own comment: this is a _preview_ of
+the motion, not the motion. Smooth playback needs the palette lifted into its own
+layer — a renderer change, not this phase's work.
+
+### Chroma Cutout — seam only, and deliberately
+
+Decision D4 chose **iOS Vision**, which needs a native module this build does not
+have. So what exists is the interface, the validated mask model, the capability
+report and a wired `UnavailableSubjectExtractor` — and **no UI at all**.
+
+There is deliberately no development fallback that returns a rectangle. A
+rectangular "mask" is not a cutout; shipping one would teach people the feature
+works badly rather than that it is not here yet. `NullImageUnderstandingProvider`
+set that precedent and this follows it.
+
+Next step is the native module plus a build, at which point the UI can appear —
+and must consult `availability()` and stay **absent on Android** rather than
+present and failing.
 
 ---
 
 ## Phases 4–7
 
-**4 — Beat-Synced Memory**, scoped by ADR 04: colour-derived pacing, honest
-capability ladder, truthful export. Ships under a name that describes what it
-does.
+**4 — built, and not called Beat-Synced.** ADR 04 required a name that describes
+what the feature does, and this one does not synchronise to a beat.
+
+- `domain/capability.ts` (10 tests) — the ladder, as data. A test asserts that
+  **no reachable rung permits audio analysis**, so the rule cannot quietly lapse.
+  `trackCapability` returns a narrowed `ReachableRung`, so a screen writing copy
+  for each case has four to write rather than seven — three of which describe
+  states that cannot occur.
+- `domain/pacing.ts` (20 tests) — ordering (`chronological`, `building`,
+  `colour-flow`) and holds derived from `facets.energy` and `atmosphere`.
+  Deterministic; a test asserts the same ids in the same order whatever order the
+  input array arrived in.
+- `composeFromMemories` (11 tests) — the entry point that makes the rest work.
+- The preview screen now states what the attached track can actually do, from
+  `trackCapability`, alongside the standing "images carry no audio".
+
+**The structural finding this phase turned up.** `paceStory` reads
+`facets.energy` and `atmosphere` — signals only a _memory_ carries. The Phase 1
+creation path picks files from the photo library, which carry none of them, so
+colour-derived pacing had no input at all. Building "create from memories" was
+not an extra: it was the precondition. It also fixed a smaller dishonesty —
+stories built from raw photographs get a placeholder pair of skin colours for
+their palette strip, while stories built from memories carry each memory's own
+extracted palette at its own weights, which is the product's real claim.
 
 **5 — AI Story Director**, per ADR 05: the deterministic local composer first, as
 a real feature; then the patch schema and validation; the provider is a separate,

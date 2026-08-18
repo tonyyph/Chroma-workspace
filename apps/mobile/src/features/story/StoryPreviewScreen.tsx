@@ -1,6 +1,7 @@
 import {
   adaptProject,
   planSlicesFor,
+  trackCapability,
   storyFormats,
   type AdaptationNote,
   type StoryFormatId,
@@ -230,10 +231,22 @@ export function StoryPreviewScreen({ onClose }: { onClose: () => void }) {
           />
         )}
 
+        {/*
+          What the attached track can actually do, said plainly.
+          `previewResolvable` is false here on purpose: a preview is re-resolved
+          on demand and never persisted (`music.ts`), so this screen genuinely
+          does not know whether one is available — and claiming playback it has
+          not confirmed would be the fabrication ADR 04 exists to prevent.
+        */}
         {project.track === null ? null : (
-          <Text tone="secondary" variant="meta">
-            {t('story.preview.noAudio')}
-          </Text>
+          <>
+            <Text tone="secondary" variant="meta">
+              {t(`story.music.${trackCapability(project.track, false)}`)}
+            </Text>
+            <Text tone="secondary" variant="meta">
+              {t('story.preview.noAudio')}
+            </Text>
+          </>
         )}
 
         {progress === null ? null : (

@@ -7,6 +7,9 @@ import {
   planSlicesFor,
   removeElement,
   setElementFrame,
+  livingPaletteConfig,
+  livingPalettePresets,
+  mapElement,
   setElementHidden,
   setElementLocked,
   reorderElement,
@@ -31,6 +34,7 @@ import { useElementGesture } from './canvas/useElementGesture';
 import { useStoryImages } from './canvas/useStoryImages';
 import { addPaletteStrip, addTextElement } from './editorActions';
 import { LayerPanel } from './LayerPanel';
+import { usePalettePhase } from './canvas/usePalettePhase';
 
 /**
  * The editor.
@@ -109,6 +113,18 @@ export function StoryEditorScreen({
 
   const [guides, setGuides] = useState<readonly SnapGuide[]>([]);
   const [showLayers, setShowLayers] = useState(false);
+
+  /**
+   * The clock for animated palettes.
+   *
+   * Driven by the *selected* strip's config so a preview costs one re-record
+   * loop rather than one per animated element. A story with several breathing
+   * palettes previews the one being worked on, which is the one the author is
+   * looking at.
+   */
+  const animatedConfig =
+    selected !== null && selected.kind === 'paletteStrip' ? selected.animation : null;
+  const { phase, reduceMotion } = usePalettePhase(animatedConfig);
 
   /**
    * Aligns a released frame, and records what it aligned to.
@@ -306,7 +322,9 @@ export function StoryEditorScreen({
                 guides={guides}
                 images={images}
                 onReport={(report) => setMissing(report.missingAssets)}
+                phase={phase}
                 project={project}
+                reduceMotion={reduceMotion}
                 selectedId={selectedId}
                 slideIndex={activeSlide}
                 width={canvasWidth}
@@ -397,6 +415,61 @@ export function StoryEditorScreen({
           }
           selectedId={selectedId}
         />
+      ) : null}
+
+      {selected?.kind !== 'paletteStrip' ? null : (
+        <ScrollView
+          contentContainerStyle={styles.dock}
+          horizontal
+          keyboardShouldPersistTaps="handled"
+          showsHorizontalScrollIndicator={false}
+        >
+          {/* "Still" is a first-class choice, not the absence of one — which is
+              why it is a chip beside the presets rather than a toggle elsewhere. */}
+          <Chip
+            label={t('story.living.still')}
+            onPress={() =>
+              act((current) =>
+                mapElement(
+                  current,
+                  selected.id,
+                  (element) =>
+                    element.kind === 'paletteStrip' ? { ...element, animation: null } : element,
+                  now(),
+                ),
+              )
+            }
+            tone={selected.animation === null ? 'selected' : 'default'}
+          />
+          {livingPalettePresets.map((preset) => (
+            <Chip
+              key={preset}
+              label={t(`story.living.${preset}`)}
+              onPress={() =>
+                act((current) =>
+                  mapElement(
+                    current,
+                    selected.id,
+                    (element) =>
+                      element.kind === 'paletteStrip'
+                        ? { ...element, animation: livingPaletteConfig(preset) }
+                        : element,
+                    now(),
+                  ),
+                )
+              }
+              tone={selected.animation?.preset === preset ? 'selected' : 'default'}
+            />
+          ))}
+        </ScrollView>
+      )}
+
+      {reduceMotion && animatedConfig !== null ? (
+        <View style={styles.notice}>
+          <Text tone="secondary" variant="meta">
+            {t('story.living.reduced')}
+          </Text>
+        </View>
       ) : null}
 
       {selected === null ? null : (

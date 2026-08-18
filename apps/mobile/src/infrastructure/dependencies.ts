@@ -1,5 +1,10 @@
 import { DevelopmentAnalytics } from '@cw/analytics';
-import { UnconfiguredMusicProvider, type MusicProvider } from '@cw/domain';
+import {
+  UnavailableSubjectExtractor,
+  UnconfiguredMusicProvider,
+  type MusicProvider,
+  type SubjectExtractor,
+} from '@cw/domain';
 import { PreviewPlayer } from './audio/PreviewPlayer';
 import { ExpoHapticsService } from './ExpoHapticsService';
 import { ExpoNotificationScheduler } from './ExpoNotificationScheduler';
@@ -54,6 +59,20 @@ export const paletteRepository = new MemoryBackedPaletteRepository(memoryReposit
  * person has ever made to record one moved element. See the class comment.
  */
 export const storyRepository = new StoredStoryRepository(storage);
+
+/**
+ * Subject extraction for Chroma Cutout.
+ *
+ * Decision D4 chose iOS Vision, which needs a native module this build does not
+ * have yet — so the honest implementation is the one that reports itself
+ * unavailable. Wired here rather than left unreferenced for the same reason
+ * `UnconfiguredMusicProvider` is: the unavailable path has to be a real,
+ * reachable code path that the UI already handles, not a claim in a document.
+ *
+ * Every surface must consult `availability()` and **hide** the feature when it
+ * answers no. There is deliberately no fallback that produces a rectangle.
+ */
+export const subjectExtractor: SubjectExtractor = new UnavailableSubjectExtractor();
 
 export const preferencesRepository = new StoredPreferencesRepository(storage);
 export const setRepository = new StoredSetRepository(storage);

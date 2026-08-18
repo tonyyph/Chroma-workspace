@@ -1,5 +1,8 @@
 import {
+  bandsToDraw,
   cropToSourceRect,
+  orderedColors,
+  paletteBands,
   translateRect,
   type SlicePlan,
   type StoryElement,
@@ -14,7 +17,7 @@ import {
   type SkFont,
   type SkImage,
 } from '@shopify/react-native-skia';
-import { alignX, paletteBands, textBlockTop } from './layout';
+import { alignX, textBlockTop } from './layout';
 import { layoutLines, wrapText } from './wrapText';
 
 /**
@@ -61,6 +64,23 @@ export type DrawSceneOptions = {
   scale: number;
   /** The ground the slice is drawn on, as `#RRGGBB`. */
   background: string;
+  /**
+   * Where in its cycle an animated palette is, 0-1.
+   *
+   * The renderer never reads a clock: the caller owns time. The editor drives
+   * this from a shared value; the exporter passes the phase the author chose, so
+   * an export is reproducible rather than "whatever it looked like when I
+   * happened to tap".
+   */
+  phase?: number;
+  /**
+   * Draws every palette at full strength and unshifted.
+   *
+   * True for reduced motion and for a still export. Not "skip the animation" —
+   * the palette is still entirely there, which is the difference the brief draws
+   * between reduced motion and removed content.
+   */
+  reduceMotion?: boolean;
 };
 
 /**
@@ -72,6 +92,8 @@ export type DrawSceneOptions = {
  */
 export function drawScene(options: DrawSceneOptions): SceneReport {
   const { canvas, layers, plan, images, fonts, scale, background } = options;
+  const phase = options.phase ?? 0;
+  const reduceMotion = options.reduceMotion ?? true;
   const missingAssets: string[] = [];
 
   canvas.drawColor(Skia.Color(background));
@@ -115,7 +137,7 @@ export function drawScene(options: DrawSceneOptions): SceneReport {
         break;
 
       case 'paletteStrip':
-        drawPaletteStrip(canvas, element, frame, alpha);
+        drawPaletteStrip(canvas, element, frame, alpha, phase, reduceMotion);
         break;
 
       case 'video':
@@ -240,13 +262,25 @@ function drawPaletteStrip(
   element: Extract<StoryElement, { kind: 'paletteStrip' }>,
   frame: { x: number; y: number; width: number; height: number },
   alpha: number,
+  phase: number,
+  reduceMotion: boolean,
 ): void {
   const horizontal = element.orientation === 'horizontal';
   const span = horizontal ? frame.width : frame.height;
 
-  for (const band of paletteBands(element.colors, span, element.weighted)) {
+  // Two steps, in this order, and the order is the guarantee: ordering is
+  // applied to the *colours* before layout, so every weight travels with its own
+  // colour; motion is applied to the *laid-out bands*, so it can never alter a
+  // width. Proportions survive both.
+  const colors =
+    element.animation === null ? element.colors : orderedColors(element.colors, element.animation);
+  const laid = paletteBands(colors, span, element.weighted);
+
+  for (const band of bandsToDraw(laid, span, element.animation, phase, reduceMotion)) {
     const paint = Skia.Paint();
-    paint.setAlphaf(alpha);
+    // The element's own opacity and the band's motion opacity multiply, so a
+    // strip faded to 50% that is also breathing never jumps back to full.
+    paint.setAlphaf(alpha * band.opacity);
     paint.setColor(Skia.Color(band.hex));
 
     canvas.drawRect(

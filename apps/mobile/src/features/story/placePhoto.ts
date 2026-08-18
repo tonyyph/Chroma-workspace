@@ -51,5 +51,8 @@ export function placePhotoOnSlide(input: {
     // its subject is. Cross-format adaptation reframes around whatever this
     // ends up being.
     focal: { x: 0.5, y: 0.5 },
+    // Unmasked. Nothing can produce a mask yet — no extractor is implemented
+    // (decision D4) — and a photograph arrives whole in any case.
+    maskAssetId: null,
   };
 }

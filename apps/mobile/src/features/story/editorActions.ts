@@ -113,6 +113,9 @@ export function addPaletteStrip(
       sourceMemoryId: null,
       orientation: 'horizontal',
       weighted: true,
+      // Still by default. Motion is something the author turns on for a reason,
+      // not the state a new element arrives in.
+      animation: null,
     },
     now,
   );

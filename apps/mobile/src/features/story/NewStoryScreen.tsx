@@ -1,14 +1,26 @@
-import { addAsset, addElement, storyFormats, type StoryFormatId } from '@cw/domain';
+import {
+  addAsset,
+  addElement,
+  safeForegroundFor,
+  paceIntensities,
+  sequenceOrders,
+  storyFormats,
+  type PaceIntensity,
+  type SequenceOrder,
+  type StoryFormatId,
+} from '@cw/domain';
 import { space, type Skin } from '@cw/tokens';
 import * as Crypto from 'expo-crypto';
 import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { analytics } from '@/infrastructure/dependencies';
 import { importStoryAsset } from '@/infrastructure/story/StoryAssetManager';
 import { usePreferences } from '@/providers';
 import { useStoryStore } from '@/store/storyStore';
 import { Button, Card, Chip, InlineError, NavBar, Screen, Text, useStyles } from '@/ui';
+import { useMemories } from '@/hooks/useMemories';
+import { composeFromMemories } from './composeFromMemories';
 import { placePhotoOnSlide } from './placePhoto';
 
 /**
@@ -38,6 +50,21 @@ export function NewStoryScreen({
   const styles = useStyles(makeStyles);
   const { t } = usePreferences();
 
+  const { memories } = useMemories();
+
+  /**
+   * Which of the two sources a story is being built from.
+   *
+   * They are genuinely different features, not one with a toggle: photographs
+   * give a blank composition, memories give one already ordered by the colour
+   * the app measured, with each memory's own palette on its slide. Pacing needs
+   * signals only a memory carries, so it exists on one path and not the other.
+   */
+  const [source, setSource] = useState<'photos' | 'memories'>('photos');
+  const [chosenMemories, setChosenMemories] = useState<readonly string[]>([]);
+  const [intensity, setIntensity] = useState<PaceIntensity>('flow');
+  const [order, setOrder] = useState<SequenceOrder>('chronological');
+
   const [picked, setPicked] = useState<readonly string[]>([]);
   const [format, setFormat] = useState<StoryFormatId>('portrait');
   const [busy, setBusy] = useState(false);
@@ -56,6 +83,46 @@ export function NewStoryScreen({
     if (result.canceled) return;
     setPicked(result.assets.map((asset) => asset.uri).slice(0, MAX_PHOTOS));
   }, []);
+
+  const createFromMemories = useCallback(async () => {
+    if (chosenMemories.length === 0 || busy) return;
+    setBusy(true);
+    setFailed(null);
+
+    const storyId = Crypto.randomUUID();
+    const now = new Date().toISOString();
+    const selected = memories.filter((memory) => chosenMemories.includes(memory.id));
+
+    try {
+      const { project } = composeFromMemories({
+        memories: selected,
+        format,
+        intensity,
+        order,
+        storyId,
+        now,
+        nextId: () => Crypto.randomUUID(),
+      });
+
+      // Written through the store's own create/apply path so it is one document,
+      // one autosave and one history — not a special case that bypasses them.
+      await useStoryStore
+        .getState()
+        .create({ id: storyId, format, slideCount: project.slideCount, now });
+      useStoryStore.getState().apply(() => project);
+      await useStoryStore.getState().flush();
+
+      analytics.track('project_created', {
+        format,
+        slideCount: project.slideCount,
+        photoCount: selected.length,
+      });
+      onCreated(storyId);
+    } catch {
+      setFailed('create');
+    }
+    setBusy(false);
+  }, [busy, chosenMemories, format, intensity, memories, onCreated, order]);
 
   const create = useCallback(async () => {
     if (picked.length === 0 || busy) return;
@@ -149,17 +216,109 @@ export function NewStoryScreen({
       <View style={styles.body}>
         <Text variant="body">{t('story.new.subtitle')}</Text>
 
-        <Card style={styles.section}>
-          <Text variant="cardTitle">{t('story.new.pickPhotos')}</Text>
-          <Text tone="secondary" variant="meta">
-            {t('story.new.photoCount', { count: picked.length, max: MAX_PHOTOS })}
-          </Text>
-          <Button
-            label={t('story.new.pickPhotos')}
-            onPress={() => void pick()}
-            variant="secondary"
+        <View style={styles.formats}>
+          <Chip
+            label={t('story.new.fromPhotos')}
+            onPress={() => setSource('photos')}
+            tone={source === 'photos' ? 'selected' : 'default'}
           />
-        </Card>
+          <Chip
+            label={t('story.new.fromMemories')}
+            onPress={() => setSource('memories')}
+            tone={source === 'memories' ? 'selected' : 'default'}
+          />
+        </View>
+
+        {source === 'memories' ? (
+          <>
+            <Card style={styles.section}>
+              <Text variant="cardTitle">{t('story.new.fromMemories')}</Text>
+              <Text tone="secondary" variant="meta">
+                {t('story.new.memoryCount', { count: chosenMemories.length, max: MAX_PHOTOS })}
+              </Text>
+
+              {memories.length === 0 ? (
+                <Text tone="secondary" variant="meta">
+                  {t('story.new.noMemories')}
+                </Text>
+              ) : (
+                <ScrollView
+                  contentContainerStyle={styles.formats}
+                  horizontal
+                  keyboardShouldPersistTaps="handled"
+                  showsHorizontalScrollIndicator={false}
+                >
+                  {memories.slice(0, 24).map((memory) => (
+                    <Chip
+                      accent={{
+                        backgroundColor: memory.facets.dominantHex,
+                        borderColor: memory.facets.dominantHex,
+                        color: safeForegroundFor(memory.facets.dominantHex),
+                      }}
+                      key={memory.id}
+                      label={memory.personalContext.title ?? memory.facets.dominantHex}
+                      onPress={() =>
+                        setChosenMemories((current) =>
+                          current.includes(memory.id)
+                            ? current.filter((id) => id !== memory.id)
+                            : current.length >= MAX_PHOTOS
+                              ? current
+                              : [...current, memory.id],
+                        )
+                      }
+                      tone={chosenMemories.includes(memory.id) ? 'selected' : 'default'}
+                    />
+                  ))}
+                </ScrollView>
+              )}
+            </Card>
+
+            <Card style={styles.section}>
+              <Text variant="cardTitle">{t('story.pace.title')}</Text>
+              <View style={styles.formats}>
+                {paceIntensities.map((value) => (
+                  <Chip
+                    key={value}
+                    label={t(`story.living.${value}`)}
+                    onPress={() => setIntensity(value)}
+                    tone={intensity === value ? 'selected' : 'default'}
+                  />
+                ))}
+              </View>
+
+              <Text variant="cardTitle">{t('story.pace.order')}</Text>
+              <View style={styles.formats}>
+                {sequenceOrders.map((value) => (
+                  <Chip
+                    key={value}
+                    label={t(`story.order.${value}`)}
+                    onPress={() => setOrder(value)}
+                    tone={order === value ? 'selected' : 'default'}
+                  />
+                ))}
+              </View>
+
+              {/* Said where the choice is made, not in a footnote. */}
+              <Text tone="secondary" variant="meta">
+                {t('story.pace.note')}
+              </Text>
+            </Card>
+          </>
+        ) : null}
+
+        {source === 'photos' ? (
+          <Card style={styles.section}>
+            <Text variant="cardTitle">{t('story.new.pickPhotos')}</Text>
+            <Text tone="secondary" variant="meta">
+              {t('story.new.photoCount', { count: picked.length, max: MAX_PHOTOS })}
+            </Text>
+            <Button
+              label={t('story.new.pickPhotos')}
+              onPress={() => void pick()}
+              variant="secondary"
+            />
+          </Card>
+        ) : null}
 
         <Card style={styles.section}>
           <Text variant="cardTitle">{t('story.new.format')}</Text>
@@ -185,9 +344,11 @@ export function NewStoryScreen({
         )}
 
         <Button
-          disabled={picked.length === 0 || busy}
+          disabled={
+            busy || (source === 'photos' ? picked.length === 0 : chosenMemories.length === 0)
+          }
           label={t('story.new.create')}
-          onPress={() => void create()}
+          onPress={() => void (source === 'photos' ? create() : createFromMemories())}
         />
       </View>
     </Screen>
