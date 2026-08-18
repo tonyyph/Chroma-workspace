@@ -6,6 +6,7 @@ import {
   visualStyles,
   type ColorMood,
   type Palette,
+  type TasteEntry,
   type VisualStyle,
 } from '@cw/domain';
 
@@ -22,12 +23,15 @@ import {
  * the screen renders them and does no arithmetic of its own.
  */
 
-export type TasteEntry<Value extends string> = {
-  value: Value;
-  count: number;
-  /** Share of the library, 0-1. Drives the proportional bar. */
-  share: number;
-};
+/**
+ * One definition of taste, in the domain.
+ *
+ * This module used to declare its own `TasteEntry` with `count` and `share`
+ * while `domain/styleDna.ts` carried `count` and `weight` — two answers to "what
+ * does this person like", of which the one that drifts is whichever was edited
+ * second. Re-exported rather than redeclared so there is one.
+ */
+export type { TasteEntry } from '@cw/domain';
 
 /** How many colours the signature strip carries before it stops reading as one. */
 const SIGNATURE_MAX = 6;
@@ -88,7 +92,10 @@ function rank<Value extends string>(
   return values
     .map((value) => {
       const count = palettes.filter((palette) => matches(palette, value)).length;
-      return { value, count, share: count / total };
+      // `weight` equals `count` here: this reads the *palette* projection, which
+      // carries no capture date to age by. The recency-weighted reading is
+      // `readStyleDna`, over memories, which do.
+      return { value, count, weight: count, share: count / total };
     })
     .filter((entry) => entry.count > 0)
     .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));

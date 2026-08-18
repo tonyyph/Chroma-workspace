@@ -7,6 +7,8 @@ import {
   planSlicesFor,
   removeElement,
   setElementFrame,
+  applyStoryPatch,
+  compose,
   livingPaletteConfig,
   livingPalettePresets,
   mapElement,
@@ -15,6 +17,7 @@ import {
   reorderElement,
   snapDraggedFrame,
   type Rect,
+  type CompositionProposal,
   type SnapGuide,
   type StoryProject,
 } from '@cw/domain';
@@ -35,6 +38,8 @@ import { useStoryImages } from './canvas/useStoryImages';
 import { addPaletteStrip, addTextElement } from './editorActions';
 import { LayerPanel } from './LayerPanel';
 import { usePalettePhase } from './canvas/usePalettePhase';
+import { ComposePanel } from './ComposePanel';
+import { useMemories } from '@/hooks/useMemories';
 
 /**
  * The editor.
@@ -244,6 +249,54 @@ export function StoryEditorScreen({
     [act],
   );
 
+  const { memories } = useMemories();
+  const [proposal, setProposal] = useState<CompositionProposal | null>(null);
+  const [rejectedCount, setRejectedCount] = useState(0);
+
+  /**
+   * Asks the local composer for a proposal.
+   *
+   * Reads only the memories this story was built from — a composer that reached
+   * into the whole library would be suggesting things about photographs the
+   * author did not put in this story.
+   */
+  const suggest = useCallback(() => {
+    const current = useStoryStore.getState().history?.present;
+    if (current === undefined || current === null) return;
+
+    const sources = memories.filter((memory) => current.sourceMemoryIds.includes(memory.id));
+    setProposal(
+      compose({
+        memories: sources,
+        order: 'chronological',
+        intensity: 'flow',
+        slideElementIds: current.layers.map((layer) => layer.id),
+      }),
+    );
+    setRejectedCount(0);
+  }, [memories]);
+
+  /**
+   * Applies the proposal through the validator, not directly.
+   *
+   * The local composer's output goes through exactly the same `applyStoryPatch`
+   * a provider's would — one validator, one accept path, no privileged
+   * shortcut for the app's own suggestion.
+   */
+  const applyProposal = useCallback(() => {
+    if (proposal === null) return;
+    let refused = 0;
+
+    act((current) => {
+      const result = applyStoryPatch(current, proposal.patch, skin.ui.bg.base);
+      refused = result.rejected.length;
+      return result.project;
+    });
+
+    setRejectedCount(refused);
+    setProposal(null);
+  }, [act, proposal, skin.ui.bg.base]);
+
   const undo = useCallback(() => {
     useStoryStore.getState().undo();
     AccessibilityInfo.announceForAccessibility(t('story.a11y.undone'));
@@ -390,6 +443,7 @@ export function StoryEditorScreen({
           }
           tone="add"
         />
+        <Chip label={t('story.compose.run')} onPress={suggest} tone="add" />
         <Chip
           label={t('story.layer.panel')}
           onPress={() => setShowLayers((open) => !open)}
@@ -398,6 +452,13 @@ export function StoryEditorScreen({
         {canUndo ? <Chip label={t('story.editor.undo')} onPress={undo} /> : null}
         {canRedo ? <Chip label={t('story.editor.redo')} onPress={redo} /> : null}
       </ScrollView>
+
+      <ComposePanel
+        onApply={applyProposal}
+        onDiscard={() => setProposal(null)}
+        proposal={proposal}
+        rejectedCount={rejectedCount}
+      />
 
       {showLayers ? (
         <LayerPanel

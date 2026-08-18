@@ -772,6 +772,19 @@ export const en = {
   'story.music.external-link': 'The track is named, and links out to where you can hear it.',
   'story.music.preview-playback':
     'A short preview can be played in the app. Images still carry no audio.',
+  'story.compose.title': 'Compose',
+  'story.compose.run': 'Suggest',
+  'story.compose.apply': 'Apply',
+  'story.compose.discard': 'Discard',
+  'story.compose.local': 'Suggested by the app from your colours. No service was contacted.',
+  'story.compose.nothing': 'Nothing to suggest for this story',
+  'story.compose.rejected': '{count} suggestions did not fit and were dropped',
+  'story.reason.ordered-by-energy': 'Ordered so it builds',
+  'story.reason.ordered-by-colour': 'Ordered so the colours flow',
+  'story.reason.ordered-by-time': 'Ordered as it happened',
+  'story.reason.focal-chosen': 'Led on the strongest contrast',
+  'story.reason.motion-from-mood': 'Motion chosen from the prevailing mood',
+  'story.reason.title-from-memory': 'Title taken from your own words',
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -55,6 +55,20 @@ export const userPreferencesSchema = z.object({
    * acts on and what the D2 row badges.
    */
   activityReadAt: z.string().datetime().nullable().default(null),
+  /**
+   * Whether the Colour DNA surfaces are shown at all.
+   *
+   * **Opt-out, not delete, and the difference is that there is nothing to
+   * delete.** The profile is derived on every read from the memories themselves
+   * (`styleDna.ts`: "derived, never stored"), so switching this off stops it
+   * being computed and shown — and deleting a memory already removes its
+   * influence everywhere, at once. A "delete my profile" button would imply a
+   * stored thing that does not exist.
+   *
+   * `.default(true)` is a widening: every preferences record written before this
+   * existed reads as opted in, which is the state those users were already in.
+   */
+  colorDnaEnabled: z.boolean().default(true),
 });
 
 export const defaultUserPreferences = userPreferencesSchema.parse({
@@ -70,6 +84,7 @@ export const defaultUserPreferences = userPreferencesSchema.parse({
   defaultExport: 'css',
   onboardingCompleted: false,
   activityReadAt: null,
+  colorDnaEnabled: true,
 });
 
 export type Language = z.infer<typeof languageSchema>;

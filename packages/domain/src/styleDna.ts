@@ -20,12 +20,28 @@ import type { ChromaticMemory } from './memory';
 /** Half-life of a memory's influence on the profile, in days. */
 const HALF_LIFE_DAYS = 90;
 
+/**
+ * One thing this person's eye keeps choosing, and how strongly.
+ *
+ * **The single definition.** `features/you/youInsights.ts` grew its own
+ * `TasteEntry` with `count` and `share` while this one carried `count` and
+ * `weight`, over different inputs — two answers to "what does this person like",
+ * of which the one that drifts is whichever was edited second. They are one type
+ * now, carrying all three numbers, because each answers a different question:
+ *
+ *   - `count` is for honest copy — "in 12 memories".
+ *   - `share` is for a proportional bar — how much of the library.
+ *   - `weight` is recency-weighted, so a taste someone has moved on from fades
+ *     rather than counting forever.
+ */
 export type TasteEntry<Value extends string> = Readonly<{
   value: Value;
   /** Recency-weighted count, not a raw tally. */
   weight: number;
   /** How many memories carry it at all, for honest copy: "in 12 memories". */
   count: number;
+  /** Share of the set it was read from, 0-1. Drives a proportional bar. */
+  share: number;
 }>;
 
 export type StyleDna = Readonly<{
@@ -69,12 +85,17 @@ const recencyOf = (isoDate: string, now: Date): number => {
 /** Rolls per-value weights and counts into a ranked list. */
 function rank<Value extends string>(
   tallies: ReadonlyMap<Value, { weight: number; count: number }>,
+  /** How many records the tallies were read from, for `share`. */
+  total: number,
 ): readonly TasteEntry<Value>[] {
   return [...tallies.entries()]
     .map(([value, { weight, count }]) => ({
       value,
       weight: Math.round(weight * 1000) / 1000,
       count,
+      // Zero rather than a division by zero: an empty library has no shares, and
+      // NaN would propagate into a bar width.
+      share: total === 0 ? 0 : Math.round((count / total) * 1000) / 1000,
     }))
     .sort((a, b) => b.weight - a.weight || a.value.localeCompare(b.value));
 }
@@ -146,11 +167,14 @@ export function readStyleDna(
   return {
     memoryCount: memories.length,
     signature,
-    moods: rank(moods),
-    colorMoods: rank(colorMoodTallies),
-    styles: rank(styleTallies),
-    genres: rank(genres),
-    artists: rank(artists),
+    moods: rank(moods, memories.length),
+    colorMoods: rank(colorMoodTallies, memories.length),
+    styles: rank(styleTallies, memories.length),
+    genres: rank(genres, paired),
+    // Artists and genres are shares of the *paired* memories, not of the whole
+    // library: "in 60% of your memories" would be wrong when only half of them
+    // ever got a track, and that is the kind of number nobody checks.
+    artists: rank(artists, paired),
     // Guarded: every memory being older than about sixty half-lives drives the
     // recency total to zero, and dividing by it would report NaN warmth.
     warmth: recencyTotal > 0 ? Math.round((warmthTotal / recencyTotal) * 1000) / 1000 : null,

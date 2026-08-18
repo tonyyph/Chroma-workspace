@@ -1,6 +1,7 @@
 export * from './analysis';
 export * from './atmosphere';
 export * from './color';
+export * from './colorDna';
 export * from './discovery';
 export * from './entitlements';
 export * from './errors';

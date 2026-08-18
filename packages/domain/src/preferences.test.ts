@@ -18,6 +18,11 @@ describe('UserPreferences', () => {
       defaultExport: 'css',
       onboardingCompleted: false,
       activityReadAt: null,
+      // On by default, and it stays private by being derived rather than by
+      // being off: the profile is computed from memories already on the device
+      // and never leaves it. Defaulting it off would also remove a surface
+      // existing users already have.
+      colorDnaEnabled: true,
     });
   });
 

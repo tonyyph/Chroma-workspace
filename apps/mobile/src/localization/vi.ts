@@ -768,4 +768,17 @@ export const vi: Record<MessageKey, string> = {
   'story.music.external-link': 'Bản nhạc được ghi tên, kèm liên kết tới nơi nghe được.',
   'story.music.preview-playback':
     'Có thể nghe thử một đoạn trong app. Ảnh vẫn không chứa âm thanh.',
+  'story.compose.title': 'Dựng',
+  'story.compose.run': 'Gợi ý',
+  'story.compose.apply': 'Áp dụng',
+  'story.compose.discard': 'Bỏ',
+  'story.compose.local': 'App tự gợi ý từ màu của bạn. Không liên hệ dịch vụ nào.',
+  'story.compose.nothing': 'Không có gì để gợi ý cho truyện này',
+  'story.compose.rejected': '{count} gợi ý không hợp lệ và đã bị bỏ',
+  'story.reason.ordered-by-energy': 'Sắp xếp để tăng dần',
+  'story.reason.ordered-by-colour': 'Sắp xếp để màu nối nhau',
+  'story.reason.ordered-by-time': 'Sắp xếp theo lúc chụp',
+  'story.reason.focal-chosen': 'Lấy ảnh tương phản mạnh nhất làm chính',
+  'story.reason.motion-from-mood': 'Chuyển động chọn theo sắc thái chung',
+  'story.reason.title-from-memory': 'Tiêu đề lấy từ chữ của bạn',
 };

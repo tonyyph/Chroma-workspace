@@ -203,14 +203,68 @@ stories built from raw photographs get a placeholder pair of skin colours for
 their palette strip, while stories built from memories carry each memory's own
 extracted palette at its own weights, which is the product's real claim.
 
-**5 — AI Story Director**, per ADR 05: the deterministic local composer first, as
-a real feature; then the patch schema and validation; the provider is a separate,
-separately approved decision.
+**5 — built as the local composer. There is no provider, and it is not called AI.**
 
-**6 — Color DNA**, per model 07: consolidate the two `TasteEntry`
-implementations, add explanation copy, opt-out and deletion UI, and the shareable
-recap story — which is also the first feature to compose _into_ Story Studio.
-Decision D6 due before this starts.
+- `domain/patch.ts` (20 tests) — the validated patch layer. A composer may
+  propose ordering, crops, typography and a palette preset; it may not propose an
+  element, an asset or a caption, because the schema has nowhere to put one.
+  Refusals are **reported, not repaired**: an out-of-range crop is dropped and
+  named, since silently clamping it would leave the author with a composition
+  nobody chose and no way to find out why.
+- `domain/director.ts` (16 tests) — the deterministic composer. Everything it
+  proposes comes from something measured: mood, contrast and energy, all computed
+  from the photographs' own colours.
+- `ComposePanel` — a proposal that changes nothing until Apply, with structured
+  reasons rather than prose, and a line saying the suggestion came from the app's
+  own reading of the colours and that no service was contacted.
+
+**Three properties worth naming, each covered by a test:**
+
+1. **The local path is not privileged.** The composer's output goes through the
+   same `applyStoryPatch` a provider's would. One validator, one accept path, no
+   shortcut for the app's own suggestion.
+2. **A locked element is never overridden.** Locking is the author's decision;
+   the composer reports that it wanted to change something and does not.
+3. **It cannot make text unreadable.** Emphasising a caption that fails 4.5:1
+   against the ground is refused, using the contrast maths `color.ts` already has.
+
+**Captions are not generated.** A generated caption on someone's memory makes a
+claim about their experience. The composer may surface a memory's _own_ title —
+the author's words — and there is deliberately no field in the patch for anything
+else.
+
+**6 — built.** Decision D6 applied: months, no seasons, no location.
+
+- **The duplication is gone.** `domain/styleDna.ts` and
+  `features/you/youInsights.ts` had each grown a `TasteEntry` — one with
+  `count`+`weight`, the other with `count`+`share`, over different inputs. There
+  is now one type carrying all three, each answering a different question, and
+  the app module re-exports it rather than redeclaring it.
+- `domain/colorDna.ts` (18 tests) — explanations as **structured data, not
+  prose**: a kind, a subject, a count and a total. A reader sees "12 of 40" and
+  judges the strength themselves rather than trusting an adjective.
+- `composeRecap.ts` (9 tests) — a recap becomes an ordinary `StoryProject`. This
+  is the bridge the two halves of the product needed: without it a recap is a
+  screen you can look at and nothing else.
+- `colorDnaEnabled` preference — opt-out. There is deliberately **no delete
+  button**, because there is nothing stored to delete: the profile is derived on
+  every read, and deleting a memory already removes its influence everywhere at
+  once. A delete control would imply a stored thing that does not exist.
+
+**Three refusals, each with a test:**
+
+1. **Nothing below three memories is named.** The same floor `rewind.ts` uses,
+   because a library should not tell someone two things are a habit.
+2. **"Rarest colour" needs something to be rarer than.** With one qualifying
+   colour it returned that colour — which in a library where it is also the most
+   common called the dominant colour the rarest. Two are now required.
+3. **Sound is reported against paired memories, not the library.** "In 60% of
+   your memories" is wrong when only half ever got a track, and it is the kind of
+   number nobody checks.
+
+A recap story carries the colours, the counts and the photographs. A test asserts
+it carries **no private note**, and that the only text it writes is the period
+key — a date, not a sentence about it.
 
 **7 — Remixable Memories**, per model 06: recipe schema, local remixing,
 attribution chain, documented API. No publish, no accounts, no community
