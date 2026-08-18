@@ -1,5 +1,5 @@
 import type { Rect } from '@cw/domain';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Gesture, type ComposedGesture } from 'react-native-gesture-handler';
 import { runOnJS, useSharedValue, type SharedValue } from 'react-native-reanimated';
 
@@ -42,6 +42,16 @@ export type ElementGestureOptions = {
   unitsPerPoint: number;
   onCommit: (frame: Rect) => void;
   onStart?: () => void;
+  /**
+   * Applies snapping to a candidate frame, on the JS thread.
+   *
+   * Passed in rather than computed here because it needs the document, and a
+   * worklet must not read it. It runs **on release only**, never per frame: an
+   * element that snapped mid-drag sticks to guides while the finger keeps
+   * moving, which reads as lag rather than as alignment. The live drag follows
+   * the finger exactly; the commit is where it lands.
+   */
+  snap?: (frame: Rect) => Rect;
 };
 
 /** Below this a pinch is a jitter in a two-finger drag, not a resize. */
@@ -57,7 +67,21 @@ export function useElementGesture(options: ElementGestureOptions): {
   const scale = useSharedValue(1);
   const active = useSharedValue(false);
 
-  const { frame, locked, unitsPerPoint, onCommit, onStart } = options;
+  const { frame, locked, unitsPerPoint, onCommit, onStart, snap } = options;
+
+  /**
+   * One place where a committed frame is snapped and handed over.
+   *
+   * Both `onEnd` handlers call it through `runOnJS`, so the snap runs on the JS
+   * thread where the document lives, and the element lands on the guide rather
+   * than near it.
+   */
+  const commit = useCallback(
+    (next: Rect) => {
+      onCommit(snap === undefined ? next : snap(next));
+    },
+    [onCommit, snap],
+  );
 
   const gesture = useMemo(() => {
     const enabled = frame !== null && !locked;
@@ -90,7 +114,7 @@ export function useElementGesture(options: ElementGestureOptions): {
           return;
         }
         const next = committedFrame(frame, { x: translateX.value, y: translateY.value }, 1);
-        runOnJS(onCommit)(next);
+        runOnJS(commit)(next);
         reset();
       })
       .onFinalize(() => {
@@ -116,7 +140,7 @@ export function useElementGesture(options: ElementGestureOptions): {
           return;
         }
         const next = committedFrame(frame, { x: 0, y: 0 }, scale.value);
-        runOnJS(onCommit)(next);
+        runOnJS(commit)(next);
         reset();
       })
       .onFinalize(() => {
@@ -125,7 +149,7 @@ export function useElementGesture(options: ElementGestureOptions): {
       });
 
     return Gesture.Simultaneous(pan, pinch);
-  }, [frame, locked, unitsPerPoint, onCommit, onStart, translateX, translateY, scale, active]);
+  }, [frame, locked, unitsPerPoint, commit, onStart, translateX, translateY, scale, active]);
 
   return { gesture, values: { translateX, translateY, scale, active } };
 }

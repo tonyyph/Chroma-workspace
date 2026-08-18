@@ -3,10 +3,16 @@ import {
   duplicateElement as duplicateElementIn,
   elementAt,
   findLayer,
+  formatOf,
   planSlicesFor,
   removeElement,
   setElementFrame,
+  setElementHidden,
   setElementLocked,
+  reorderElement,
+  snapDraggedFrame,
+  type Rect,
+  type SnapGuide,
   type StoryProject,
 } from '@cw/domain';
 import { space, type Skin } from '@cw/tokens';
@@ -24,6 +30,7 @@ import { StoryCanvas, StoryOverview } from './canvas/StoryCanvas';
 import { useElementGesture } from './canvas/useElementGesture';
 import { useStoryImages } from './canvas/useStoryImages';
 import { addPaletteStrip, addTextElement } from './editorActions';
+import { LayerPanel } from './LayerPanel';
 
 /**
  * The editor.
@@ -100,12 +107,43 @@ export function StoryEditorScreen({
     void hapticsService.selection();
   }, []);
 
+  const [guides, setGuides] = useState<readonly SnapGuide[]>([]);
+  const [showLayers, setShowLayers] = useState(false);
+
+  /**
+   * Aligns a released frame, and records what it aligned to.
+   *
+   * Runs on the JS thread, once per gesture, because it reads the document. The
+   * guides it returns are drawn until the next gesture — long enough to explain
+   * what just happened, and gone before they become decoration.
+   */
+  const snap = useCallback(
+    (frame: Rect): Rect => {
+      const current = useStoryStore.getState().history?.present;
+      if (current === null || current === undefined || selectedId === null) return frame;
+
+      const result = snapDraggedFrame({
+        frame,
+        movingId: selectedId,
+        layers: current.layers,
+        format: formatOf(current.format),
+        slideIndex: activeSlide,
+        slideCount: current.slideCount,
+      });
+
+      setGuides(result.guides);
+      return result.frame;
+    },
+    [activeSlide, selectedId],
+  );
+
   const { gesture: dragGesture, values } = useElementGesture({
     frame: selected?.frame ?? null,
     locked: selected?.locked ?? false,
     unitsPerPoint,
     onCommit: commitFrame,
     onStart: announceStart,
+    snap,
   });
 
   /**
@@ -134,6 +172,8 @@ export function StoryEditorScreen({
         y: screenY * unitsPerPoint,
       });
 
+      // A new selection makes the previous drag's guides meaningless.
+      setGuides([]);
       useStoryEditorStore.getState().select(hit?.id ?? null);
       AccessibilityInfo.announceForAccessibility(
         hit === null
@@ -262,9 +302,12 @@ export function StoryEditorScreen({
             <Animated.View style={dragStyle}>
               <StoryCanvas
                 background={skin.ui.bg.base}
+                guideColor={skin.ui.action.primary}
+                guides={guides}
                 images={images}
                 onReport={(report) => setMissing(report.missingAssets)}
                 project={project}
+                selectedId={selectedId}
                 slideIndex={activeSlide}
                 width={canvasWidth}
               />
@@ -329,9 +372,32 @@ export function StoryEditorScreen({
           }
           tone="add"
         />
+        <Chip
+          label={t('story.layer.panel')}
+          onPress={() => setShowLayers((open) => !open)}
+          tone={showLayers ? 'selected' : 'default'}
+        />
         {canUndo ? <Chip label={t('story.editor.undo')} onPress={undo} /> : null}
         {canRedo ? <Chip label={t('story.editor.redo')} onPress={redo} /> : null}
       </ScrollView>
+
+      {showLayers ? (
+        <LayerPanel
+          layers={project.layers}
+          onMove={(id, toIndex) => act((current) => reorderElement(current, id, toIndex, now()))}
+          onSelect={(id) => {
+            setGuides([]);
+            useStoryEditorStore.getState().select(id);
+          }}
+          onToggleHidden={(id, hidden) =>
+            act((current) => setElementHidden(current, id, hidden, now()))
+          }
+          onToggleLocked={(id, locked) =>
+            act((current) => setElementLocked(current, id, locked, now()))
+          }
+          selectedId={selectedId}
+        />
+      ) : null}
 
       {selected === null ? null : (
         <View style={styles.selectionBar}>

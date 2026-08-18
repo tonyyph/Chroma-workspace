@@ -63,13 +63,15 @@ export type AnalyticsEventMap = {
   export_completed: { format: StoryFormatKey; slideCount: number; ms: number };
   export_failed: { format: StoryFormatKey; reason: ExportFailureReason };
   share_started: { format: StoryFormatKey; slideCount: number };
+  /** Cross-Format Composer: `from` → `to`, plus how many elements it adjusted. */
+  format_adapted: { from: StoryFormatKey; to: StoryFormatKey; adjusted: number };
 };
 
 /** How someone reached the studio, so the entry points can be compared. */
 export type StudioEntryPoint = 'library' | 'memory' | 'collection' | 'deep-link';
 
 /** Mirrors the domain's `StoryFormatId`, restated so analytics imports no schema. */
-export type StoryFormatKey = 'portrait' | 'square' | 'story';
+export type StoryFormatKey = 'portrait' | 'square' | 'story' | 'tiktok';
 
 /**
  * Mirrors `ExportFailure` in the app.

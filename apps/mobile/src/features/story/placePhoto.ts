@@ -46,5 +46,10 @@ export function placePhotoOnSlide(input: {
       { width: input.sourceWidth, height: input.sourceHeight },
       { width: frame.width, height: frame.height },
     ),
+    // The centre until the author moves it. Honest as a default: nothing has
+    // looked at this photograph yet, so the app has no basis for guessing where
+    // its subject is. Cross-format adaptation reframes around whatever this
+    // ends up being.
+    focal: { x: 0.5, y: 0.5 },
   };
 }

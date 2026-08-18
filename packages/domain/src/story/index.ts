@@ -6,3 +6,5 @@ export * from './history';
 export * from './migration';
 export * from './project';
 export * from './slicing';
+export * from './adapt';
+export * from './snapping';

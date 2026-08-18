@@ -1,5 +1,19 @@
-import { planSlicesFor, type SlicePlan, type StoryProject } from '@cw/domain';
-import { Canvas, Picture, Skia, type SkImage } from '@shopify/react-native-skia';
+import {
+  findLayer,
+  planSlicesFor,
+  translateRect,
+  type SlicePlan,
+  type SnapGuide,
+  type StoryProject,
+} from '@cw/domain';
+import {
+  Canvas,
+  PaintStyle,
+  Picture,
+  Skia,
+  type SkCanvas,
+  type SkImage,
+} from '@shopify/react-native-skia';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import { drawScene, type SceneReport } from '../render/drawScene';
@@ -25,6 +39,9 @@ export function StoryCanvas({
   width,
   background,
   onReport,
+  guides,
+  guideColor,
+  selectedId,
 }: {
   project: StoryProject;
   slideIndex: number;
@@ -32,6 +49,11 @@ export function StoryCanvas({
   width: number;
   background: string;
   onReport?: (report: SceneReport) => void;
+  /** Alignment lines from the last snap. Drawn over the scene, never exported. */
+  guides?: readonly SnapGuide[];
+  guideColor?: string;
+  /** Outlined so selection is visible without relying on colour alone. */
+  selectedId?: string | null;
 }) {
   const plans = useMemo(() => planSlicesFor(project), [project]);
   const plan: SlicePlan | undefined = plans[slideIndex];
@@ -58,9 +80,39 @@ export function StoryCanvas({
     });
     onReport?.(report);
 
+    /**
+     * Guides and the selection outline are drawn *after* the scene and are not
+     * part of it.
+     *
+     * They exist only in the editor: `exportStory` builds its own picture from
+     * `drawScene` alone, so there is no path by which a guide reaches an
+     * exported slide. That is the same reason slide boundaries are chrome rather
+     * than elements.
+     */
+    drawOverlay({
+      canvas,
+      plan,
+      scale,
+      guides: guides ?? [],
+      guideColor: guideColor ?? '#FFFFFF',
+      selected: selectedId == null ? null : findLayer(project, selectedId),
+    });
+
     return recorder.finishRecordingAsPicture();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project.layers, plan, images, fonts, scale, width, height, background]);
+  }, [
+    project,
+    plan,
+    images,
+    fonts,
+    scale,
+    width,
+    height,
+    background,
+    guides,
+    guideColor,
+    selectedId,
+  ]);
 
   if (plan === undefined || picture === null) return <View style={{ width, height: 0 }} />;
 
@@ -131,4 +183,59 @@ export function StoryOverview({
       <Picture picture={picture} />
     </Canvas>
   );
+}
+
+/**
+ * The editor's own marks: alignment guides and the selection outline.
+ *
+ * Deliberately a separate function from `drawScene`, and deliberately never
+ * called by the exporter. A guide that could reach an export is a guide that
+ * eventually does.
+ *
+ * The selection outline is a **shape**, not a tint. Selection must not be
+ * signalled by colour alone — an outline is visible to someone who cannot
+ * distinguish the accent from the photograph underneath it, and it survives both
+ * skins without either needing a colour it does not have.
+ */
+function drawOverlay(input: {
+  canvas: SkCanvas;
+  plan: SlicePlan;
+  scale: number;
+  guides: readonly SnapGuide[];
+  guideColor: string;
+  selected: StoryProject['layers'][number] | null;
+}): void {
+  const { canvas, plan, scale, guides, guideColor, selected } = input;
+
+  canvas.save();
+  canvas.scale(scale, scale);
+
+  if (guides.length > 0) {
+    const paint = Skia.Paint();
+    paint.setColor(Skia.Color(guideColor));
+    paint.setStyle(PaintStyle.Stroke);
+    // Divided by the scale so the line is a constant width on screen rather than
+    // a hairline at small zoom and a bar at large.
+    paint.setStrokeWidth(1 / scale);
+
+    for (const guide of guides) {
+      const local = guide.axis === 'x' ? guide.position + plan.translateX : guide.position;
+      if (guide.axis === 'x') {
+        canvas.drawLine(local, 0, local, plan.height, paint);
+      } else {
+        canvas.drawLine(0, local, plan.width, local, paint);
+      }
+    }
+  }
+
+  if (selected !== null) {
+    const frame = translateRect(selected.frame, plan.translateX, 0);
+    const paint = Skia.Paint();
+    paint.setColor(Skia.Color(guideColor));
+    paint.setStyle(PaintStyle.Stroke);
+    paint.setStrokeWidth(2 / scale);
+    canvas.drawRect(Skia.XYWHRect(frame.x, frame.y, frame.width, frame.height), paint);
+  }
+
+  canvas.restore();
 }

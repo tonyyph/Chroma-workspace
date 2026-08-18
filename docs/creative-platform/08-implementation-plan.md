@@ -10,11 +10,11 @@
 | ----- | ----------------------------------------- | ------------------------------------ |
 | 0     | Repository audit, baseline, decisions     | **done**                             |
 | 1     | Story Studio vertical slice               | **code complete, device-unverified** |
-| 2     | Precision editing + Cross-Format Composer | not started                          |
-| 3     | Living Palette, then Chroma Cutout        | not started, D4 open                 |
+| 2     | Precision editing + Cross-Format Composer | **partly built** — see below         |
+| 3     | Living Palette, then Chroma Cutout        | not started (D4 decided)             |
 | 4     | Beat-Synced Memory (scoped by D1)         | not started                          |
 | 5     | AI Story Director                         | not started                          |
-| 6     | Color DNA (~60% pre-existing)             | not started                          |
+| 6     | Color DNA (~60% pre-existing)             | not started (D6 decided)             |
 | 7     | Remixable Memories, local only (D5)       | not started                          |
 
 Baseline was 832 tests. It is now **1073**, with `corepack pnpm check` at exit 0.
@@ -82,19 +82,46 @@ before that.
 
 ## Phase 2 — precision editing and Cross-Format Composer
 
-Snapping and smart guides (pure, testable, in the domain); alignment to centre,
-edges, grid and nearby objects; a layer panel that is screen-reader navigable;
-lock/hide from the panel; slide add/remove/reorder; rotation gesture; shapes,
-frames and gradients; focal points; adaptation between 4:5, 1:1 and 9:16; an
-export review screen.
+### Built
 
-Also here: **TikTok as a safe-zone profile**, not a fourth canvas — the same
-1080×1920 with different insets, because its action rail eats ~240px that
-Instagram's story layout does not. `StoryFormat` grows `safeInsets`; no geometry
-changes. It lands with the review screen that can actually draw the inset.
+- **Snapping** (`domain/snapping.ts`, 18 tests) — slide centres and edges, canvas
+  edges, other elements' edges and centres. Three rules it is built around: a
+  snap moves and never resizes; one snap per axis, the nearest; nothing reaches
+  beyond the threshold. Applied **on release only** — snapping mid-drag makes an
+  element stick to guides while the finger keeps moving, which reads as lag.
+- **Guides and the selection outline**, drawn as an editor-only overlay that
+  `exportStory` never calls, so a guide cannot reach an exported slide. The
+  outline is a shape rather than a tint, because selection must not be signalled
+  by colour alone.
+- **Focal points** on photo elements (`.default({x:0.5,y:0.5})`, a widening with
+  no migration).
+- **Cross-Format Composer** (`domain/adapt.ts`, 26 tests) — proportional
+  repositioning, refocus-aware recropping, width-only type scaling, per-axis
+  safe-area nudging, and an `AdaptationNote` list for the review. Pure, returning
+  a new project, so trying a 9:16 version cannot damage the finished 4:5 one.
+- **Safe insets on every format, and `tiktok`** — the same 1080×1920 as `story`
+  with a different safe zone, because its action rail covers ~240 units the
+  Instagram layout does not. Now earned rather than speculative: the review
+  screen draws it.
+- **Layer panel** — the accessibility surface for the canvas. The scene is one
+  Skia picture with no per-element views, so a screen reader has nothing to walk;
+  this list is how anyone not using tap hit-testing selects, reorders, hides and
+  locks. Reordering is by button, not drag, for the same reason.
+- **Export review** — format chips, an adapted preview, and a summary of what was
+  moved, reframed or left under the platform's chrome.
 
-Risks: snapping that fights the user is worse than none; a layer panel is where
-accessibility is either done properly or not at all.
+### Not built
+
+Slide add/remove/reorder UI (`setSlideCount` exists, nothing calls it); the
+rotation gesture (the property renders, no gesture drives it); shapes, frames and
+gradients; grid snapping.
+
+### One bug worth recording
+
+`nudgeIntoSafeArea` originally treated "does not fit" as a single verdict, so a
+caption 900 units wide — too wide for TikTok's 840-unit safe width — was left
+sitting under the caption bar rather than being lifted off it. The axes are now
+independent. Caught by a test, not by review.
 
 ---
 

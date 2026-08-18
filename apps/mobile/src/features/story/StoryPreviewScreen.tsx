@@ -1,4 +1,11 @@
-import { planSlicesFor } from '@cw/domain';
+import {
+  adaptProject,
+  planSlicesFor,
+  storyFormats,
+  type AdaptationNote,
+  type StoryFormatId,
+  type StoryProject,
+} from '@cw/domain';
 import { space, type Skin } from '@cw/tokens';
 import { File } from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
@@ -7,7 +14,7 @@ import { ScrollView, Share, StyleSheet, View, useWindowDimensions } from 'react-
 import { analytics } from '@/infrastructure/dependencies';
 import { usePreferences, useSkin } from '@/providers';
 import { selectProject, useStoryStore } from '@/store/storyStore';
-import { Button, InlineError, NavBar, Screen, Text, useStyles } from '@/ui';
+import { Button, Chip, InlineError, NavBar, Screen, Text, useStyles } from '@/ui';
 import { StoryCanvas } from './canvas/StoryCanvas';
 import { useStoryImages } from './canvas/useStoryImages';
 import { exportStory, type ExportFailure } from './export/exportStory';
@@ -40,7 +47,25 @@ export function StoryPreviewScreen({ onClose }: { onClose: () => void }) {
   const [files, setFiles] = useState<readonly string[]>([]);
   const [failure, setFailure] = useState<ExportFailure | null>(null);
 
-  const plans = useMemo(() => (project === null ? [] : planSlicesFor(project)), [project]);
+  /**
+   * A format being considered, not yet applied.
+   *
+   * The adaptation is computed and previewed before it touches the document, so
+   * trying a 9:16 version of a finished 4:5 story costs nothing and changes
+   * nothing. `adaptProject` is pure and returns a new project, which is what
+   * makes this possible — the original is never at risk.
+   */
+  const [tryingFormat, setTryingFormat] = useState<StoryFormatId | null>(null);
+
+  const adaptation = useMemo(() => {
+    if (project === null || tryingFormat === null || tryingFormat === project.format) return null;
+    return adaptProject(project, tryingFormat, new Date().toISOString());
+  }, [project, tryingFormat]);
+
+  /** What the strip shows: the adaptation when one is being considered. */
+  const shown: StoryProject | null = adaptation?.project ?? project;
+
+  const plans = useMemo(() => (shown === null ? [] : planSlicesFor(shown)), [shown]);
   const slideWidth = width - space.gutter * 2;
   const fonts = useStoryFonts(plans[0]?.width ?? 1080);
 
@@ -48,7 +73,7 @@ export function StoryPreviewScreen({ onClose }: { onClose: () => void }) {
   useEffect(() => () => setCancelled(true), []);
 
   const runExport = useCallback(async () => {
-    if (project === null || progress !== null || fonts === null) return;
+    if (project === null || shown === null || progress !== null || fonts === null) return;
 
     setFailure(null);
     setFiles([]);
@@ -60,7 +85,7 @@ export function StoryPreviewScreen({ onClose }: { onClose: () => void }) {
 
     const startedAt = Date.now();
     const result = await exportStory({
-      project,
+      project: shown,
       fonts,
       background: skin.ui.bg.base,
       onProgress: ({ completed, total }) => setProgress({ done: completed, total }),
@@ -148,14 +173,63 @@ export function StoryPreviewScreen({ onClose }: { onClose: () => void }) {
             background={skin.ui.bg.base}
             images={images}
             key={plan.index}
-            project={project}
+            // `shown` is non-null wherever this renders — the null branch
+            // returned above — but the narrowing does not survive the memo.
+            project={shown ?? project}
             slideIndex={plan.index}
             width={slideWidth}
           />
         ))}
       </ScrollView>
 
+      <ScrollView
+        contentContainerStyle={styles.formats}
+        horizontal
+        keyboardShouldPersistTaps="handled"
+        showsHorizontalScrollIndicator={false}
+      >
+        {(Object.keys(storyFormats) as StoryFormatId[]).map((id) => (
+          <Chip
+            key={id}
+            label={t(`story.format.${id}`)}
+            onPress={() => {
+              setTryingFormat(id === project.format ? null : id);
+              // A format change invalidates whatever was exported under the old
+              // one; leaving the files listed would offer a stale share.
+              setFiles([]);
+            }}
+            tone={(tryingFormat ?? project.format) === id ? 'selected' : 'default'}
+          />
+        ))}
+      </ScrollView>
+
       <View style={styles.body}>
+        {adaptation === null ? null : <AdaptationSummary notes={adaptation.notes} />}
+
+        {adaptation === null ? null : (
+          <Button
+            label={t('story.adapt.apply')}
+            onPress={() => {
+              const target = tryingFormat;
+              if (target === null) return;
+              // Applied through `apply`, so it is one undoable step and one
+              // autosave — the same path as any other edit.
+              useStoryStore
+                .getState()
+                .apply(
+                  (current) => adaptProject(current, target, new Date().toISOString()).project,
+                );
+              analytics.track('format_adapted', {
+                from: project.format,
+                to: target,
+                adjusted: adaptation.notes.length,
+              });
+              setTryingFormat(null);
+            }}
+            variant="secondary"
+          />
+        )}
+
         {project.track === null ? null : (
           <Text tone="secondary" variant="meta">
             {t('story.preview.noAudio')}
@@ -202,6 +276,50 @@ export function StoryPreviewScreen({ onClose }: { onClose: () => void }) {
 }
 
 /**
+ * What the adaptation changed, in the user's terms.
+ *
+ * The brief asks for a review before export, and a review that says "adapted"
+ * reviews nothing. These are counts of specific actions — moved, reframed, still
+ * covered — so the author can tell the difference between a change they wanted
+ * and one they need to undo.
+ */
+function AdaptationSummary({ notes }: { notes: readonly AdaptationNote[] }) {
+  const { t } = usePreferences();
+
+  const count = (kind: AdaptationNote['kind']) => notes.filter((note) => note.kind === kind).length;
+
+  const moved = count('moved-into-safe-area');
+  const recropped = count('recropped');
+  const unsafe = count('left-outside-safe-area');
+
+  if (moved === 0 && recropped === 0 && unsafe === 0) {
+    return <Text variant="meta">{t('story.adapt.none')}</Text>;
+  }
+
+  return (
+    <View>
+      {recropped === 0 ? null : (
+        <Text tone="secondary" variant="meta">
+          {t('story.adapt.recropped', { count: recropped })}
+        </Text>
+      )}
+      {moved === 0 ? null : (
+        <Text tone="secondary" variant="meta">
+          {t('story.adapt.moved', { count: moved })}
+        </Text>
+      )}
+      {/* The one that is a warning rather than a report: these are still
+          covered, and only the author can decide whether that matters. */}
+      {unsafe === 0 ? null : (
+        <Text tone="danger" variant="meta">
+          {t('story.adapt.unsafe', { count: unsafe })}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+/**
  * Each failure gets its own sentence.
  *
  * A seam and a full disk are different problems with different answers, and a
@@ -231,5 +349,10 @@ const makeStyles = (_skin: Skin) =>
     strip: {
       gap: space.xs,
       paddingHorizontal: space.gutter,
+    },
+    formats: {
+      gap: space.xs,
+      paddingHorizontal: space.gutter,
+      paddingTop: space.sm,
     },
   });

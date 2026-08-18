@@ -557,9 +557,9 @@ product owner. There was no evidence of that approval, so all six were re-raised
 from scratch.
 
 **D1, D2, D3 and D5 were put to the product owner on 2026-08-17 and each was
-decided in favour of the recommendation recorded below.** They are now binding on
-the specification, the schema and Phase 1. **D4 and D6 remain open**; neither
-blocks Phase 1 or Phase 2, and each is due before the phase named in its entry.
+decided in favour of the recommendation recorded below.** **D4 and D6 were
+delegated back and decided the same day**, on the reasoning recorded in their
+entries. All six are binding on the specification, the schema and the plan.
 
 **D1 — Music's role in the visual system. DECIDED: colour-derived pacing only.**
 Tempo, valence and danceability are
@@ -584,17 +584,34 @@ projects free, paid line on systems work (full template library with one free pe
 family mirroring `looks.ts`, AI Director, advanced Living Palette, high-resolution
 export, watermark-free via the existing `watermark_free_share`).
 
-**D4 — Chroma Cutout implementation route. STILL OPEN — due before Phase 3's cutout work** (§7). iOS Vision (best quality,
-native code, iOS-only) vs a cross-platform ML runtime (heavier, lower quality) vs
-a backend (does not exist, conflicts with local-first privacy). This determines
-whether Phase 3 needs new native code.
+**D4 — Chroma Cutout implementation route. DECIDED 2026-08-17: iOS Vision, iOS-only, behind the provider interface.** (§7)
+
+The three routes were iOS Vision (`VNGenerateForegroundInstanceMaskRequest`,
+iOS 17+), a cross-platform ML runtime, and a backend service. Vision wins on
+every axis this product cares about: highest quality, fully on-device, no model
+asset in the bundle, no network, no cost, and no private photograph ever leaving the
+phone — which is the only route that does not contradict the local-first posture
+`.env.example` states. A backend would mean uploading private photographs to
+compute something the phone can already do. An ML runtime would mean a large
+native dependency and a bundled model for materially worse masks.
+
+**The accepted cost is that Cutout is an iOS feature.** That is defensible for
+this app specifically — it is already iOS-leaning (`supportsTablet: false`, a
+real iOS widget extension, EAS iOS profiles) — but it must be handled as a
+_capability_, not a broken button: the provider reports availability, and on
+Android the feature is **absent from the UI** rather than present and failing.
+Android gets a real implementation when a cross-platform route is justified on
+its own merits, not as a consolation.
+
+Phase 3 therefore does need new native code, in the config-plugin shape
+`plugins/withChromawaveWidget` already established.
 
 **D5 — Remixable Memories without a backend. DECIDED: spec the API, local remix only.** (§9) No server, no auth, no
 identity. _Recommendation:_ specify the API, build local/private remixing only,
 and do not ship Trending Remixes / Rising Creators surfaces until real users
 exist — the codebase has already deleted one attempt at simulated social proof.
 
-**D6 — Seasons and location in Color DNA. STILL OPEN — due before Phase 7** (§5, §14). Seasons are not derivable
+**D6 — Seasons and location in Color DNA. DECIDED 2026-08-17: drop both; keep the month-based framing.** (§5, §14). Seasons are not derivable
 (hemisphere unknown by design) and photo location is disabled by design.
 _Recommendation:_ keep the existing month-based framing and drop seasonal and
 location patterns from the Color DNA scope.
@@ -680,9 +697,8 @@ the schema stabilises, not as a separate phase at the end.
 Phase 0 is complete. Baseline recorded (§1) — green except the pre-existing
 `format:check` failure.
 
-**D1, D2, D3 and D5 were decided on 2026-08-17** (§15) and nothing blocks Phase 1.
-**D4 and D6 remain open** and are due before Phase 3's cutout work and Phase 7
-respectively.
+**All six decisions D1–D6 were made on 2026-08-17** (§15). Nothing is blocked on
+a product decision.
 
 Next deliverables, in order, before any production code:
 

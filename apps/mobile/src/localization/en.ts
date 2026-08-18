@@ -736,6 +736,20 @@ export const en = {
   'story.a11y.undone': 'Undone',
   'story.a11y.redone': 'Redone',
   'story.a11y.layers': 'Layers',
+  'story.format.tiktok': 'TikTok',
+  'story.adapt.title': 'Adapt shape',
+  'story.adapt.review': 'Review changes',
+  'story.adapt.apply': 'Apply',
+  'story.adapt.none': 'Nothing needed moving',
+  'story.adapt.moved': '{count} moved into the safe area',
+  'story.adapt.recropped': '{count} reframed around their subject',
+  'story.adapt.unsafe': '{count} still sit under the app controls',
+  'story.adapt.safeArea': 'Safe area',
+  'story.layer.hide': 'Hide',
+  'story.layer.show': 'Show',
+  'story.layer.forward': 'Forward',
+  'story.layer.backward': 'Back',
+  'story.layer.panel': 'Layers',
 } as const;
 
 export type MessageKey = keyof typeof en;

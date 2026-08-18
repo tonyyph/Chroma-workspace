@@ -55,6 +55,23 @@ export const photoElementSchema = z.object({
   sourceWidth: z.number().int().positive(),
   sourceHeight: z.number().int().positive(),
   crop: cropSchema,
+  /**
+   * The part of the source that must survive a reframe, in normalised source
+   * coordinates.
+   *
+   * This is what makes cross-format adaptation something other than a centre
+   * crop. Moving a 4:5 composition to 9:16 has to throw away pixels, and the
+   * only question worth answering is *which* — a centred crop answers "the
+   * outside ones", which is how a subject standing off to the left gets cut in
+   * half in the story version.
+   *
+   * `.default` rather than required: every project written before this field
+   * existed still parses, and the centre is exactly what those projects
+   * implicitly meant. The same widening `imageRefSchema.grade` uses.
+   */
+  focal: z
+    .object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) })
+    .default({ x: 0.5, y: 0.5 }),
 });
 
 export type PhotoElement = z.infer<typeof photoElementSchema>;
