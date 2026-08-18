@@ -40,7 +40,17 @@ export type Entitlement =
    * What Pro buys is the part that is systems work: taking the derived grade
    * apart and putting it back differently.
    */
-  | 'advanced_grading';
+  | 'advanced_grading'
+  /**
+   * The full template library beyond the free one per family.
+   *
+   * The line stays where `looks.ts` put it: **one working template per family is
+   * free**, because a wall of locked chips tells someone the app is not for
+   * them, and one working example tells them what the family *is* — which is the
+   * thing worth paying to unlock. Making a story, editing it and exporting it
+   * are free at every resolution; this buys the library, not the ability.
+   */
+  | 'template_library';
 
 const tierEntitlements: Record<SubscriptionTier, ReadonlySet<Entitlement>> = {
   free: new Set(),
@@ -51,6 +61,7 @@ const tierEntitlements: Record<SubscriptionTier, ReadonlySet<Entitlement>> = {
     'locked_white_balance',
     'wide_gamut_export',
     'advanced_grading',
+    'template_library',
   ]),
 };
 

@@ -17,6 +17,7 @@ import { StoredEntitlements } from './StoredEntitlements';
 import { StoredMemoryRepository } from './StoredMemoryRepository';
 import { StoredPreferencesRepository } from './StoredPreferencesRepository';
 import { StoredSetRepository } from './StoredSetRepository';
+import { StoredRecipeRepository } from './story/StoredRecipeRepository';
 import { StoredStoryRepository } from './story/StoredStoryRepository';
 import { ExpoSharedContainer, ExpoTimelineReloader } from './widgets/ExpoSharedContainer';
 import { WidgetSnapshotWriter } from './widgets/WidgetSnapshotWriter';
@@ -59,6 +60,15 @@ export const paletteRepository = new MemoryBackedPaletteRepository(memoryReposit
  * person has ever made to record one moved element. See the class comment.
  */
 export const storyRepository = new StoredStoryRepository(storage);
+
+/**
+ * Remix recipes, on this device only.
+ *
+ * Decision D5: there is no backend, no account and no identity, so a recipe is
+ * saved here and remixed here. `06-remix-privacy-model.md` specifies the API a
+ * server would need; nothing in this app reaches one.
+ */
+export const recipeRepository = new StoredRecipeRepository(storage);
 
 /**
  * Subject extraction for Chroma Cutout.

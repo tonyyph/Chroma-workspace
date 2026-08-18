@@ -266,19 +266,86 @@ A recap story carries the colours, the counts and the photographs. A test assert
 it carries **no private note**, and that the only text it writes is the period
 key — a date, not a sentence about it.
 
-**7 — Remixable Memories**, per model 06: recipe schema, local remixing,
-attribution chain, documented API. No publish, no accounts, no community
-surfaces.
+**7 — built, local only.** Decision D5 held: no publish, no accounts, no
+community surfaces, no counters.
+
+- `domain/remix.ts` (21 tests) — the recipe. **A recipe carries slots, not
+  content.** Where a story has a photograph, a recipe has a rectangle; where it
+  has a caption someone wrote, a recipe has a text slot with a role and no words.
+  There is no field anywhere in the schema that can hold a file, a URI, an asset
+  id or authored text — so "a remix leaked my photograph" is not a bug a careless
+  caller can introduce. It is a shape the type cannot express.
+- `StoredRecipeRepository` (10 tests) — a shelf on this device. One test asserts
+  **no URI is ever written to disk**, checked by searching the serialised blob
+  rather than field by field, so a future field cannot quietly reintroduce one.
+- Attribution with a bounded chain, and `attributionIntact` to detect a chain
+  that has been shortened or a source swapped — "silent removal of attribution"
+  is the first failure `06` names, and the way to prevent it is to check.
+
+**What travels and what does not:** the arrangement and the palette travel — the
+palette is the design being shared, and it is a derived measurement rather than
+media. Photographs, words, notes and source memory ids do not. An unfilled photo
+slot is **counted, not drawn as a placeholder**: a grey rectangle is something
+someone exports without noticing.
 
 ---
 
-## Templates
+## Templates — built
 
-Cross-cutting rather than a phase. The eight families land with Phases 2–4 as the
-schema stabilises. Each must be data-driven rather than a hard-coded screen,
-adapt across formats and slide counts, consume the user's palette, declare its
-supported features and free/premium status, work in both skins, and contain no
-third-party assets.
+`domain/templates.ts` (23 tests). All eight families the brief names, as
+**functions rather than screens**: `(slideCount, format, palette, track)` to a
+list of layout slots. A hard-coded template works at one slide count in one
+format with one palette; these produce three slides or twelve, portrait or 9:16,
+and consume whatever colours the author's photographs actually had.
+
+**They contain no colours of their own.** Every colour placed comes from the
+palette handed in, or is computed for contrast against the ground the caller
+named. A test builds each family against both skins' grounds and asserts the text
+colours differ — a template that hard-coded one would produce the same colour for
+both, which is the appearance leak.
+
+**They supply no words.** A text slot declares a `purpose` — title, caption,
+track, index, date — and carries no content. A template says what belongs in a
+place; it never says what it says.
+
+**A music family with no track omits the slot** rather than drawing an empty
+card, the same rule `livingMemory.ts` applies to its scenes. Tested in both
+directions: musical families place a track slot when given one and none when not,
+and non-musical families place none even when handed a track.
+
+### Wired into the editor
+
+`applyTemplate` (10 tests) plus a picker.
+
+**A template rearranges; it does not replace.** Photographs, crops and words
+already written are the author's work, so existing elements are matched to slots
+by kind and in order and keep everything they carry — only their _frames_ change.
+A story with four photographs under a three-slot layout **keeps the fourth**,
+reported rather than deleted: silently removing someone's photograph is not
+something undo should have to rescue them from.
+
+**The thumbnail is drawn from the template's own slots.** A baked PNG would be a
+picture of what the layout looked like on the day it was exported and would stop
+matching the first time the layout changed. Drawing the slots means the preview
+cannot disagree with the layout, because it _is_ the layout.
+
+**Gating reuses the existing system** — one new `Entitlement` member,
+`template_library`, and the existing paywall. One template per family is free,
+the line `looks.ts` set. A locked template still shows its layout: the shape is
+what is being sold, so hiding it would sell nothing.
+
+### Three bugs the tests caught
+
+1. **`album-notes` ran off the foot of a square slide.** A square plate at 78% of
+   a 1080-wide square leaves no room for the strip and notes beneath it. The
+   layout now sizes against height as well as width — it has to fit the shortest
+   format it claims to support, not only the tallest.
+2. **`before-the-song-ends` declared `usesMusic` and never named the track.** A
+   family called that which never says which song was claiming a capability it
+   had not earned.
+3. **A test asserted an assumption, not a property.** It compared the first
+   slot's height across formats — but `album-notes` draws a _square_ plate, which
+   is correctly identical in both. Now asserted on the whole layout.
 
 ---
 

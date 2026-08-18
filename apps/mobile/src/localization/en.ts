@@ -785,6 +785,22 @@ export const en = {
   'story.reason.focal-chosen': 'Led on the strongest contrast',
   'story.reason.motion-from-mood': 'Motion chosen from the prevailing mood',
   'story.reason.title-from-memory': 'Title taken from your own words',
+  'story.remix.save': 'Save as recipe',
+  'story.remix.saved': 'Recipe saved on this device',
+  'story.remix.private': 'Recipes stay on your device. Nothing is published.',
+  'story.remix.carries': 'A recipe carries the arrangement — never your photos, words or notes.',
+  'story.template.title': 'Layouts',
+  'story.template.locked': 'Pro',
+  'story.template.applied': 'Layout applied',
+  'story.template.kept': '{count} kept where they were',
+  'story.template.chromatic-journey': 'Chromatic Journey',
+  'story.template.sound-in-colour': 'Sound in Colour',
+  'story.template.film-diary': 'Film Diary',
+  'story.template.album-notes': 'Album Notes',
+  'story.template.mood-spectrum': 'Mood Spectrum',
+  'story.template.minimal-swiss-sequence': 'Swiss Sequence',
+  'story.template.chroma-editorial': 'Chroma Editorial',
+  'story.template.before-the-song-ends': 'Before the Song Ends',
 } as const;
 
 export type MessageKey = keyof typeof en;

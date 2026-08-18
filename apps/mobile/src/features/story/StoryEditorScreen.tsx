@@ -9,6 +9,8 @@ import {
   setElementFrame,
   applyStoryPatch,
   compose,
+  toRecipe,
+  type StoryTemplate,
   livingPaletteConfig,
   livingPalettePresets,
   mapElement,
@@ -24,10 +26,11 @@ import {
 import { space, type Skin } from '@cw/tokens';
 import * as Crypto from 'expo-crypto';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
 import { AccessibilityInfo, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle } from 'react-native-reanimated';
-import { analytics, hapticsService } from '@/infrastructure/dependencies';
+import { analytics, hapticsService, recipeRepository } from '@/infrastructure/dependencies';
 import { usePreferences, useSkin } from '@/providers';
 import { reconcileSelection, useStoryEditorStore } from '@/store/storyEditorStore';
 import { selectCanRedo, selectCanUndo, selectProject, useStoryStore } from '@/store/storyStore';
@@ -38,7 +41,9 @@ import { useStoryImages } from './canvas/useStoryImages';
 import { addPaletteStrip, addTextElement } from './editorActions';
 import { LayerPanel } from './LayerPanel';
 import { usePalettePhase } from './canvas/usePalettePhase';
+import { applyTemplate } from './applyTemplate';
 import { ComposePanel } from './ComposePanel';
+import { TemplatePicker } from './TemplatePicker';
 import { useMemories } from '@/hooks/useMemories';
 
 /**
@@ -66,6 +71,7 @@ export function StoryEditorScreen({
   onClose: () => void;
 }) {
   const styles = useStyles(makeStyles);
+  const router = useRouter();
   const skin = useSkin();
   const { t } = usePreferences();
   const { width } = useWindowDimensions();
@@ -251,6 +257,9 @@ export function StoryEditorScreen({
 
   const { memories } = useMemories();
   const [proposal, setProposal] = useState<CompositionProposal | null>(null);
+  const [recipeSaved, setRecipeSaved] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [templateKept, setTemplateKept] = useState<number | null>(null);
   const [rejectedCount, setRejectedCount] = useState(0);
 
   /**
@@ -296,6 +305,53 @@ export function StoryEditorScreen({
     setRejectedCount(refused);
     setProposal(null);
   }, [act, proposal, skin.ui.bg.base]);
+
+  /**
+   * Saves the arrangement as a remix recipe, on this device.
+   *
+   * `toRecipe` strips every asset, every word and every source memory — the
+   * recipe has nowhere to put them. Nothing is published: there is no backend
+   * and no account (decision D5), so this is a shelf on the phone.
+   */
+  const saveRecipe = useCallback(() => {
+    const current = useStoryStore.getState().history?.present;
+    if (current === undefined || current === null) return;
+
+    void recipeRepository
+      .save(toRecipe(current, { recipeId: Crypto.randomUUID(), now: new Date().toISOString() }))
+      .then(() => setRecipeSaved(true))
+      .catch(() => setRecipeSaved(false));
+  }, []);
+
+  /**
+   * Applies a layout, keeping everything the author made.
+   *
+   * Through `apply` like any other edit, so it is one undoable step — which is
+   * what makes trying a template cheap enough to actually try.
+   */
+  const useTemplate = useCallback(
+    (template: StoryTemplate) => {
+      let kept = 0;
+      act((current) => {
+        const result = applyTemplate(current, template, {
+          groundHex: skin.ui.bg.base,
+          now: new Date().toISOString(),
+          nextId: () => Crypto.randomUUID(),
+        });
+        kept = result.unplaced;
+        return result.project;
+      });
+
+      setTemplateKept(kept);
+      setShowTemplates(false);
+      analytics.track('template_applied', {
+        family: template.family,
+        free: template.free,
+        slideCount: project?.slideCount ?? 0,
+      });
+    },
+    [act, project?.slideCount, skin.ui.bg.base],
+  );
 
   const undo = useCallback(() => {
     useStoryStore.getState().undo();
@@ -444,6 +500,12 @@ export function StoryEditorScreen({
           tone="add"
         />
         <Chip label={t('story.compose.run')} onPress={suggest} tone="add" />
+        <Chip label={t('story.remix.save')} onPress={saveRecipe} />
+        <Chip
+          label={t('story.template.title')}
+          onPress={() => setShowTemplates((open) => !open)}
+          tone={showTemplates ? 'selected' : 'default'}
+        />
         <Chip
           label={t('story.layer.panel')}
           onPress={() => setShowLayers((open) => !open)}
@@ -452,6 +514,34 @@ export function StoryEditorScreen({
         {canUndo ? <Chip label={t('story.editor.undo')} onPress={undo} /> : null}
         {canRedo ? <Chip label={t('story.editor.redo')} onPress={redo} /> : null}
       </ScrollView>
+
+      {showTemplates ? (
+        <TemplatePicker
+          onApply={useTemplate}
+          onLocked={() => router.push({ pathname: '/paywall', params: { trigger: 'template' } })}
+          project={project}
+        />
+      ) : null}
+
+      {templateKept === null || templateKept === 0 ? null : (
+        <View style={styles.notice}>
+          <Text tone="secondary" variant="meta">
+            {t('story.template.kept', { count: templateKept })}
+          </Text>
+        </View>
+      )}
+
+      {recipeSaved ? (
+        <View style={styles.notice}>
+          <Text tone="secondary" variant="meta">
+            {t('story.remix.saved')}
+          </Text>
+          {/* Said where the action is, not in a settings screen. */}
+          <Text tone="secondary" variant="meta">
+            {t('story.remix.carries')}
+          </Text>
+        </View>
+      ) : null}
 
       <ComposePanel
         onApply={applyProposal}

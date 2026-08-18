@@ -63,6 +63,8 @@ export type AnalyticsEventMap = {
   export_completed: { format: StoryFormatKey; slideCount: number; ms: number };
   export_failed: { format: StoryFormatKey; reason: ExportFailureReason };
   share_started: { format: StoryFormatKey; slideCount: number };
+  /** `family` is the template id, never anything about the story it was applied to. */
+  template_applied: { family: string; free: boolean; slideCount: number };
   /** Cross-Format Composer: `from` → `to`, plus how many elements it adjusted. */
   format_adapted: { from: StoryFormatKey; to: StoryFormatKey; adjusted: number };
 };
@@ -95,7 +97,14 @@ export type ExportFormat = 'css' | 'tailwind' | 'swift' | 'json' | 'svg' | 'ase'
  * app either gives away or never withheld.
  */
 export type PaywallTrigger =
-  'watermark' | 'json-export' | 'semantic-names' | 'auto-wb' | 'pro-tools' | 'unknown';
+  | 'watermark'
+  | 'json-export'
+  | 'semantic-names'
+  | 'auto-wb'
+  | 'pro-tools'
+  /** A locked template family in the story editor. */
+  | 'template'
+  | 'unknown';
 
 export type ShareRatio = '1x1' | '4x5' | '9x16' | '1.91x1';
 
