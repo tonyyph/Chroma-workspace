@@ -1,14 +1,18 @@
 import {
   bandsToDraw,
   cropToSourceRect,
+  hasEffects,
   orderedColors,
   paletteBands,
+  scaledEffects,
   translateRect,
+  type ElementEffects,
   type SlicePlan,
   type StoryElement,
   type TextRole,
 } from '@cw/domain';
 import {
+  BlendMode,
   ClipOp,
   FilterMode,
   MipmapMode,
@@ -16,7 +20,9 @@ import {
   type SkCanvas,
   type SkFont,
   type SkImage,
+  type SkImageFilter,
 } from '@shopify/react-native-skia';
+import { glowFilter, grainShader, outlineFilter, shadowFilter } from './effectFilters';
 import { alignX, textBlockTop } from './layout';
 import { layoutLines, wrapText } from './wrapText';
 
@@ -128,7 +134,7 @@ export function drawScene(options: DrawSceneOptions): SceneReport {
           drawMissing(canvas, frame, alpha);
           break;
         }
-        drawPhoto(canvas, image, element, frame, alpha);
+        drawPhoto(canvas, image, element, frame, alpha, scale);
         break;
       }
 
@@ -163,6 +169,7 @@ function drawPhoto(
   element: Extract<StoryElement, { kind: 'photo' }>,
   frame: { x: number; y: number; width: number; height: number },
   alpha: number,
+  scale: number,
 ): void {
   // The crop is a fraction of the source, so it means the same thing whether
   // this is a 1024px preview or a 4096px master. Scaling it by the image's
@@ -173,26 +180,77 @@ function drawPhoto(
     height: image.height(),
   });
 
-  const paint = Skia.Paint();
-  paint.setAlphaf(alpha);
-
+  const src = Skia.XYWHRect(source.x, source.y, source.width, source.height);
   const destination = Skia.XYWHRect(frame.x, frame.y, frame.width, frame.height);
 
-  canvas.save();
-  // Clipped to its frame so a photograph cannot bleed over a neighbour when the
-  // crop and the frame disagree about aspect.
-  canvas.clipRect(destination, ClipOp.Intersect, true);
-  canvas.drawImageRectOptions(
-    image,
-    Skia.XYWHRect(source.x, source.y, source.width, source.height),
-    destination,
-    // Linear + nearest mipmap: this is a downscale of a photograph, where
-    // nearest-neighbour sampling produces visible aliasing on export.
-    FilterMode.Linear,
-    MipmapMode.Nearest,
-    paint,
-  );
-  canvas.restore();
+  const plain = (filter: SkImageFilter | null): void => {
+    const paint = Skia.Paint();
+    paint.setAlphaf(alpha);
+    if (filter !== null) paint.setImageFilter(filter);
+    canvas.drawImageRectOptions(
+      image,
+      src,
+      destination,
+      // Linear + nearest mipmap: this is a downscale of a photograph, where
+      // nearest-neighbour sampling produces visible aliasing on export.
+      FilterMode.Linear,
+      MipmapMode.Nearest,
+      paint,
+    );
+  };
+
+  const drawImageClipped = (): void => {
+    canvas.save();
+    // Clipped to its frame so a photograph cannot bleed over a neighbour when
+    // the crop and the frame disagree about aspect.
+    canvas.clipRect(destination, ClipOp.Intersect, true);
+    plain(null);
+    canvas.restore();
+  };
+
+  // The path every existing story takes. Kept byte-for-byte what `drawPhoto`
+  // did before effects existed, so adding them cost nothing to anyone who has
+  // not switched one on.
+  if (!hasEffects(element.effects)) {
+    drawImageClipped();
+    return;
+  }
+
+  /**
+   * Effect dimensions are in canvas units and the canvas is already scaled, so
+   * they are scaled to match. If the device check in the design's §4 shows Skia
+   * sigmas already follow the canvas transform, this call becomes the identity —
+   * one line to change, in one place.
+   */
+  const effects: ElementEffects = scaledEffects(element.effects, scale);
+
+  // Back to front, fixed here rather than decided per call, so two renders
+  // cannot disagree about depth.
+  if (effects.glow !== null) plain(glowFilter(effects.glow));
+  if (effects.shadow !== null) plain(shadowFilter(effects.shadow));
+  if (effects.outline !== null) plain(outlineFilter(effects.outline));
+
+  drawImageClipped();
+
+  if (effects.grain !== null) {
+    /**
+     * Clipped to the element rather than to the frame.
+     *
+     * Over a cut subject, grain covering the whole slide is a different effect
+     * from grain on the subject — and the one the author asked for is the
+     * second. `SrcATop` keeps it inside whatever alpha the image has.
+     */
+    canvas.save();
+    canvas.clipRect(destination, ClipOp.Intersect, true);
+
+    const grainPaint = Skia.Paint();
+    grainPaint.setShader(grainShader(effects.grain, frame.width, frame.height));
+    grainPaint.setAlphaf(alpha * effects.grain.amount);
+    grainPaint.setBlendMode(BlendMode.SrcATop);
+    canvas.drawRect(destination, grainPaint);
+
+    canvas.restore();
+  }
 }
 
 /**
