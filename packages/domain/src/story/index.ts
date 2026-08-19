@@ -3,6 +3,7 @@ export * from './bands';
 export * from './capability';
 export * from './cutout';
 export * from './document';
+export * from './effects';
 export * from './elements';
 export * from './formats';
 export * from './geometry';

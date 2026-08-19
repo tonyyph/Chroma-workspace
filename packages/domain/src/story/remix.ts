@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { colorSchema } from '../palette';
+import { EMPTY_EFFECTS } from './effects';
 import {
   paletteOrientationSchema,
   textAlignmentSchema,
@@ -273,6 +274,9 @@ export function applyRecipe(
           crop: { x: 0, y: 0, width: 1, height: 1 },
           focal: { x: 0.5, y: 0.5 },
           maskAssetId: null,
+          // The remixer's own composition starts clean: a recipe carries the
+          // arrangement, and effects arrive with the slot in Task 6.
+          effects: EMPTY_EFFECTS,
         });
         break;
       }

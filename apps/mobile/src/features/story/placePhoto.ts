@@ -1,5 +1,6 @@
 import {
   coverCrop,
+  EMPTY_EFFECTS,
   formatOf,
   sliceBounds,
   type StoryElement,
@@ -54,5 +55,8 @@ export function placePhotoOnSlide(input: {
     // Unmasked. Nothing can produce a mask yet — no extractor is implemented
     // (decision D4) — and a photograph arrives whole in any case.
     maskAssetId: null,
+    // Nothing switched on. An effect is something the author reaches for, not
+    // the state a photograph arrives in.
+    effects: EMPTY_EFFECTS,
   };
 }

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { colorSchema, hexSchema } from '../palette';
+import { elementEffectsSchema } from './effects';
 import { cropSchema, rectSchema } from './geometry';
 import { livingPaletteConfigSchema } from './livingPalette';
 
@@ -85,6 +86,14 @@ export const photoElementSchema = z.object({
    * (decision D4), and the app offers no control that would produce one.
    */
   maskAssetId: z.string().min(1).max(64).nullable().default(null),
+  /**
+   * What is drawn around and over this photograph.
+   *
+   * A nested object rather than five flat fields: one widening, one place to
+   * read, and the whole set is optional in a single default. Photo elements only
+   * for now — effects on text are a separate widening later.
+   */
+  effects: elementEffectsSchema,
 });
 
 export type PhotoElement = z.infer<typeof photoElementSchema>;

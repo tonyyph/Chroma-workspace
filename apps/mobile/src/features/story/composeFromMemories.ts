@@ -2,6 +2,7 @@ import {
   addAsset,
   addElement,
   coverCrop,
+  EMPTY_EFFECTS,
   createStoryProject,
   formatOf,
   paceStory,
@@ -119,6 +120,7 @@ export function composeFromMemories(input: ComposeInput): {
           ),
           focal: { x: 0.5, y: 0.5 },
           maskAssetId: null,
+          effects: EMPTY_EFFECTS,
         },
         input.now,
       );
