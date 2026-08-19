@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { colorSchema } from '../palette';
-import { EMPTY_EFFECTS } from './effects';
+import { elementEffectsSchema, EMPTY_EFFECTS } from './effects';
 import {
   paletteOrientationSchema,
   textAlignmentSchema,
@@ -55,6 +55,14 @@ const slotBase = {
 export const photoSlotSchema = z.object({
   ...slotBase,
   kind: z.literal('photo'),
+  /**
+   * The effects travel; the photograph does not.
+   *
+   * An outline and a grain are *design* — the thing a recipe exists to share.
+   * They say nothing about which picture was under them, which is exactly the
+   * line this schema draws everywhere else.
+   */
+  effects: elementEffectsSchema,
 });
 
 /** Where words go. Carries how they are set, never what they said. */
@@ -152,6 +160,7 @@ export function toRecipe(
             frame: layer.frame,
             rotation: layer.rotation,
             opacity: layer.opacity,
+            effects: layer.effects,
           },
         ];
       case 'text':
@@ -276,7 +285,7 @@ export function applyRecipe(
           maskAssetId: null,
           // The remixer's own composition starts clean: a recipe carries the
           // arrangement, and effects arrive with the slot in Task 6.
-          effects: EMPTY_EFFECTS,
+          effects: slot.effects,
         });
         break;
       }

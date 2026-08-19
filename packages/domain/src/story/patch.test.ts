@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { makeColor } from '../palette';
 import { storyElementSchema, type StoryElement } from './elements';
 import { createStoryProject, storyProjectSchema, type StoryProject } from './project';
+import { EMPTY_EFFECTS, MAX_GLOW_RADIUS } from './effects';
 import { acceptStoryPatch, applyStoryPatch, STORY_PATCH_VERSION, type StoryPatch } from './patch';
 
 const ID = '11111111-1111-4111-8111-111111111111';
@@ -81,6 +82,7 @@ const patch = (overrides: Partial<StoryPatch> = {}): StoryPatch => ({
   crops: [],
   typography: [],
   animation: null,
+  effects: [],
   ...overrides,
 });
 
@@ -281,5 +283,64 @@ describe('what a valid patch does', () => {
     const project = { ...projectWith([strip('s')]), title: 'Kept' };
     const result = applyStoryPatch(project, patch({ animation: 'flow' }), GROUND);
     expect(result.project.title).toBe('Kept');
+  });
+});
+
+describe('a patch cannot propose an absurd effect', () => {
+  it('is rejected at parse time when a bound is exceeded', () => {
+    // The ceiling lives in `effects.ts`, so the refusal happens before
+    // `applyStoryPatch` ever sees the value.
+    const bad = {
+      ...patch(),
+      effects: [
+        {
+          elementId: 'p',
+          effects: {
+            ...EMPTY_EFFECTS,
+            glow: { radius: MAX_GLOW_RADIUS + 1, colorHex: '#FFFFFF' },
+          },
+        },
+      ],
+    };
+    expect(acceptStoryPatch(bad)).toBeNull();
+  });
+
+  it('applies a valid one', () => {
+    const project = projectWith([photo('p')]);
+    const result = applyStoryPatch(
+      project,
+      patch({
+        effects: [
+          { elementId: 'p', effects: { ...EMPTY_EFFECTS, grain: { amount: 0.3, seed: 5 } } },
+        ],
+      }),
+      GROUND,
+    );
+
+    const layer = result.project.layers[0];
+    expect(layer?.kind === 'photo' ? layer.effects.grain?.seed : null).toBe(5);
+  });
+
+  it('refuses to change effects on a locked element', () => {
+    const project = projectWith([photo('p', { locked: true })]);
+    const result = applyStoryPatch(
+      project,
+      patch({ effects: [{ elementId: 'p', effects: EMPTY_EFFECTS }] }),
+      GROUND,
+    );
+
+    expect(result.rejected).toContainEqual({ reason: 'element-locked', elementId: 'p' });
+    expect(result.changed).toBe(false);
+  });
+
+  it('refuses effects on something that is not a photograph', () => {
+    const project = projectWith([text('t')]);
+    const result = applyStoryPatch(
+      project,
+      patch({ effects: [{ elementId: 't', effects: EMPTY_EFFECTS }] }),
+      GROUND,
+    );
+
+    expect(result.rejected).toContainEqual({ reason: 'wrong-element-kind', elementId: 't' });
   });
 });

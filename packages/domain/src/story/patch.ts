@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { contrastRatio } from '../color';
+import { elementEffectsSchema } from './effects';
 import { textRoleSchema, type StoryElement } from './elements';
 import { cropSchema } from './geometry';
 import { livingPaletteConfig, livingPalettePresetSchema } from './livingPalette';
@@ -52,6 +53,16 @@ export const storyPatchSchema = z.object({
     .max(MAX_SLIDES),
   /** A palette animation preset to apply to every strip, or null to leave them. */
   animation: livingPalettePresetSchema.nullable(),
+  /**
+   * Effect changes, by element id.
+   *
+   * The bounds are the schema's, not this file's — which is the whole reason
+   * `effects.ts` carries ceilings. A composer proposing a 4000-unit shadow is
+   * refused at parse time, before `applyStoryPatch` ever sees it.
+   */
+  effects: z
+    .array(z.object({ elementId: z.string().min(1).max(64), effects: elementEffectsSchema }))
+    .max(MAX_SLIDES),
 });
 
 export type StoryPatch = z.infer<typeof storyPatchSchema>;
@@ -182,6 +193,27 @@ export function applyStoryPatch(
       role: entry.role,
       scale: entry.scale,
     });
+    changed = true;
+  }
+
+  /* -------------------------------------------------------------- effects */
+
+  for (const entry of patch.effects) {
+    const layer = byId.get(entry.elementId);
+    if (layer === undefined) {
+      rejected.push({ reason: 'unknown-element', elementId: entry.elementId });
+      continue;
+    }
+    if (layer.kind !== 'photo') {
+      rejected.push({ reason: 'wrong-element-kind', elementId: entry.elementId });
+      continue;
+    }
+    if (layer.locked) {
+      rejected.push({ reason: 'element-locked', elementId: entry.elementId });
+      continue;
+    }
+
+    layers = replace(layers, entry.elementId, { ...layer, effects: entry.effects });
     changed = true;
   }
 

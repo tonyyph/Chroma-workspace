@@ -176,6 +176,9 @@ export function compose(input: {
       slideOrder: null,
       crops: [],
       typography: [],
+      // The composer proposes arrangement, not decoration. Effects are the
+      // author's choice, the same way a template's are not.
+      effects: [],
       animation,
     },
     reasons,

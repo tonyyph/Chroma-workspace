@@ -296,3 +296,40 @@ describe('a recipe cannot carry a video slot', () => {
     expect([...kinds].sort()).toEqual(['paletteStrip', 'photo', 'text']);
   });
 });
+
+describe('effects travel in a recipe', () => {
+  it('carries them, because they are design rather than content', () => {
+    const withGrain = storyProjectSchema.parse({
+      ...project(),
+      layers: [
+        {
+          ...photo('p', 'a1'),
+          effects: { outline: null, shadow: null, glow: null, grain: { amount: 0.4, seed: 9 } },
+        },
+      ],
+    });
+
+    const slot = toRecipe(withGrain, { recipeId: 'r1', now: NOW }).slots.find(
+      (entry) => entry.kind === 'photo',
+    );
+    expect(slot?.kind === 'photo' ? slot.effects.grain?.seed : null).toBe(9);
+  });
+
+  it('gives the remixer the design without the photograph', () => {
+    const withGrain = storyProjectSchema.parse({
+      ...project(),
+      layers: [
+        {
+          ...photo('p', 'a1'),
+          effects: { outline: null, shadow: null, glow: null, grain: { amount: 0.4, seed: 9 } },
+        },
+      ],
+    });
+
+    // The whole line this schema draws: an outline says nothing about which
+    // picture was under it.
+    const serialised = JSON.stringify(toRecipe(withGrain, { recipeId: 'r1', now: NOW }));
+    expect(serialised).toContain('"seed":9');
+    expect(serialised).not.toContain('file:');
+  });
+});
