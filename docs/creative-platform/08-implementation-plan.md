@@ -110,11 +110,38 @@ before that.
 - **Export review** — format chips, an adapted preview, and a summary of what was
   moved, reframed or left under the platform's chrome.
 
-### Not built
+### Slide management — built
 
-Slide add/remove/reorder UI (`setSlideCount` exists, nothing calls it); the
-rotation gesture (the property renders, no gesture drives it); shapes, frames and
-gradients; grid snapping.
+`domain/slides.ts` (20 tests), wired into the filmstrip.
+
+**This is domain work, not a button.** A slide is a _window_ onto one logical
+canvas, not a container — so inserting one is not "make the array longer", it is
+"widen the canvas and move everything to the right of here". An operation that
+changed `slideCount` without moving elements would leave a story whose pictures
+had all silently shifted one slide left.
+
+Three rules, all about not destroying work:
+
+1. **Inserting deletes nothing.**
+2. **Removing deletes only what lived entirely on that slide**, and reports how
+   much. An element crossing the boundary is kept and shifted — it belongs to its
+   neighbours too, and removing it would take content off a slide nobody asked to
+   remove.
+3. **Reordering refuses when an element crosses the boundary being moved**, and
+   names it. There is no correct answer for where half a photograph goes, and
+   picking one silently is worse than saying so.
+
+### Rotation — built
+
+A rotation gesture composed alongside pan and pinch, snapped to 5°. A finger
+cannot hold an angle steady, so an unsnapped rotation leaves every element at
+2.7° or 358.4° — never level, never square to its neighbour. The step's exact
+size matters less than the property that zero is a multiple of it: putting
+something back straight has to be reachable.
+
+### Still not built
+
+Shapes, frames and gradients; grid snapping.
 
 ### One bug worth recording
 

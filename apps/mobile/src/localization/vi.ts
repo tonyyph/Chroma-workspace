@@ -797,4 +797,10 @@ export const vi: Record<MessageKey, string> = {
   'story.template.minimal-swiss-sequence': 'Chuỗi Swiss',
   'story.template.chroma-editorial': 'Chroma Editorial',
   'story.template.before-the-song-ends': 'Trước khi bài hát kết thúc',
+  'story.slide.add': 'Thêm trang',
+  'story.slide.remove': 'Xoá trang',
+  'story.slide.left': 'Sang trái',
+  'story.slide.right': 'Sang phải',
+  'story.slide.removed': 'Đã xoá {count} phần cùng trang',
+  'story.slide.blocked': 'Có phần cắt qua mép này. Hãy dời nó để đổi thứ tự.',
 };

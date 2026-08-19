@@ -33,6 +33,8 @@ export type ElementGestureValues = {
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
   scale: SharedValue<number>;
+  /** Live rotation offset in degrees, from the element's committed angle. */
+  rotation: SharedValue<number>;
   active: SharedValue<boolean>;
 };
 
@@ -41,6 +43,14 @@ export type ElementGestureOptions = {
   locked: boolean;
   unitsPerPoint: number;
   onCommit: (frame: Rect) => void;
+  /**
+   * Called once on release with the element's new angle in degrees.
+   *
+   * Separate from `onCommit` because rotation is a different field: folding it
+   * into the frame would mean every pan committed an angle it did not change,
+   * and every rotation committed a position it did not move.
+   */
+  onCommitRotation?: (degrees: number) => void;
   onStart?: () => void;
   /**
    * Applies snapping to a candidate frame, on the JS thread.
@@ -65,9 +75,10 @@ export function useElementGesture(options: ElementGestureOptions): {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
+  const rotation = useSharedValue(0);
   const active = useSharedValue(false);
 
-  const { frame, locked, unitsPerPoint, onCommit, onStart, snap } = options;
+  const { frame, locked, unitsPerPoint, onCommit, onCommitRotation, onStart, snap } = options;
 
   /**
    * One place where a committed frame is snapped and handed over.
@@ -91,6 +102,7 @@ export function useElementGesture(options: ElementGestureOptions): {
       translateX.value = 0;
       translateY.value = 0;
       scale.value = 1;
+      rotation.value = 0;
       active.value = false;
     };
 
@@ -148,10 +160,55 @@ export function useElementGesture(options: ElementGestureOptions): {
         active.value = false;
       });
 
-    return Gesture.Simultaneous(pan, pinch);
-  }, [frame, locked, unitsPerPoint, commit, onStart, translateX, translateY, scale, active]);
+    /**
+     * Rotation, and why it snaps.
+     *
+     * A finger cannot hold an angle steady, so an unsnapped rotation leaves
+     * every element at 2.7 degrees or 358.4 — never level, and never square to
+     * its neighbour. Snapping to a small increment costs nothing anyone can see
+     * and makes "put it back straight" reachable at all.
+     */
+    const rotate = Gesture.Rotation()
+      .enabled(enabled)
+      .onStart(() => {
+        'worklet';
+        active.value = true;
+        if (onStart !== undefined) runOnJS(onStart)();
+      })
+      .onUpdate((event) => {
+        'worklet';
+        rotation.value = (event.rotation * 180) / Math.PI;
+      })
+      .onEnd(() => {
+        'worklet';
+        if (frame === null || onCommitRotation === undefined) {
+          reset();
+          return;
+        }
+        runOnJS(onCommitRotation)(rotation.value);
+        reset();
+      })
+      .onFinalize(() => {
+        'worklet';
+        active.value = false;
+      });
 
-  return { gesture, values: { translateX, translateY, scale, active } };
+    return Gesture.Simultaneous(pan, pinch, rotate);
+  }, [
+    frame,
+    locked,
+    unitsPerPoint,
+    commit,
+    onCommitRotation,
+    onStart,
+    translateX,
+    translateY,
+    scale,
+    rotation,
+    active,
+  ]);
+
+  return { gesture, values: { translateX, translateY, scale, rotation, active } };
 }
 
 /**
@@ -162,6 +219,21 @@ export function useElementGesture(options: ElementGestureOptions): {
  * across the canvas as it grows, which looks like a bug in the gesture rather
  * than in one line of geometry.
  */
+/**
+ * The angle a rotation gesture settles on.
+ *
+ * Snapped to `ROTATION_STEP`, and wrapped into 0–360 so an element never stores
+ * -720°. Level is always reachable because 0 is a multiple of the step — which
+ * is the property that matters more than the step's exact size.
+ */
+export const ROTATION_STEP = 5;
+
+export function committedRotation(current: number, delta: number): number {
+  const snapped = Math.round((current + delta) / ROTATION_STEP) * ROTATION_STEP;
+  const wrapped = snapped % 360;
+  return wrapped < 0 ? wrapped + 360 : wrapped;
+}
+
 export function committedFrame(
   frame: Rect,
   translation: { x: number; y: number },

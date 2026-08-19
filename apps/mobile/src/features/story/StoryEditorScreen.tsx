@@ -9,6 +9,10 @@ import {
   setElementFrame,
   applyStoryPatch,
   compose,
+  insertSlide,
+  moveSlide,
+  setElementRotation,
+  removeSlide,
   toRecipe,
   type StoryTemplate,
   livingPaletteConfig,
@@ -36,7 +40,7 @@ import { reconcileSelection, useStoryEditorStore } from '@/store/storyEditorStor
 import { selectCanRedo, selectCanUndo, selectProject, useStoryStore } from '@/store/storyStore';
 import { Button, Chip, InlineError, NavBar, Screen, Text, useStyles } from '@/ui';
 import { StoryCanvas, StoryOverview } from './canvas/StoryCanvas';
-import { useElementGesture } from './canvas/useElementGesture';
+import { committedRotation, useElementGesture } from './canvas/useElementGesture';
 import { useStoryImages } from './canvas/useStoryImages';
 import { addPaletteStrip, addTextElement } from './editorActions';
 import { LayerPanel } from './LayerPanel';
@@ -164,11 +168,25 @@ export function StoryEditorScreen({
     [activeSlide, selectedId],
   );
 
+  const commitRotation = useCallback(
+    (delta: number) => {
+      if (selected === null) return;
+      const next = committedRotation(selected.rotation, delta);
+      useStoryStore
+        .getState()
+        .apply((current) =>
+          setElementRotation(current, selected.id, next, new Date().toISOString()),
+        );
+    },
+    [selected],
+  );
+
   const { gesture: dragGesture, values } = useElementGesture({
     frame: selected?.frame ?? null,
     locked: selected?.locked ?? false,
     unitsPerPoint,
     onCommit: commitFrame,
+    onCommitRotation: commitRotation,
     onStart: announceStart,
     snap,
   });
@@ -233,6 +251,7 @@ export function StoryEditorScreen({
       { translateX: values.translateX.value / unitsPerPoint },
       { translateY: values.translateY.value / unitsPerPoint },
       { scale: values.scale.value },
+      { rotate: `${values.rotation.value}deg` },
     ],
   }));
 
@@ -260,6 +279,7 @@ export function StoryEditorScreen({
   const [recipeSaved, setRecipeSaved] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [templateKept, setTemplateKept] = useState<number | null>(null);
+  const [slideNotice, setSlideNotice] = useState<string | null>(null);
   const [rejectedCount, setRejectedCount] = useState(0);
 
   /**
@@ -351,6 +371,55 @@ export function StoryEditorScreen({
       });
     },
     [act, project?.slideCount, skin.ui.bg.base],
+  );
+
+  /**
+   * Slide management, through `apply` so each is one undoable step.
+   *
+   * Every one of these can refuse, and each refusal says why — a filmstrip
+   * button that silently does nothing is the same defect as one with no handler.
+   */
+  const addSlide = useCallback(() => {
+    setSlideNotice(null);
+    act((current) => insertSlide(current, activeSlide + 1, new Date().toISOString()).project);
+  }, [act, activeSlide]);
+
+  const deleteSlide = useCallback(() => {
+    let removed = 0;
+    act((current) => {
+      const result = removeSlide(current, activeSlide, new Date().toISOString());
+      removed = result.removed;
+      return result.project;
+    });
+    setSlideNotice(removed > 0 ? t('story.slide.removed', { count: removed }) : null);
+    // The last slide of a story cannot go, so the active index may now be past
+    // the end.
+    const count = useStoryStore.getState().history?.present.slideCount ?? 1;
+    useStoryEditorStore.getState().setActiveSlide(Math.min(activeSlide, count - 1));
+  }, [act, activeSlide, t]);
+
+  const shiftSlide = useCallback(
+    (delta: number) => {
+      let refusal: string | null = null;
+      act((current) => {
+        const result = moveSlide(
+          current,
+          activeSlide,
+          activeSlide + delta,
+          new Date().toISOString(),
+        );
+        // Only the crossing case is worth telling someone about: the others are
+        // "you are already at the end", which the disabled control says better.
+        refusal = result.refused === 'crossing-element' ? t('story.slide.blocked') : null;
+        return result.project;
+      });
+
+      setSlideNotice(refusal);
+      if (refusal === null) {
+        useStoryEditorStore.getState().setActiveSlide(activeSlide + delta);
+      }
+    },
+    [act, activeSlide, t],
   );
 
   const undo = useCallback(() => {
@@ -470,6 +539,16 @@ export function StoryEditorScreen({
           onPress={() => useStoryEditorStore.getState().toggleOverview()}
           tone="info"
         />
+        <Chip label={t('story.slide.add')} onPress={addSlide} tone="add" />
+        {project.slideCount > 1 ? (
+          <Chip label={t('story.slide.remove')} onPress={deleteSlide} tone="danger" />
+        ) : null}
+        {activeSlide > 0 ? (
+          <Chip label={t('story.slide.left')} onPress={() => shiftSlide(-1)} />
+        ) : null}
+        {activeSlide < project.slideCount - 1 ? (
+          <Chip label={t('story.slide.right')} onPress={() => shiftSlide(1)} />
+        ) : null}
       </ScrollView>
 
       <ScrollView
@@ -514,6 +593,14 @@ export function StoryEditorScreen({
         {canUndo ? <Chip label={t('story.editor.undo')} onPress={undo} /> : null}
         {canRedo ? <Chip label={t('story.editor.redo')} onPress={redo} /> : null}
       </ScrollView>
+
+      {slideNotice === null ? null : (
+        <View style={styles.notice}>
+          <Text tone="secondary" variant="meta">
+            {slideNotice}
+          </Text>
+        </View>
+      )}
 
       {showTemplates ? (
         <TemplatePicker

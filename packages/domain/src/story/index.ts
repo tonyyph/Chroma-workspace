@@ -15,5 +15,6 @@ export * from './patch';
 export * from './project';
 export * from './remix';
 export * from './slicing';
+export * from './slides';
 export * from './snapping';
 export * from './templates';

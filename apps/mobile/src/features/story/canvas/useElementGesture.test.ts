@@ -1,5 +1,5 @@
 import type { Rect } from '@cw/domain';
-import { committedFrame } from './useElementGesture';
+import { committedFrame, committedRotation, ROTATION_STEP } from './useElementGesture';
 
 /**
  * The one piece of the gesture layer that can be asserted off-device.
@@ -56,5 +56,41 @@ describe('committedFrame', () => {
     const tiny = committedFrame(frame, { x: 0, y: 0 }, 0.1);
     expect(tiny.width).toBeGreaterThan(0);
     expect(tiny.height).toBeGreaterThan(0);
+  });
+});
+
+describe('committedRotation', () => {
+  it('snaps to the step, so level is always reachable', () => {
+    // A finger cannot hold an angle steady. Unsnapped, every element ends at
+    // 2.7 degrees and nothing is ever square to its neighbour.
+    expect(committedRotation(0, 2)).toBe(0);
+    expect(committedRotation(0, ROTATION_STEP * 2 + 1)).toBe(ROTATION_STEP * 2);
+  });
+
+  it('keeps zero as a multiple of the step', () => {
+    // The property that matters more than the step's size: putting something
+    // back straight has to be possible.
+    expect(0 % ROTATION_STEP).toBe(0);
+    expect(committedRotation(0, 0)).toBe(0);
+  });
+
+  it('accumulates from the element’s current angle', () => {
+    expect(committedRotation(90, 10)).toBe(100);
+  });
+
+  it('wraps rather than storing an unbounded angle', () => {
+    expect(committedRotation(350, 20)).toBe(10);
+    expect(committedRotation(0, -10)).toBe(350);
+    expect(committedRotation(0, -730)).toBeGreaterThanOrEqual(0);
+  });
+
+  it('always returns something the schema accepts', () => {
+    for (const current of [0, 90, 180, 359]) {
+      for (const delta of [-400, -37, 0, 12, 400]) {
+        const result = committedRotation(current, delta);
+        expect(result).toBeGreaterThanOrEqual(0);
+        expect(result).toBeLessThan(360);
+      }
+    }
   });
 });

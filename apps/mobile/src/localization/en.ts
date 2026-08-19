@@ -801,6 +801,12 @@ export const en = {
   'story.template.minimal-swiss-sequence': 'Swiss Sequence',
   'story.template.chroma-editorial': 'Chroma Editorial',
   'story.template.before-the-song-ends': 'Before the Song Ends',
+  'story.slide.add': 'Add slide',
+  'story.slide.remove': 'Remove slide',
+  'story.slide.left': 'Move left',
+  'story.slide.right': 'Move right',
+  'story.slide.removed': '{count} removed with the slide',
+  'story.slide.blocked': 'Something crosses this edge. Move it to reorder.',
 } as const;
 
 export type MessageKey = keyof typeof en;
