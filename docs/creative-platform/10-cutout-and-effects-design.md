@@ -170,17 +170,17 @@ first.
 Shadow and glow are both `ImageFilter.MakeDropShadowOnly` — shadow is offset and
 blurred, glow is zero offset with a large sigma. One primitive, two calls.
 
-**Outline is the awkward one.** The correct approach dilates the alpha channel
-and tints it. **[verify]** whether RN Skia exposes `MakeDilate`.
+**Outline uses dilate.** Verified against the installed `.d.ts` on 2026-08-19:
+`ImageFilter.MakeDilate(rx, ry, input?, cropRect?)` exists in RN Skia 2.4.18.
 
-This spec specifies the approach that is certainly available: **draw the image
-eight times, offset around a circle, behind the real image**, using the same
-`DropShadowOnly` already in use. Algorithmically worse — eight draws rather than
-one — and on a static image nobody can tell. Dilate is recorded as an
-optimisation to verify, not as the thing being built.
+So the outline is `MakeDilate` on the alpha, tinted with
+`ColorFilter.MakeBlend(colour, SrcIn)` through `MakeColorFilter`, drawn behind
+the image. One draw.
 
-This is a deliberate choice to specify what is known to work rather than what is
-hoped to work and discovered at build time.
+An earlier draft of this document specified drawing the image eight times around
+a circle, because dilate was believed unavailable and specifying a hoped-for API
+is how a plan turns into a surprise at build time. Checking took a minute and
+removed seven draws per outlined element.
 
 ### Grain must be deterministic
 
@@ -307,11 +307,22 @@ colour; `en` and `vi` stay in lockstep within their character budgets.
 
 ## 7. Open items before implementation
 
+**Resolved 2026-08-19**, by reading the installed type definitions:
+
+- `ImageFilter.MakeDilate`, `MakeDropShadowOnly`, `MakeBlur`, `MakeOffset`,
+  `MakeColorFilter` — all present.
+- `Shader.MakeTurbulence(..., seed, ...)` — present, and seeded.
+- `ColorFilter.MakeBlend(color, mode)`, `Paint.setImageFilter`,
+  `setColorFilter`, `setBlendMode` — all present.
+
+§4 was rewritten to use dilate as a result.
+
+**Still open — these need Xcode or a device:**
+
 1. **[verify]** `VNInstanceMaskObservation.confidence` exists. If not, drop the
    field — do not substitute a constant.
 2. **[verify]** The exact Vision request/handler/masked-image API surface.
-3. **[verify]** Whether RN Skia exposes `MakeDilate`. If it does, outline can use
-   it; if not, the eight-draw ring specified in §4 stands.
-4. **[verify]** Whether blur sigma scales with the canvas transform. This one
-   changes the design if the answer is no.
-5. **Effect defaults** need to be chosen by eye on a device, not derived.
+3. **[verify]** Whether blur sigma scales with the canvas transform. **This one
+   changes the design if the answer is no**, and it is the mandatory device check
+   described in §4.
+4. **Effect defaults** need to be chosen by eye on a device, not derived.
