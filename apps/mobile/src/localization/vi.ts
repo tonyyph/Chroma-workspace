@@ -803,4 +803,12 @@ export const vi: Record<MessageKey, string> = {
   'story.slide.right': 'Sang phải',
   'story.slide.removed': 'Đã xoá {count} phần cùng trang',
   'story.slide.blocked': 'Có phần cắt qua mép này. Hãy dời nó để đổi thứ tự.',
+  'story.effect.title': 'Hiệu ứng',
+  'story.effect.outline': 'Viền',
+  'story.effect.glow': 'Quầng sáng',
+  'story.effect.grain': 'Hạt phim',
+  'story.effect.shadow': 'Đổ bóng',
+  'story.effect.paperCut': 'Cắt giấy',
+  'story.effect.none': 'Không',
+  'story.effect.locked': 'Pro',
 };

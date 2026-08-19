@@ -807,6 +807,14 @@ export const en = {
   'story.slide.right': 'Move right',
   'story.slide.removed': '{count} removed with the slide',
   'story.slide.blocked': 'Something crosses this edge. Move it to reorder.',
+  'story.effect.title': 'Effects',
+  'story.effect.outline': 'Outline',
+  'story.effect.glow': 'Glow',
+  'story.effect.grain': 'Grain',
+  'story.effect.shadow': 'Shadow',
+  'story.effect.paperCut': 'Paper cut',
+  'story.effect.none': 'None',
+  'story.effect.locked': 'Pro',
 } as const;
 
 export type MessageKey = keyof typeof en;

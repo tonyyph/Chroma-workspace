@@ -5,6 +5,7 @@ import { usePalettes } from '@/hooks';
 
 const TRIGGERS: readonly PaywallTrigger[] = [
   'watermark',
+  'effects',
   'json-export',
   'semantic-names',
   'auto-wb',

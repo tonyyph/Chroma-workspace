@@ -50,7 +50,18 @@ export type Entitlement =
    * thing worth paying to unlock. Making a story, editing it and exporting it
    * are free at every resolution; this buys the library, not the ability.
    */
-  | 'template_library';
+  | 'template_library'
+  /**
+   * The effects that surround a subject: outline, glow, grain, shadow.
+   *
+   * **The gate is on setting an effect, never on drawing one.** A story made
+   * while subscribed keeps its effects and keeps exporting them if the
+   * subscription lapses; only the controls become unavailable. Effects that
+   * stopped rendering would silently alter a finished composition someone may
+   * already have published from — and this product does not take back work it
+   * has already accepted.
+   */
+  | 'cutout_effects';
 
 const tierEntitlements: Record<SubscriptionTier, ReadonlySet<Entitlement>> = {
   free: new Set(),
@@ -62,6 +73,7 @@ const tierEntitlements: Record<SubscriptionTier, ReadonlySet<Entitlement>> = {
     'wide_gamut_export',
     'advanced_grading',
     'template_library',
+    'cutout_effects',
   ]),
 };
 

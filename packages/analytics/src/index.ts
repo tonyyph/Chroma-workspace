@@ -67,7 +67,12 @@ export type AnalyticsEventMap = {
   template_applied: { family: string; free: boolean; slideCount: number };
   /** Cross-Format Composer: `from` → `to`, plus how many elements it adjusted. */
   format_adapted: { from: StoryFormatKey; to: StoryFormatKey; adjusted: number };
+  /** `effect` is the primitive's name, never its values and never the element. */
+  effect_applied: { effect: EffectName };
 };
+
+/** Which effect primitive was switched on. `none` is clearing them all. */
+export type EffectName = 'outline' | 'glow' | 'grain' | 'shadow' | 'paper-cut';
 
 /** How someone reached the studio, so the entry points can be compared. */
 export type StudioEntryPoint = 'library' | 'memory' | 'collection' | 'deep-link';
@@ -104,6 +109,8 @@ export type PaywallTrigger =
   | 'pro-tools'
   /** A locked template family in the story editor. */
   | 'template'
+  /** A locked effect on a story element. */
+  | 'effects'
   | 'unknown';
 
 export type ShareRatio = '1x1' | '4x5' | '9x16' | '1.91x1';
